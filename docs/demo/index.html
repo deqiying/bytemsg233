@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>bytemsg233 — 技术原理演示</title>
+    <style>
+        :root{--bg:#0a0a0f;--card:#12121a;--accent:#6366f1;--accent2:#22d3ee;--text:#e2e8f0;--muted:#64748b;--success:#22c55e}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'SF Mono','Fira Code',monospace;background:var(--bg);color:var(--text);overflow-x:hidden}
+        .hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:2rem}
+        h1{font-size:4rem;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:1rem;animation:fadeInUp 1s ease}
+        .subtitle{font-size:1.2rem;color:var(--muted);margin-bottom:3rem;animation:fadeInUp 1s ease .2s both}
+        .demo-section{max-width:900px;margin:4rem auto;padding:0 2rem}
+        .demo-title{font-size:1.8rem;color:var(--accent2);margin-bottom:2rem;text-align:center}
+        .code-compare{display:grid;grid-template-columns:1fr 1fr;gap:2rem;margin-bottom:3rem}
+        .code-block{background:var(--card);border-radius:12px;padding:1.5rem;border:1px solid #1e1e2e;position:relative;overflow:hidden}
+        .code-block::before{content:attr(data-label);position:absolute;top:0;left:0;right:0;padding:.5rem 1rem;background:rgba(99,102,241,.1);font-size:.8rem;color:var(--accent);border-bottom:1px solid #1e1e2e}
+        .code-block pre{margin-top:2rem;font-size:.85rem;line-height:1.6;overflow-x:auto}
+        .hl{color:var(--accent)}.hl2{color:var(--accent2)}.cm{color:var(--muted)}
+        .binary-demo{background:var(--card);border-radius:16px;padding:2rem;border:1px solid #1e1e2e;margin:2rem 0}
+        .binary-row{display:flex;align-items:center;margin:1rem 0;gap:.5rem}
+        .binary-label{width:120px;text-align:right;color:var(--muted);font-size:.9rem}
+        .binary-bits{display:flex;gap:4px}
+        .bit{width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:6px;font-size:.8rem;font-weight:700;background:#1e1e2e;border:1px solid #2e2e3e;opacity:0;transform:scale(.5);animation:bitAppear .3s ease forwards}
+        .bit.active{background:var(--accent);border-color:var(--accent);color:#fff}
+        .bit.zero{color:var(--muted)}
+        .flow{display:flex;align-items:center;justify-content:center;gap:1rem;margin:3rem 0;flex-wrap:wrap}
+        .flow-node{background:var(--card);border:2px solid #2e2e3e;border-radius:12px;padding:1.2rem 1.8rem;text-align:center;min-width:140px;opacity:0;animation:fadeInUp .6s ease forwards}
+        .flow-node.active{border-color:var(--accent);box-shadow:0 0 20px rgba(99,102,241,.2)}
+        .flow-arrow{font-size:1.5rem;color:var(--muted);opacity:0;animation:fadeInUp .6s ease forwards}
+        .flow-node .icon{font-size:2rem;margin-bottom:.5rem}
+        .flow-node .label{font-size:.85rem;color:var(--muted)}
+        .flow-node .name{font-size:1rem;font-weight:700}
+        .size-compare{display:flex;gap:2rem;justify-content:center;margin:2rem 0;align-items:flex-end}
+        .size-bar{text-align:center}
+        .bar{width:80px;border-radius:8px 8px 0 0;margin:0 auto;transition:height 1s ease}
+        .bar.protobuf{background:#ef4444;height:200px}
+        .bar.json{background:#f59e0b;height:320px}
+        .bar.bytemsg{background:var(--success);height:140px}
+        .bar-label{margin-top:.5rem;font-size:.85rem;color:var(--muted)}
+        .bar-size{font-size:1.2rem;font-weight:700;margin-top:.3rem}
+        @keyframes fadeInUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes bitAppear{to{opacity:1;transform:scale(1)}}
+        .animate-on-scroll{opacity:0;transform:translateY(30px);transition:all .8s ease}
+        .animate-on-scroll.visible{opacity:1;transform:translateY(0)}
+        .features{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1.5rem;margin:3rem 0}
+        .feature{background:var(--card);border-radius:12px;padding:1.5rem;border:1px solid #1e1e2e;transition:all .3s ease}
+        .feature:hover{border-color:var(--accent);transform:translateY(-4px)}
+        .feature .icon{font-size:2rem;margin-bottom:1rem}
+        .feature h3{margin-bottom:.5rem}
+        .feature p{color:var(--muted);font-size:.9rem}
+        .i18n-demo{background:var(--card);border-radius:12px;padding:2rem;border:1px solid #1e1e2e;text-align:center}
+        .i18n-toggle{display:inline-flex;background:#1e1e2e;border-radius:8px;padding:4px;margin:1rem 0}
+        .i18n-btn{padding:.5rem 1.5rem;border:none;background:0 0;color:var(--muted);cursor:pointer;border-radius:6px;font-family:inherit;transition:all .3s ease}
+        .i18n-btn.active{background:var(--accent);color:#fff}
+        .i18n-output{margin-top:1rem;font-size:1.1rem;min-height:2rem}
+        footer{text-align:center;padding:3rem;color:var(--muted);border-top:1px solid #1e1e2e;margin-top:4rem}
+        .single-file{background:var(--card);border-radius:12px;padding:2rem;border:1px solid #1e1e2e;margin:2rem 0}
+        .file-tree{display:flex;gap:3rem;justify-content:center;flex-wrap:wrap}
+        .file-group{text-align:center}
+        .file-group h3{margin-bottom:1rem;color:var(--accent2)}
+        .file-item{background:#1e1e2e;padding:.4rem 1rem;border-radius:6px;margin:.3rem 0;font-size:.85rem}
+        .file-item.highlight{border:1px solid var(--accent);color:var(--accent)}
+        @media(max-width:768px){.code-compare,.file-tree{grid-template-columns:1fr;flex-direction:column}h1{font-size:2.5rem}}
+    </style>
+</head>
+<body>
+
+<section class="hero">
+    <h1>bytemsg233</h1>
+    <p class="subtitle">代替 Protobuf 的现代序列化框架 · Agent-First · 多语言 · 国际化</p>
+</section>
+
+<section class="demo-section animate-on-scroll">
+    <h2 class="demo-title">单文件 vs 散落文件</h2>
+    <div class="single-file">
+        <div class="file-tree">
+            <div class="file-group">
+                <h3>Protobuf — 多文件散落</h3>
+                <div class="file-item">user.proto</div>
+                <div class="file-item">types.proto</div>
+                <div class="file-item">common.proto</div>
+                <div class="file-item">service.proto</div>
+                <div class="file-item" style="color:var(--muted)">agent 需要解析 import 链...</div>
+            </div>
+            <div class="file-group">
+                <h3>ByteMsg — 单文件 .bmsg</h3>
+                <div class="file-item highlight">user.bmsg</div>
+                <div class="file-item" style="color:var(--muted)">一切在此，无需 import</div>
+            </div>
+        </div>
+    </div>
+    <div class="code-compare">
+        <div class="code-block" data-label="Protobuf">
+            <pre><span class="cm">// user.proto</span>
+<span class="hl">import</span> <span class="hl2">"types.proto"</span>;
+<span class="hl">import</span> <span class="hl2">"common.proto"</span>;
+
+<span class="hl">message</span> User {
+  <span class="hl">uint32</span> id = <span class="hl2">1</span>;
+  <span class="hl">string</span> name = <span class="hl2">2</span>;
+}</pre>
+        </div>
+        <div class="code-block" data-label="ByteMsg — .bmsg">
+            <pre><span class="cm">// user.bmsg — 一切在此</span>
+<span class="hl">schema:</span> bymsg/v1
+<span class="hl">package:</span> com.example
+
+<span class="hl">enum</span> <span class="hl2">UserType</span> {
+  ADMIN = <span class="hl2">0</span>
+  USER = <span class="hl2">1</span>
+}
+
+<span class="hl">message</span> <span class="hl2">User</span> {
+  <span class="hl">uint32</span> id = <span class="hl2">1</span> <span class="cm">// "ID" | "ID"</span>
+  <span class="hl">string</span> name = <span class="hl2">2</span> <span class="cm">// "名称" | "Name"</span>
+}</pre>
+        </div>
+    </div>
+</section>
+
+<section class="demo-section animate-on-scroll">
+    <h2 class="demo-title">二进制编码原理</h2>
+    <div class="binary-demo">
+        <p style="text-align:center;color:var(--muted);margin-bottom:1.5rem">Varint 编码：小数字用更少字节</p>
+        <div class="binary-row">
+            <span class="binary-label">值 = 1:</span>
+            <div class="binary-bits" id="bits-1"></div>
+            <span style="color:var(--success);margin-left:1rem">1 字节</span>
+        </div>
+        <div class="binary-row">
+            <span class="binary-label">值 = 300:</span>
+            <div class="binary-bits" id="bits-300"></div>
+            <span style="color:var(--accent2);margin-left:1rem">2 字节</span>
+        </div>
+        <div class="binary-row">
+            <span class="binary-label">值 = 16384:</span>
+            <div class="binary-bits" id="bits-16384"></div>
+            <span style="color:var(--accent);margin-left:1rem">3 字节</span>
+        </div>
+    </div>
+</section>
+
+<section class="demo-section animate-on-scroll">
+    <h2 class="demo-title">序列化流程</h2>
+    <div class="flow" id="flow-diagram">
+        <div class="flow-node" style="animation-delay:.2s"><div class="icon">.bmsg</div><div class="name">Schema</div><div class="label">单文件定义</div></div>
+        <div class="flow-arrow" style="animation-delay:.4s">→</div>
+        <div class="flow-node" style="animation-delay:.6s"><div class="icon">⚙️</div><div class="name">Parser</div><div class="label">解析 AST</div></div>
+        <div class="flow-arrow" style="animation-delay:.8s">→</div>
+        <div class="flow-node" style="animation-delay:1s"><div class="icon">🔧</div><div class="name">Codegen</div><div class="label">5 语言生成</div></div>
+        <div class="flow-arrow" style="animation-delay:1.2s">→</div>
+        <div class="flow-node" style="animation-delay:1.4s"><div class="icon">📦</div><div class="name">Binary</div><div class="label">紧凑编码</div></div>
+    </div>
+</section>
+
+<section class="demo-section animate-on-scroll">
+    <h2 class="demo-title">体积对比</h2>
+    <div class="size-compare">
+        <div class="size-bar"><div class="bar protobuf"></div><div class="bar-label">Protobuf</div><div class="bar-size">100 B</div></div>
+        <div class="size-bar"><div class="bar json"></div><div class="bar-label">JSON</div><div class="bar-size">160 B</div></div>
+        <div class="size-bar"><div class="bar bytemsg"></div><div class="bar-label">ByteMsg</div><div class="bar-size">70 B</div></div>
+    </div>
+</section>
+
+<section class="demo-section animate-on-scroll">
+    <h2 class="demo-title">国际化演示</h2>
+    <div class="i18n-demo">
+        <div class="i18n-toggle">
+            <button class="i18n-btn active" onclick="setLang('zh',this)">中文</button>
+            <button class="i18n-btn" onclick="setLang('en',this)">English</button>
+        </div>
+        <div class="i18n-output" id="i18n-output">
+            <code>// 用户资料</code><br>
+            <code>type UserProfile struct {</code><br>
+            <code>&nbsp;&nbsp;// 用户ID</code><br>
+            <code>&nbsp;&nbsp;Id uint32 `bytemsg:"1"`</code><br>
+            <code>&nbsp;&nbsp;// 用户名</code><br>
+            <code>&nbsp;&nbsp;Name string `bytemsg:"2"`</code><br>
+            <code>}</code>
+        </div>
+    </div>
+</section>
+
+<section class="demo-section animate-on-scroll">
+    <h2 class="demo-title">核心特性</h2>
+    <div class="features">
+        <div class="feature"><div class="icon">📄</div><h3>单文件 .bmsg</h3><p>一个文件包含所有定义，无需 import，Agent 友好</p></div>
+        <div class="feature"><div class="icon">🗜️</div><h3>紧凑二进制</h3><p>Varint + Zigzag 编码，比 JSON 小 50%+</p></div>
+        <div class="feature"><div class="icon">🌐</div><h3>多语言生成</h3><p>Go / C# / Java / TypeScript / Python 一键生成</p></div>
+        <div class="feature"><div class="icon">🗺️</div><h3>原生 Map/List</h3><p>深度嵌套的 map&lt;K,V&gt; 和 list&lt;T&gt; 一等公民支持</p></div>
+        <div class="feature"><div class="icon">🌍</div><h3>i18n 内置</h3><p>代码注释和 CLI 输出自动中英文切换</p></div>
+        <div class="feature"><div class="icon">🔌</div><h3>插件化</h3><p>自定义代码生成器，扩展目标语言</p></div>
+    </div>
+</section>
+
+<footer><p>bytemsg233 — by neko233-com · MIT License</p></footer>
+
+<script>
+const observer=new IntersectionObserver(e=>{e.forEach(i=>{if(i.isIntersecting)i.target.classList.add('visible')})},{threshold:.1});
+document.querySelectorAll('.animate-on-scroll').forEach(el=>observer.observe(el));
+
+function renderBits(id,value,bits){
+    const c=document.getElementById(id),bin=value.toString(2).padStart(bits,'0');
+    c.innerHTML='';
+    bin.split('').forEach((b,i)=>{
+        const el=document.createElement('span');
+        el.className='bit '+(b==='1'?'active':'zero');
+        el.textContent=b;el.style.animationDelay=i*.1+'s';c.appendChild(el);
+    });
+}
+const bo=new IntersectionObserver(e=>{e.forEach(i=>{if(i.isIntersecting){renderBits('bits-1',1,8);renderBits('bits-300',300,16);renderBits('bits-16384',16384,24);bo.unobserve(i.target)}})},{threshold:.3});
+const bd=document.querySelector('.binary-demo');if(bd)bo.observe(bd);
+
+const i18n={
+    zh:'<code>// 用户资料</code><br><code>type UserProfile struct {</code><br><code>&nbsp;&nbsp;// 用户ID</code><br><code>&nbsp;&nbsp;Id uint32 `bytemsg:"1"`</code><br><code>&nbsp;&nbsp;// 用户名</code><br><code>&nbsp;&nbsp;Name string `bytemsg:"2"`</code><br><code>}</code>',
+    en:'<code>// User Profile</code><br><code>type UserProfile struct {</code><br><code>&nbsp;&nbsp;// User ID</code><br><code>&nbsp;&nbsp;Id uint32 `bytemsg:"1"`</code><br><code>&nbsp;&nbsp;// Username</code><br><code>&nbsp;&nbsp;Name string `bytemsg:"2"`</code><br><code>}</code>'
+};
+function setLang(lang,btn){
+    document.querySelectorAll('.i18n-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('i18n-output').innerHTML=i18n[lang];
+}
+</script>
+</body>
+</html>

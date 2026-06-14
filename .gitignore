@@ -1,0 +1,43 @@
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+bytemsg233
+
+# Test
+*.test
+*.out
+coverage.out
+coverage.html
+
+# Build
+dist/
+build/
+output/
+generated/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+*.sublime-*
+.project
+.settings/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+ehthumbs.db
+
+# Go
+vendor/
+
+# Temp
+*.tmp
+*.bak
+*.log

@@ -1,0 +1,159 @@
+# https://taskfile.dev
+
+version: '3'
+
+vars:
+  VERSION:
+    sh: git describe --tags --always --dirty 2>/dev/null || echo dev
+  COMMIT:
+    sh: git rev-parse --short HEAD 2>/dev/null || echo none
+  DATE:
+    sh: date -u +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null || echo unknown
+  LDFLAGS: "-s -w -X main.version={{.VERSION}} -X main.commit={{.COMMIT}} -X main.date={{.DATE}}"
+
+tasks:
+
+  default:
+    desc: 显示所有可用命令
+    cmds:
+      - task --list
+
+  # ==================== 测试 ====================
+
+  test:
+    desc: 运行所有测试
+    cmds:
+      - go test ./... -v -count=1
+
+  test-race:
+    desc: 运行测试 (race detector)
+    cmds:
+      - go test ./... -race -count=1
+
+  test-coverage:
+    desc: 运行测试 + 覆盖率报告
+    cmds:
+      - go test ./... -coverprofile=coverage.out -covermode=atomic -v
+      - go tool cover -func=coverage.out
+      - go tool cover -html=coverage.out -o coverage.html
+    silent: false
+
+  bench:
+    desc: 运行基准测试 + 体积对比
+    cmds:
+      - go test ./pkg/binary/... -bench=. -benchmem -count=3
+
+  bench-game:
+    desc: 游戏场景基准测试
+    cmds:
+      - go test ./pkg/binary/... -run "TestGameScenario" -v
+
+  bench-size:
+    desc: 体积对比测试
+    cmds:
+      - go test ./pkg/binary/... -run "TestSizeComparison" -v
+
+  # ==================== 构建 ====================
+
+  build:
+    desc: 构建当前平台
+    cmds:
+      - go build -ldflags="{{.LDFLAGS}}" -trimpath -o bytemsg233.exe ./cmd/bytemsg233
+
+  build-all:
+    desc: 跨平台构建
+    cmds:
+      - cmd: bash scripts/build.sh --version {{.VERSION}}
+        platforms: [linux, darwin]
+
+      - cmd: powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build.ps1 -Version {{.VERSION}}
+        platforms: [windows]
+
+  # ==================== 代码质量 ====================
+
+  lint:
+    desc: 代码检查
+    cmds:
+      - cmd: golangci-lint run ./...
+        ignore_error: true
+      - cmd: go vet ./...
+
+  fmt:
+    desc: 格式化代码
+    cmds:
+      - go fmt ./...
+
+  tidy:
+    desc: 整理依赖
+    cmds:
+      - go mod tidy
+
+  # ==================== CI / Deploy ====================
+
+  ci:
+    desc: 完整 CI 流水线
+    deps: [lint, test-race, bench-size, build-all]
+    cmds:
+      - echo "CI pipeline complete"
+
+  deploy:
+    desc: 发布 (dry-run 加 --dry-run)
+    cmds:
+      - cmd: bash scripts/deploy.sh --version {{.VERSION}}
+        platforms: [linux, darwin]
+
+      - cmd: powershell -NoProfile -ExecutionPolicy Bypass -File scripts/deploy.ps1 -Version {{.VERSION}}
+        platforms: [windows]
+
+  deploy-dry:
+    desc: Dry-run 发布
+    cmds:
+      - cmd: bash scripts/deploy.sh --version {{.VERSION}} --dry-run
+        platforms: [linux, darwin]
+
+      - cmd: powershell -NoProfile -ExecutionPolicy Bypass -File scripts/deploy.ps1 -Version {{.VERSION}} -DryRun
+        platforms: [windows]
+
+  # ==================== 示例 ====================
+
+  example:
+    desc: 构建并运行示例
+    deps: [build]
+    cmds:
+      - ./bytemsg233.exe init example
+      - ./bytemsg233.exe compile example.bmsg --lang go --lang csharp --lang java --lang typescript --lang python --output ./generated
+      - echo ""
+      - echo "Generated files:"
+      - cmd: ls -1 generated/
+        platforms: [linux, darwin]
+      - cmd: dir /b generated
+        platforms: [windows]
+      - rm -f example.bmsg
+      - rm -rf generated/
+
+  # ==================== 清理 ====================
+
+  clean:
+    desc: 清理构建产物
+    cmds:
+      - rm -f bytemsg233 bytemsg233.exe coverage.out coverage.html
+      - rm -rf dist/ generated/ output/
+
+  # ==================== 工具 ====================
+
+  install:
+    desc: 安装到本地
+    cmds:
+      - go install -ldflags="{{.LDFLAGS}}" ./cmd/bytemsg233
+
+  release-snapshot:
+    desc: 本地快照发布
+    cmds:
+      - goreleaser release --snapshot --clean
+
+  version:
+    desc: 显示版本信息
+    cmds:
+      - echo "Version: {{.VERSION}}"
+      - echo "Commit:  {{.COMMIT}}"
+      - echo "Date:    {{.DATE}}"

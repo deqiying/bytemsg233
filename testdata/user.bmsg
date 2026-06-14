@@ -1,0 +1,29 @@
+schema: bymsg/v1
+package: com.example.user
+
+enum UserType {
+    ADMIN = 0
+    USER = 1
+    GUEST = 2
+}
+
+enum Status {
+    ACTIVE = 0
+    INACTIVE = 1
+    BANNED = 2
+}
+
+message UserProfile {
+    uint32 id = 1 // "用户ID" | "User ID"
+    string name = 2 // "用户名" | "Username"
+    string email = 3 // "邮箱" | "Email"
+    list<string> tags = 4 // "标签" | "Tags"
+    map<string, string> metadata = 5 // "元数据" | "Metadata"
+    Address address = 6 // "地址" | "Address"
+}
+
+message Address {
+    string street = 1 // "街道" | "Street"
+    string city = 2 // "城市" | "City"
+    string zip = 3 // "邮编" | "Zip Code"
+}
