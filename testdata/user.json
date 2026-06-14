@@ -1,0 +1,29 @@
+{
+  "schema": "bymsg/v1",
+  "package": "com.example.user",
+  "messages": {
+    "UserProfile": {
+      "fields": {
+        "id": { "type": "uint32", "tag": 1 },
+        "name": { "type": "string", "tag": 2 },
+        "email": { "type": "string", "tag": 3 },
+        "tags": { "type": "list<string>", "tag": 4 },
+        "metadata": { "type": "map<string, string>", "tag": 5 }
+      },
+      "description": { "zh": "用户资料", "en": "User Profile" }
+    },
+    "Address": {
+      "fields": {
+        "street": { "type": "string", "tag": 1 },
+        "city": { "type": "string", "tag": 2 },
+        "zip": { "type": "string", "tag": 3 }
+      }
+    }
+  },
+  "enums": {
+    "UserType": {
+      "values": { "ADMIN": 0, "USER": 1, "GUEST": 2 },
+      "description": { "zh": "用户类型", "en": "User Type" }
+    }
+  }
+}

@@ -33,18 +33,7 @@ type CompileOptions struct {
 
 // Compile compiles a schema file
 func (c *Compiler) Compile(options *CompileOptions) error {
-	data, err := os.ReadFile(options.InputFile)
-	if err != nil {
-		return fmt.Errorf("failed to read schema file: %w", err)
-	}
-
-	var s *schema.Schema
-	ext := filepath.Ext(options.InputFile)
-	if ext == ".bmsg" {
-		s, err = schema.ParseBmsg(data)
-	} else {
-		s, err = schema.Parse(data)
-	}
+	s, err := schema.ParseFile(options.InputFile)
 	if err != nil {
 		return fmt.Errorf("failed to parse schema: %w", err)
 	}
