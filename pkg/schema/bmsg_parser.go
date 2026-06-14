@@ -79,7 +79,7 @@ func ParseBmsg(data []byte) (*Schema, error) {
 			if len(parts) == 2 {
 				name := strings.TrimSpace(parts[0])
 				var value int
-				fmt.Sscanf(strings.TrimSpace(parts[1]), "%d", &value)
+				_, _ = fmt.Sscanf(strings.TrimSpace(parts[1]), "%d", &value)
 				currentEnum.Values[name] = value
 			}
 			continue
@@ -124,7 +124,7 @@ func parseBmsgField(line string) (string, *Field) {
 
 	fieldName := restParts[0]
 	var tag int
-	fmt.Sscanf(restParts[2], "%d", &tag)
+	_, _ = fmt.Sscanf(restParts[2], "%d", &tag)
 
 	return fieldName, &Field{
 		Type:        fieldType,
