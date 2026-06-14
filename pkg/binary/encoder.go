@@ -1,13 +1,35 @@
 package binary
 
 import (
+	"bytes"
 	"encoding/binary"
 	"io"
+	"sync"
 )
+
+var bufferPool = sync.Pool{
+	New: func() any { return new(bytes.Buffer) },
+}
+
+// GetBuffer gets a buffer from the pool
+func GetBuffer() *bytes.Buffer {
+	buf := bufferPool.Get().(*bytes.Buffer)
+	buf.Reset()
+	return buf
+}
+
+// PutBuffer returns a buffer to the pool
+func PutBuffer(buf *bytes.Buffer) {
+	if buf.Cap() > 64*1024 {
+		return
+	}
+	bufferPool.Put(buf)
+}
 
 // Encoder writes binary data
 type Encoder struct {
-	w io.Writer
+	w   io.Writer
+	buf [binary.MaxVarintLen64]byte
 }
 
 // NewEncoder creates a new encoder
@@ -17,9 +39,8 @@ func NewEncoder(w io.Writer) *Encoder {
 
 // WriteVarint writes a variable-length integer
 func (e *Encoder) WriteVarint(value uint64) error {
-	buf := make([]byte, binary.MaxVarintLen64)
-	n := binary.PutUvarint(buf, value)
-	_, err := e.w.Write(buf[:n])
+	n := binary.PutUvarint(e.buf[:], value)
+	_, err := e.w.Write(e.buf[:n])
 	return err
 }
 
@@ -30,11 +51,10 @@ func (e *Encoder) WriteZigzag(value int64) error {
 
 // WriteString writes a length-prefixed string
 func (e *Encoder) WriteString(s string) error {
-	data := []byte(s)
-	if err := e.WriteVarint(uint64(len(data))); err != nil {
+	if err := e.WriteVarint(uint64(len(s))); err != nil {
 		return err
 	}
-	_, err := e.w.Write(data)
+	_, err := io.WriteString(e.w, s)
 	return err
 }
 

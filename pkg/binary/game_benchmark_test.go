@@ -402,6 +402,157 @@ func makeLeaderboard() Leaderboard {
 	}
 }
 
+// ==================== 优化版编码 (buffer pool) ====================
+
+func encodeLoginPushOptimized(lp LoginPush) []byte {
+	buf := GetBuffer()
+	defer PutBuffer(buf)
+	enc := NewEncoder(buf)
+
+	pBuf := GetBuffer()
+	p := NewEncoder(pBuf)
+	p.WriteFieldHeader(1, 0); p.WriteVarint(lp.Player.Uid)
+	p.WriteFieldHeader(2, 2); p.WriteString(lp.Player.Name)
+	p.WriteFieldHeader(3, 0); p.WriteVarint(uint64(lp.Player.Level))
+	p.WriteFieldHeader(4, 0); p.WriteVarint(uint64(lp.Player.VipLevel))
+	p.WriteFieldHeader(5, 0); p.WriteVarint(uint64(lp.Player.Diamond))
+	p.WriteFieldHeader(6, 0); p.WriteVarint(lp.Player.Gold)
+	p.WriteFieldHeader(7, 0); p.WriteVarint(uint64(lp.Player.Energy))
+	p.WriteFieldHeader(8, 0); p.WriteVarint(uint64(lp.Player.Avatar))
+	p.WriteFieldHeader(9, 0); p.WriteVarint(uint64(lp.Player.GuildId))
+	p.WriteFieldHeader(10, 2); p.WriteString(lp.Player.GuildName)
+	enc.WriteFieldHeader(1, 2); enc.WriteBytes(pBuf.Bytes())
+	PutBuffer(pBuf)
+
+	hBuf := GetBuffer()
+	h := NewEncoder(hBuf)
+	h.WriteVarint(uint64(len(lp.Heroes)))
+	for _, hero := range lp.Heroes {
+		h.WriteFieldHeader(1, 0); h.WriteVarint(uint64(hero.HeroId))
+		h.WriteFieldHeader(2, 0); h.WriteVarint(uint64(hero.Level))
+		h.WriteFieldHeader(3, 0); h.WriteVarint(uint64(hero.Star))
+		h.WriteFieldHeader(4, 0); h.WriteVarint(uint64(hero.Grade))
+		h.WriteFieldHeader(5, 0); h.WriteVarint(hero.Exp)
+		sBuf := GetBuffer()
+		s := NewEncoder(sBuf)
+		s.WriteVarint(uint64(len(hero.Skills)))
+		for _, sk := range hero.Skills {
+			s.WriteFieldHeader(1, 0); s.WriteVarint(uint64(sk.SkillId))
+			s.WriteFieldHeader(2, 0); s.WriteVarint(uint64(sk.Level))
+		}
+		h.WriteFieldHeader(6, 2); h.WriteBytes(sBuf.Bytes())
+		PutBuffer(sBuf)
+		rBuf := GetBuffer()
+		r := NewEncoder(rBuf)
+		r.WriteVarint(uint64(len(hero.Runes)))
+		for k, v := range hero.Runes {
+			r.WriteVarint(uint64(k)); r.WriteVarint(uint64(v))
+		}
+		h.WriteFieldHeader(7, 2); h.WriteBytes(rBuf.Bytes())
+		PutBuffer(rBuf)
+		h.WriteFieldHeader(8, 0); h.WriteVarint(uint64(hero.SkinId))
+		h.WriteFieldHeader(9, 0); h.WriteVarint(uint64(hero.AwakeLv))
+		h.WriteFieldHeader(10, 0); h.WriteVarint(uint64(hero.FavorLv))
+		h.WriteFieldHeader(11, 0); h.WriteVarint(uint64(hero.FavorExp))
+	}
+	enc.WriteFieldHeader(2, 2); enc.WriteBytes(hBuf.Bytes())
+	PutBuffer(hBuf)
+
+	iBuf := GetBuffer()
+	it := NewEncoder(iBuf)
+	it.WriteVarint(uint64(len(lp.Items)))
+	for _, item := range lp.Items {
+		it.WriteFieldHeader(1, 0); it.WriteVarint(uint64(item.ItemId))
+		it.WriteFieldHeader(2, 0); it.WriteVarint(uint64(item.Count))
+		it.WriteFieldHeader(3, 0); it.WriteVarint(uint64(item.Level))
+		if item.Locked { it.WriteFieldHeader(4, 0); it.WriteVarint(1) }
+		it.WriteFieldHeader(5, 0); it.WriteVarint(uint64(item.Exp))
+	}
+	enc.WriteFieldHeader(3, 2); enc.WriteBytes(iBuf.Bytes())
+	PutBuffer(iBuf)
+
+	mBuf := GetBuffer()
+	m := NewEncoder(mBuf)
+	m.WriteVarint(uint64(len(lp.Mail)))
+	for _, mail := range lp.Mail {
+		m.WriteFieldHeader(1, 0); m.WriteVarint(mail.MailId)
+		m.WriteFieldHeader(2, 0); m.WriteVarint(uint64(mail.Type))
+		m.WriteFieldHeader(3, 2); m.WriteString(mail.Title)
+		if mail.Read { m.WriteFieldHeader(4, 0); m.WriteVarint(1) }
+		if mail.Taken { m.WriteFieldHeader(5, 0); m.WriteVarint(1) }
+		m.WriteFieldHeader(6, 0); m.WriteVarint(uint64(mail.SendTime))
+		if mail.HasItems { m.WriteFieldHeader(7, 0); m.WriteVarint(1) }
+	}
+	enc.WriteFieldHeader(4, 2); enc.WriteBytes(mBuf.Bytes())
+	PutBuffer(mBuf)
+
+	qBuf := GetBuffer()
+	q := NewEncoder(qBuf)
+	q.WriteVarint(uint64(len(lp.Quests)))
+	for _, quest := range lp.Quests {
+		q.WriteFieldHeader(1, 0); q.WriteVarint(uint64(quest.QuestId))
+		q.WriteFieldHeader(2, 0); q.WriteVarint(uint64(quest.Progress))
+		q.WriteFieldHeader(3, 0); q.WriteVarint(uint64(quest.Status))
+	}
+	enc.WriteFieldHeader(5, 2); enc.WriteBytes(qBuf.Bytes())
+	PutBuffer(qBuf)
+
+	enc.WriteFieldHeader(7, 0); enc.WriteVarint(uint64(lp.ServerTime))
+	return append([]byte(nil), buf.Bytes()...)
+}
+
+func encodeBattleFrameOptimized(f BattleFrame) []byte {
+	buf := GetBuffer()
+	defer PutBuffer(buf)
+	enc := NewEncoder(buf)
+	enc.WriteFieldHeader(1, 0); enc.WriteVarint(f.BattleId)
+	enc.WriteFieldHeader(2, 0); enc.WriteVarint(uint64(f.Frame))
+	enc.WriteFieldHeader(3, 0); enc.WriteVarint(uint64(f.Timestamp))
+	inBuf := GetBuffer()
+	in := NewEncoder(inBuf)
+	in.WriteVarint(uint64(len(f.Inputs)))
+	for _, input := range f.Inputs {
+		in.WriteFieldHeader(1, 0); in.WriteVarint(uint64(input.PlayerId))
+		in.WriteFieldHeader(2, 0); in.WriteVarint(uint64(input.HeroId))
+		in.WriteFieldHeader(3, 0); in.WriteVarint(uint64(input.Action))
+		in.WriteFieldHeader(4, 0); in.WriteVarint(uint64(input.SkillId))
+		in.WriteFieldHeader(5, 0); in.WriteVarint(uint64(input.TargetId))
+		in.WriteFieldHeader(6, 0); in.WriteZigzag(int64(input.X))
+		in.WriteFieldHeader(7, 0); in.WriteZigzag(int64(input.Y))
+		in.WriteFieldHeader(8, 0); in.WriteVarint(uint64(input.Dir))
+	}
+	enc.WriteFieldHeader(4, 2); enc.WriteBytes(inBuf.Bytes())
+	PutBuffer(inBuf)
+	enc.WriteFieldHeader(5, 0); enc.WriteVarint(uint64(f.RandomSeed))
+	return append([]byte(nil), buf.Bytes()...)
+}
+
+func encodeLeaderboardOptimized(lb Leaderboard) []byte {
+	buf := GetBuffer()
+	defer PutBuffer(buf)
+	enc := NewEncoder(buf)
+	enc.WriteFieldHeader(1, 0); enc.WriteVarint(uint64(lb.Type))
+	enc.WriteFieldHeader(2, 0); enc.WriteVarint(uint64(lb.Season))
+	enc.WriteFieldHeader(3, 0); enc.WriteVarint(uint64(lb.UpdatedAt))
+	eBuf := GetBuffer()
+	e := NewEncoder(eBuf)
+	e.WriteVarint(uint64(len(lb.Entries)))
+	for _, entry := range lb.Entries {
+		e.WriteFieldHeader(1, 0); e.WriteVarint(uint64(entry.Rank))
+		e.WriteFieldHeader(2, 0); e.WriteVarint(entry.PlayerId)
+		e.WriteFieldHeader(3, 2); e.WriteString(entry.Name)
+		e.WriteFieldHeader(4, 0); e.WriteVarint(uint64(entry.Level))
+		e.WriteFieldHeader(5, 0); e.WriteVarint(entry.Score)
+		e.WriteFieldHeader(6, 0); e.WriteVarint(uint64(entry.Avatar))
+		e.WriteFieldHeader(7, 2); e.WriteString(entry.Guild)
+	}
+	enc.WriteFieldHeader(4, 2); enc.WriteBytes(eBuf.Bytes())
+	PutBuffer(eBuf)
+	enc.WriteFieldHeader(5, 0); enc.WriteVarint(uint64(lb.MyRank))
+	enc.WriteFieldHeader(6, 0); enc.WriteVarint(lb.MyScore)
+	return append([]byte(nil), buf.Bytes()...)
+}
+
 // ==================== 场景测试 ====================
 
 func TestGame_LoginPush(t *testing.T) {
@@ -524,4 +675,22 @@ func BenchmarkGame_Leaderboard_Msgpack(b *testing.B) {
 	lb := makeLeaderboard()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ { msgpack.Marshal(lb) }
+}
+
+func BenchmarkGame_LoginPush_Optimized(b *testing.B) {
+	lp := makeLoginPush()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ { encodeLoginPushOptimized(lp) }
+}
+
+func BenchmarkGame_BattleFrame_Optimized(b *testing.B) {
+	f := makeBattleFrame()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ { encodeBattleFrameOptimized(f) }
+}
+
+func BenchmarkGame_Leaderboard_Optimized(b *testing.B) {
+	lb := makeLeaderboard()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ { encodeLeaderboardOptimized(lb) }
 }
