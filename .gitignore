@@ -17,6 +17,14 @@ dist/
 build/
 output/
 generated/
+*.vsix
+*.tgz
+
+# Editor extension artifacts
+editors/**/node_modules/
+editors/**/*.vsix
+editors/**/dist/
+editors/**/build/
 
 # IDE
 .idea/
