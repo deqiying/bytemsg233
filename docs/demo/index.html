@@ -976,7 +976,7 @@
           <div class="poster reveal">
             <div>
               <h2><span data-i18n="hero.title.a">Install first.</span> <span data-i18n="hero.title.b">Ship schema next.</span></h2>
-              <p class="poster-copy" data-i18n="hero.copy">bytemsg233 turns one JSON schema into native-feeling Go, C#, Java, TypeScript, Rust, and Python models with object pooling, enum helpers, localized comments, and compact binary payloads.</p>
+              <p class="poster-copy" data-i18n="hero.copy">bytemsg233 turns one JSON schema into native-feeling Go, C#, Java, TypeScript, Rust, and Python models with single-threaded pools, enum helpers, localized comments, compact binary payloads, and 0-GC hot paths.</p>
             </div>
 
             <div class="install-strip">
@@ -1077,7 +1077,7 @@ bytemsg233 export user.bmsg.json \
         <div class="language-grid">
           <article class="language-panel">
             <h3>Go</h3>
-            <p data-i18n="lang.go">Struct tags, exported fields, and `sync.Pool` style helpers.</p>
+            <p data-i18n="lang.go">Struct tags, exported fields, and single-threaded slice-stack pool helpers.</p>
             <code>hero := AcquireHero()
 defer ReleaseHero(hero)
 hero.State = HeroStateMOVING</code>
@@ -1376,7 +1376,7 @@ heroPool.return(hero)</code></pre></div>
     const i18n = {
       en: {
         "meta.title": "bytemsg233 - JSON-first binary schema toolchain",
-        "meta.description": "bytemsg233 is a JSON-first binary schema toolchain for game and client protocols, with multi-language generation, object pooling, enum helpers, and benchmark comparisons.",
+        "meta.description": "bytemsg233 is a JSON-first binary schema toolchain for game and client protocols, with multi-language generation, single-threaded pooling, enum helpers, low-allocation hot paths, and benchmark comparisons.",
         "brand.copy": "JSON-first binary schema toolchain for games, clients, and SDKs.",
         "nav.install": "Install",
         "nav.json": "JSON DSL",
@@ -1389,7 +1389,7 @@ heroPool.return(hero)</code></pre></div>
         "topline.github": "GitHub repository",
         "hero.title.a": "Install first.",
         "hero.title.b": "Ship schema next.",
-        "hero.copy": "bytemsg233 turns one JSON schema into native-feeling Go, C#, Java, TypeScript, Rust, C++, C, Kotlin, Swift, Dart, Lua, and Python models with object pooling, enum helpers, localized comments, and compact binary payloads.",
+        "hero.copy": "bytemsg233 turns one JSON schema into native-feeling Go, C#, Java, TypeScript, Rust, C++, C, Kotlin, Swift, Dart, Lua, and Python models with single-threaded pools, enum helpers, localized comments, compact binary payloads, and 0-GC hot paths.",
         "button.copy": "Copy",
         "button.copied": "Copied",
         "install.unix": "Install",
@@ -1413,7 +1413,7 @@ heroPool.return(hero)</code></pre></div>
         "rule.exports.copy": "Generate `.md` for people and `.bmsg` for legacy/future DSL tooling.",
         "languages.title": "Generated code should feel native, not translated.",
         "languages.copy": "Each target gets its own pool pattern, enum helpers, comments, and naming style. The schema is shared; the developer experience is language-specific.",
-        "lang.go": "Struct tags, exported fields, and `sync.Pool` style helpers.",
+        "lang.go": "Struct tags, exported fields, and single-threaded slice-stack pool helpers.",
         "lang.csharp": "Partial classes, XML docs, native collections, and Unity-friendly pooling.",
         "lang.java": "Javadoc, getters/setters, enum value lookup, queue-backed pooling.",
         "lang.ts": "Runtime JS plus `.d.ts`, suitable for web and frontend build systems.",
@@ -1481,7 +1481,7 @@ heroPool.return(hero)</code></pre></div>
         "topline.github": "GitHub 仓库",
         "hero.title.a": "先安装。",
         "hero.title.b": "再交付 schema。",
-        "hero.copy": "bytemsg233 把一份 JSON schema 生成 Go、C#、Java、TypeScript、Rust、C++、C、Kotlin、Swift、Dart、Lua、Python 的原生风格模型，内置对象池、enum helper、本地化注释和紧凑二进制载荷。",
+        "hero.copy": "bytemsg233 把一份 JSON schema 生成 Go、C#、Java、TypeScript、Rust、C++、C、Kotlin、Swift、Dart、Lua、Python 的原生风格模型，内置单线程对象池、enum helper、本地化注释、紧凑二进制载荷和 0-GC 热路径。",
         "button.copy": "复制",
         "button.copied": "已复制",
         "install.unix": "安装",
@@ -1505,7 +1505,7 @@ heroPool.return(hero)</code></pre></div>
         "rule.exports.copy": "生成 `.md` 给人看，生成 `.bmsg` 给 legacy 或未来 DSL 工具。",
         "languages.title": "生成代码应该像原生代码，不像翻译稿。",
         "languages.copy": "每个目标语言都有自己的池化模式、enum helper、注释和命名风格。schema 共享，开发体验按语言定制。",
-        "lang.go": "Struct tag、导出字段、接近 `sync.Pool` 风格的 helper。",
+        "lang.go": "Struct tag、导出字段、单线程 slice-stack pool helper。",
         "lang.csharp": "partial class、XML docs、原生集合，以及 Unity 友好的池化。",
         "lang.java": "Javadoc、getter/setter、enum value lookup、队列池化。",
         "lang.ts": "运行时 JS 加 `.d.ts`，适合 Web 和前端构建系统。",

@@ -42,7 +42,7 @@ foreach ($o in $osList) {
         $env:GOOS = $o
         $env:GOARCH = $a
 
-        & go build -ldflags=$ldflags -trimpath -o "$OutputDir/$binName" ./cmd/bytemsg233
+        & go build -ldflags "$ldflags" -trimpath -o "$OutputDir/$binName" ./cmd/bytemsg233
         if ($LASTEXITCODE -eq 0) {
             $size = (Get-Item "$OutputDir/$binName").Length / 1MB
             Ok "$binName ($([math]::Round($size, 2)) MB)"

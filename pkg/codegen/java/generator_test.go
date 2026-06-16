@@ -79,6 +79,12 @@ func TestJavaGenerator(t *testing.T) {
 	if !strings.Contains(userContent, "import java.util.Map;") {
 		t.Error("Expected Map import")
 	}
+	if strings.Contains(userContent, "Concurrent") || strings.Contains(userContent, "java.util.concurrent") {
+		t.Error("Java generated pool must not use concurrent collections")
+	}
+	if !strings.Contains(userContent, "private static final Deque<User> POOL = new ArrayDeque<>()") {
+		t.Error("Expected single-threaded ArrayDeque pool")
+	}
 	if !strings.Contains(userContent, "public static User acquire()") {
 		t.Error("Expected pool acquire helper")
 	}

@@ -110,8 +110,7 @@ func (g *Generator) generateClass(buf *strings.Builder, s *schema.Schema, name s
 
 	buf.WriteString(fmt.Sprintf("%spublic partial class %s\n", indentStr, name))
 	buf.WriteString(fmt.Sprintf("%s{\n", indentStr))
-	buf.WriteString(fmt.Sprintf("%s\tprivate static readonly Stack<%s> Pool = new Stack<%s>();\n", indentStr, name, name))
-	buf.WriteString(fmt.Sprintf("%s\tprivate static readonly object PoolLock = new object();\n\n", indentStr))
+	buf.WriteString(fmt.Sprintf("%s\tprivate static readonly Stack<%s> Pool = new Stack<%s>();\n\n", indentStr, name, name))
 
 	for _, fieldName := range codegen.SortedFieldNames(msg) {
 		field := msg.Fields[fieldName]
@@ -132,12 +131,9 @@ func (g *Generator) generateClass(buf *strings.Builder, s *schema.Schema, name s
 	buf.WriteString("\n")
 	buf.WriteString(fmt.Sprintf("%s\tpublic static %s Rent()\n", indentStr, name))
 	buf.WriteString(fmt.Sprintf("%s\t{\n", indentStr))
-	buf.WriteString(fmt.Sprintf("%s\t\tlock (PoolLock)\n", indentStr))
+	buf.WriteString(fmt.Sprintf("%s\t\tif (Pool.Count > 0)\n", indentStr))
 	buf.WriteString(fmt.Sprintf("%s\t\t{\n", indentStr))
-	buf.WriteString(fmt.Sprintf("%s\t\t\tif (Pool.Count > 0)\n", indentStr))
-	buf.WriteString(fmt.Sprintf("%s\t\t\t{\n", indentStr))
-	buf.WriteString(fmt.Sprintf("%s\t\t\t\treturn Pool.Pop();\n", indentStr))
-	buf.WriteString(fmt.Sprintf("%s\t\t\t}\n", indentStr))
+	buf.WriteString(fmt.Sprintf("%s\t\t\treturn Pool.Pop();\n", indentStr))
 	buf.WriteString(fmt.Sprintf("%s\t\t}\n\n", indentStr))
 	buf.WriteString(fmt.Sprintf("%s\t\treturn new %s();\n", indentStr, name))
 	buf.WriteString(fmt.Sprintf("%s\t}\n\n", indentStr))
@@ -148,12 +144,9 @@ func (g *Generator) generateClass(buf *strings.Builder, s *schema.Schema, name s
 	buf.WriteString(fmt.Sprintf("%s\t\t{\n", indentStr))
 	buf.WriteString(fmt.Sprintf("%s\t\t\treturn;\n", indentStr))
 	buf.WriteString(fmt.Sprintf("%s\t\t}\n\n", indentStr))
-	buf.WriteString(fmt.Sprintf("%s\t\tlock (PoolLock)\n", indentStr))
+	buf.WriteString(fmt.Sprintf("%s\t\twhile (Pool.Count < count)\n", indentStr))
 	buf.WriteString(fmt.Sprintf("%s\t\t{\n", indentStr))
-	buf.WriteString(fmt.Sprintf("%s\t\t\twhile (Pool.Count < count)\n", indentStr))
-	buf.WriteString(fmt.Sprintf("%s\t\t\t{\n", indentStr))
-	buf.WriteString(fmt.Sprintf("%s\t\t\t\tPool.Push(new %s());\n", indentStr, name))
-	buf.WriteString(fmt.Sprintf("%s\t\t\t}\n", indentStr))
+	buf.WriteString(fmt.Sprintf("%s\t\t\tPool.Push(new %s());\n", indentStr, name))
 	buf.WriteString(fmt.Sprintf("%s\t\t}\n", indentStr))
 	buf.WriteString(fmt.Sprintf("%s\t}\n\n", indentStr))
 
@@ -164,10 +157,7 @@ func (g *Generator) generateClass(buf *strings.Builder, s *schema.Schema, name s
 	buf.WriteString(fmt.Sprintf("%s\t\t\treturn;\n", indentStr))
 	buf.WriteString(fmt.Sprintf("%s\t\t}\n\n", indentStr))
 	buf.WriteString(fmt.Sprintf("%s\t\tvalue.Reset();\n", indentStr))
-	buf.WriteString(fmt.Sprintf("%s\t\tlock (PoolLock)\n", indentStr))
-	buf.WriteString(fmt.Sprintf("%s\t\t{\n", indentStr))
-	buf.WriteString(fmt.Sprintf("%s\t\t\tPool.Push(value);\n", indentStr))
-	buf.WriteString(fmt.Sprintf("%s\t\t}\n", indentStr))
+	buf.WriteString(fmt.Sprintf("%s\t\tPool.Push(value);\n", indentStr))
 	buf.WriteString(fmt.Sprintf("%s\t}\n\n", indentStr))
 
 	buf.WriteString(fmt.Sprintf("%s\tpublic void Release()\n", indentStr))

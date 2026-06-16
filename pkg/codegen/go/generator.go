@@ -279,25 +279,25 @@ func (g *Generator) generateMessage(buf *strings.Builder, s *schema.Schema, name
 	buf.WriteString("}\n\n")
 
 	poolName := codegen.ToCamelCase(name) + "Pool"
-	buf.WriteString(fmt.Sprintf("var %s = make(chan *%s, ByteMsgPacketPoolLimit)\n\n", poolName, name))
+	buf.WriteString(fmt.Sprintf("var %s = make([]*%s, 0, ByteMsgPacketPoolLimit)\n\n", poolName, name))
 
 	buf.WriteString(fmt.Sprintf("// Acquire%s gets a reusable %s from the pool.\n", name, name))
 	buf.WriteString(fmt.Sprintf("func Acquire%s() *%s {\n", name, name))
-	buf.WriteString("\tselect {\n")
-	buf.WriteString(fmt.Sprintf("\tcase value := <-%s:\n", poolName))
+	buf.WriteString(fmt.Sprintf("\tif n := len(%s); n > 0 {\n", poolName))
+	buf.WriteString(fmt.Sprintf("\t\tvalue := %s[n-1]\n", poolName))
+	buf.WriteString(fmt.Sprintf("\t\t%s[n-1] = nil\n", poolName))
+	buf.WriteString(fmt.Sprintf("\t\t%s = %s[:n-1]\n", poolName, poolName))
 	buf.WriteString("\t\treturn value\n")
-	buf.WriteString("\tdefault:\n")
-	buf.WriteString(fmt.Sprintf("\t\treturn &%s{}\n", name))
 	buf.WriteString("\t}\n")
+	buf.WriteString(fmt.Sprintf("\treturn &%s{}\n", name))
 	buf.WriteString("}\n\n")
 
 	buf.WriteString(fmt.Sprintf("// Release%s resets a %s and returns it to the pool.\n", name, name))
 	buf.WriteString(fmt.Sprintf("func Release%s(value *%s) {\n", name, name))
 	buf.WriteString("\tif value == nil {\n\t\treturn\n\t}\n")
 	buf.WriteString("\tvalue.Reset()\n")
-	buf.WriteString("\tselect {\n")
-	buf.WriteString(fmt.Sprintf("\tcase %s <- value:\n", poolName))
-	buf.WriteString("\tdefault:\n")
+	buf.WriteString(fmt.Sprintf("\tif len(%s) < ByteMsgPacketPoolLimit {\n", poolName))
+	buf.WriteString(fmt.Sprintf("\t\t%s = append(%s, value)\n", poolName, poolName))
 	buf.WriteString("\t}\n")
 	buf.WriteString("}\n\n")
 

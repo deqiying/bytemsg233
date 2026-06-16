@@ -35,6 +35,9 @@ Log "Version: $Version"
 if (!$SkipTest) {
     Log "Step 1/4: Running tests..."
     & pwsh scripts/test.ps1 -Coverage
+    if ($LASTEXITCODE -ne 0) {
+        throw "Tests failed"
+    }
     Ok "Tests passed"
 } else {
     Warn "Step 1/4: Tests skipped"
@@ -44,6 +47,9 @@ if (!$SkipTest) {
 if (!$SkipBuild) {
     Log "Step 2/4: Building binaries..."
     & pwsh scripts/build.ps1 -Version $Version
+    if ($LASTEXITCODE -ne 0) {
+        throw "Build failed"
+    }
     Ok "Build complete"
 } else {
     Warn "Step 2/4: Build skipped"

@@ -236,15 +236,7 @@ func TestAppendEncoder(t *testing.T) {
 }
 
 func TestBufferPoolLimit(t *testing.T) {
-	for {
-		select {
-		case <-bufferPool:
-		default:
-			goto drained
-		}
-	}
-
-drained:
+	bufferPool = bufferPool[:0]
 	for i := 0; i < ByteMsgBufferPoolLimit+1; i++ {
 		PutBuffer(new(bytes.Buffer))
 	}
@@ -252,13 +244,7 @@ drained:
 		t.Fatalf("buffer pool len = %d, want %d", len(bufferPool), ByteMsgBufferPoolLimit)
 	}
 
-	for {
-		select {
-		case <-bufferPool:
-		default:
-			return
-		}
-	}
+	bufferPool = bufferPool[:0]
 }
 
 func TestVarintCompactness(t *testing.T) {

@@ -4,7 +4,9 @@
 
 This page explains what the numbers mean, not just who wins a table.
 
-ByteMsg233 is optimized for schema-driven game and client traffic: small field headers, varint integers, zigzag signed integers, no repeated field names, and generated APIs that can reuse memory. It is not trying to beat Protobuf in every tiny microcase. The target is a practical protocol: readable schema, compact packets, native generated code, and a zero-GC hot path where the caller provides buffers and pools are prewarmed.
+ByteMsg233 is optimized for schema-driven game and client traffic: small field headers, varint integers, zigzag signed integers, no repeated field names, and generated APIs that can reuse memory. The target is a practical protocol: readable schema, compact packets, native generated code, high-throughput encode/decode on repeated DTO payloads, and a zero-GC hot path where the caller provides buffers and pools are prewarmed.
+
+The headline is intentionally modest: low allocation pressure, stable frame-time behavior, compact bytes, and strong repeated-structure throughput. Tiny packets can still favor mature specialized implementations; larger client payloads are where the design should show up most clearly.
 
 ## How To Read The Tables
 
@@ -51,29 +53,30 @@ These values are duration. Lower `ns/op` is better.
 
 | Scenario | ByteMsg233 | Protobuf | JSON | MessagePack |
 |---|---:|---:|---:|---:|
-| Player profile | 140 | **90** | 387 | 513 |
-| Chat message | 154 | **107** | 317 | 375 |
-| ChatDto all types | **161** | 632 | 1214 | 1291 |
-| Battle input | **979** | 2030 | 2836 | 3994 |
-| Leaderboard | **9277** | 26729 | 21990 | 52826 |
+| Player profile | **137.8** | 139.1 | 390.0 | 477.3 |
+| Chat message | 143.4 | **89.6** | 281.9 | 337.4 |
+| ChatDto all types | **249.8** | 1005 | 2175 | 2266 |
+| Battle input | **822.6** | 1681 | 2228 | 3513 |
+| TaskDto list, 100 rows | **3231** | 23374 | 27944 | 46550 |
+| Leaderboard | **7367** | 23444 | 17085 | 39710 |
 
 The same ChatDto result as throughput. Higher `ops/s` is better.
 
 | Codec | Encode ops/s | Decode ops/s |
 |---|---:|---:|
-| ByteMsg233 | **6195787** | 919963 |
-| Protobuf | 1583030 | **1891790** |
-| JSON | 823723 | 223914 |
-| MessagePack | 774593 | 667111 |
+| ByteMsg233 | **4003203** | 493097 |
+| Protobuf | 995025 | **914077** |
+| JSON | 459770 | 151630 |
+| MessagePack | 441306 | 444050 |
 
 ChatDto relative view:
 
 | Codec | Encode duration | Decode duration | Encode throughput | Decode throughput |
 |---|---:|---:|---:|---:|
-| ByteMsg233 | **0.25x Protobuf** | 2.05x Protobuf | **3.91x Protobuf** | 0.49x Protobuf |
-| Protobuf | 3.93x ByteMsg233 | **0.49x ByteMsg233** | 0.26x ByteMsg233 | **2.06x ByteMsg233** |
-| JSON | 7.54x ByteMsg233 | 8.44x Protobuf | 0.13x ByteMsg233 | 0.12x Protobuf |
-| MessagePack | 8.02x ByteMsg233 | 2.83x Protobuf | 0.13x ByteMsg233 | 0.35x Protobuf |
+| ByteMsg233 | **0.25x Protobuf** | 1.85x Protobuf | **4.02x Protobuf** | 0.54x Protobuf |
+| Protobuf | 4.02x ByteMsg233 | **0.54x ByteMsg233** | 0.25x ByteMsg233 | **1.85x ByteMsg233** |
+| JSON | 8.71x ByteMsg233 | 6.03x Protobuf | 0.11x ByteMsg233 | 0.17x Protobuf |
+| MessagePack | 9.07x ByteMsg233 | 2.06x Protobuf | 0.11x ByteMsg233 | 0.49x Protobuf |
 
 Interpretation:
 
@@ -81,6 +84,7 @@ Interpretation:
 - ByteMsg233 encode uses the append hot path: caller-owned buffer, precomputed nested sizes, no temporary nested buffers, `0 B/op`.
 - ByteMsg233 pulls ahead when repeated structures dominate.
 - JSON and MessagePack pay for dynamic object shape and field-name-heavy data.
+- The performance goal for generated decode is the same shape: reusable state, caller-owned storage where practical, and no hot-path GC after pool prewarm.
 
 ## Decode Speed
 
@@ -88,31 +92,35 @@ Decode numbers are a baseline. Generated fast paths and pool-aware decoders are 
 
 | Scenario | ByteMsg233 | Protobuf | JSON | MessagePack |
 |---|---:|---:|---:|---:|
-| Player profile | 279 | **104** | 1636 | 612 |
-| Chat message | 224 | **86** | 969 | 349 |
-| ChatDto all types | 1087 | **529** | 4466 | 1499 |
-| Battle input | 1001 | - | 172 | **90** |
+| Player profile | 226.9 | **88.7** | 1345 | 552.5 |
+| Chat message | 198.0 | **79.1** | 764.8 | 279.4 |
+| ChatDto all types | 2028 | **1094** | 6595 | 2252 |
+| Battle input | 889.1 | - | 156.4 | **70.6** |
 
 ## Allocations
 
 Allocations are where game clients feel pain: a small per-packet allocation can become a frame-time spike when repeated thousands of times.
 
-### Encode
+### Encode (`B/op`, `allocs/op`)
 
 | Scenario | ByteMsg233 | Protobuf | JSON | MessagePack |
 |---|---:|---:|---:|---:|
-| Player profile | 2 | 3 | 1 | 4 |
-| Battle input | 2 | 36 | 2 | 7 |
-| Leaderboard | 2 | 394 | 2 | 11 |
+| Player profile | **64, 1** | 104, 3 | 176, 1 | 496, 4 |
+| ChatDto all types | **0, 0** | 1328, 22 | 1282, 11 | 2323, 7 |
+| Battle input | **288, 2** | 1560, 36 | 1177, 2 | 2059, 7 |
+| TaskDto list, 100 rows | **0, 0** | 23160, 410 | 16446, 2 | 32830, 11 |
+| Leaderboard | **3488, 2** | 22136, 394 | 9773, 2 | 32830, 11 |
 
-### Decode
+### Decode (`B/op`, `allocs/op`)
 
 | Scenario | ByteMsg233 | Protobuf | JSON | MessagePack |
 |---|---:|---:|---:|---:|
-| Player profile | 5 | 2 | 4 | 1 |
-| Chat message | 5 | 2 | 4 | 1 |
+| Player profile | 128, 5 | **40, 2** | 216, 4 | 48, 1 |
+| Chat message | 160, 5 | **56, 2** | 216, 4 | 48, 1 |
+| ChatDto all types | 1536, 56 | 752, 26 | 600, 28 | **296, 18** |
+| Battle input | **48, 1** | - | 144, 1 | **48, 1** |
 
-Generated object pools are separate from these raw codec benchmark numbers. They reduce application-level churn after code generation, especially in Unity-style gameplay code and client update loops.
+Generated object pools are separate from these raw codec benchmark numbers. They reduce application-level churn after code generation, especially in Unity-style gameplay code and client update loops. Runtime pools are single-threaded and lock-free by policy so hot-path memory reuse stays predictable.
 
 For hot-path encode code, prefer caller-owned buffers. `AppendEncoder` is the zero-GC path for preallocated byte slices:
 

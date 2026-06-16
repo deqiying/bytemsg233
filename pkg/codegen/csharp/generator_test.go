@@ -89,6 +89,12 @@ func TestCSharpGenerator(t *testing.T) {
 	if !strings.Contains(content, "private static readonly Stack<UserProfile> Pool = new Stack<UserProfile>()") {
 		t.Error("Expected Stack-backed Unity-friendly pool")
 	}
+	if strings.Contains(content, "Concurrent") {
+		t.Error("C# generated pool must not use concurrent collections")
+	}
+	if strings.Contains(content, "PoolLock") || strings.Contains(content, "lock (") {
+		t.Error("C# generated pool must stay single-threaded without locks")
+	}
 	if !strings.Contains(content, "public static void Return(UserProfile value)") {
 		t.Error("Expected pool return helper")
 	}

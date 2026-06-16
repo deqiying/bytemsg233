@@ -329,27 +329,13 @@ func TestGeneratedEmptyPacketZeroAlloc(t *testing.T) {
 }
 
 func TestGeneratedPacketPoolLimit(t *testing.T) {
-	for {
-		select {
-		case <-playerPool:
-		default:
-			goto drained
-		}
-	}
-
-drained:
+	playerPool = playerPool[:0]
 	for i := 0; i < ByteMsgPacketPoolLimit+1; i++ {
 		ReleasePlayer(&Player{Id: uint64(i)})
 	}
 	if len(playerPool) != ByteMsgPacketPoolLimit {
 		t.Fatalf("player pool len = %d, want %d", len(playerPool), ByteMsgPacketPoolLimit)
 	}
-	for {
-		select {
-		case <-playerPool:
-		default:
-			return
-		}
-	}
+	playerPool = playerPool[:0]
 }
 `

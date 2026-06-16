@@ -8,17 +8,18 @@ import (
 
 const ByteMsgBufferPoolLimit = 10000
 
-var bufferPool = make(chan *bytes.Buffer, ByteMsgBufferPoolLimit)
+var bufferPool = make([]*bytes.Buffer, 0, ByteMsgBufferPoolLimit)
 
 // GetBuffer gets a buffer from the pool
 func GetBuffer() *bytes.Buffer {
-	select {
-	case buf := <-bufferPool:
+	if n := len(bufferPool); n > 0 {
+		buf := bufferPool[n-1]
+		bufferPool[n-1] = nil
+		bufferPool = bufferPool[:n-1]
 		buf.Reset()
 		return buf
-	default:
-		return new(bytes.Buffer)
 	}
+	return new(bytes.Buffer)
 }
 
 // PutBuffer returns a buffer to the pool
@@ -30,9 +31,8 @@ func PutBuffer(buf *bytes.Buffer) {
 		return
 	}
 	buf.Reset()
-	select {
-	case bufferPool <- buf:
-	default:
+	if len(bufferPool) < ByteMsgBufferPoolLimit {
+		bufferPool = append(bufferPool, buf)
 	}
 }
 

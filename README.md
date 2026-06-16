@@ -21,6 +21,8 @@ bytemsg233 version
 
 The short version: JSON replaces `.proto`; generated code should not feel like Protobuf.
 
+Performance posture is deliberately practical: compact binary payloads, high-throughput generated encode/decode, very low memory churn, and 0-GC hot paths when callers use preallocated buffers plus prewarmed pools. Repeated game and business DTO workloads are the main optimization target.
+
 ## Quick Start
 
 ```bash
@@ -93,6 +95,8 @@ Enums, lists, maps, and comments are first-class:
 For complex data, reference another message class by name instead of nesting message structures inline. That keeps packets readable and keeps generated classes pool-friendly.
 
 YAML is still supported for teams that prefer it, and legacy `.bmsg` can be exported for future tooling experiments. The main authoring path is `.bmsg.json`.
+
+Runtime libraries and generated encode/decode hot paths are single-threaded by design. Pools use caller-owned or local stack/list storage only: no locks, no concurrent collections, no channels, no goroutines, no thread pools, and no hidden background work.
 
 ## Generated API Shape
 

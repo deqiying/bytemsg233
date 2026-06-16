@@ -56,11 +56,12 @@ func (g *Generator) writePackage(buf *strings.Builder, packageName string) {
 }
 
 func (g *Generator) writeMessageImports(buf *strings.Builder) {
+	buf.WriteString("import java.util.ArrayDeque;\n")
 	buf.WriteString("import java.util.ArrayList;\n")
+	buf.WriteString("import java.util.Deque;\n")
 	buf.WriteString("import java.util.HashMap;\n")
 	buf.WriteString("import java.util.List;\n")
-	buf.WriteString("import java.util.Map;\n")
-	buf.WriteString("import java.util.concurrent.ConcurrentLinkedQueue;\n\n")
+	buf.WriteString("import java.util.Map;\n\n")
 }
 
 func (g *Generator) generateEnum(buf *strings.Builder, name string, enum *schema.Enum) {
@@ -120,7 +121,7 @@ func (g *Generator) generateClass(buf *strings.Builder, s *schema.Schema, name s
 	}
 
 	buf.WriteString(fmt.Sprintf("public class %s {\n", name))
-	buf.WriteString(fmt.Sprintf("\tprivate static final ConcurrentLinkedQueue<%s> POOL = new ConcurrentLinkedQueue<>();\n\n", name))
+	buf.WriteString(fmt.Sprintf("\tprivate static final Deque<%s> POOL = new ArrayDeque<>();\n\n", name))
 
 	for _, fieldName := range codegen.SortedFieldNames(msg) {
 		field := msg.Fields[fieldName]
@@ -137,8 +138,7 @@ func (g *Generator) generateClass(buf *strings.Builder, s *schema.Schema, name s
 
 	buf.WriteString("\n")
 	buf.WriteString(fmt.Sprintf("\tpublic static %s acquire() {\n", name))
-	buf.WriteString(fmt.Sprintf("\t\t%s value = POOL.poll();\n", name))
-	buf.WriteString(fmt.Sprintf("\t\treturn value != null ? value : new %s();\n", name))
+	buf.WriteString(fmt.Sprintf("\t\treturn POOL.isEmpty() ? new %s() : POOL.pop();\n", name))
 	buf.WriteString("\t}\n\n")
 
 	buf.WriteString(fmt.Sprintf("\tpublic static void release(%s value) {\n", name))
@@ -146,7 +146,7 @@ func (g *Generator) generateClass(buf *strings.Builder, s *schema.Schema, name s
 	buf.WriteString("\t\t\treturn;\n")
 	buf.WriteString("\t\t}\n")
 	buf.WriteString("\t\tvalue.reset();\n")
-	buf.WriteString("\t\tPOOL.offer(value);\n")
+	buf.WriteString("\t\tPOOL.push(value);\n")
 	buf.WriteString("\t}\n\n")
 
 	buf.WriteString("\tpublic void release() {\n")

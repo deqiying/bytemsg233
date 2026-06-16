@@ -40,6 +40,8 @@ Every target must support normal allocation and pool usage:
 
 Hot-path encode/decode must prefer caller-provided buffers and reusable decoder state. Pretty string and debug helpers may allocate, but they must stay outside the hot path.
 
+Target language runtimes and generated encode/decode code are single-threaded. Pool helpers must use plain stack/list/arena storage owned by the caller or runtime instance. Do not add locks, concurrent collections, channels, goroutines, atomics, thread pools, or background workers to runtime hot paths.
+
 ## Export Names
 
 Single-file exports default to `ByteMsg233_Export` plus the target extension:

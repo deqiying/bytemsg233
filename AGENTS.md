@@ -8,6 +8,8 @@
 
 - bytemsg233 runtime and generated hot-path code must target ultra-high performance.
 - Serialization/deserialization hot paths should aim for zero GC / zero allocation where practical.
+- Target language runtime libraries and generated encode/decode paths must be single-threaded and lock-free.
+- Do not use concurrency primitives in target runtime or generated hot paths: no goroutines, channels, `sync.Pool`, mutexes, locks, `Concurrent*` collections, `synchronized`, thread pools, atomics, or background workers.
 - Prefer caller-provided buffers, append-style APIs, object pools, stack values, and reusable decoder state.
 - Prefer `AppendEncoder` for zero-GC byte-slice hot paths and `BufferEncoder` for concrete `bytes.Buffer` hot paths.
 - Do not add reflection, maps, JSON, fmt-heavy formatting, or heap-heavy helpers to hot paths.
