@@ -67,6 +67,26 @@ func (d *Decoder) ReadBytes() ([]byte, error) {
 	return buf, nil
 }
 
+// ReadFixed32 reads a fixed-width 32-bit little-endian value.
+func (d *Decoder) ReadFixed32() (uint32, error) {
+	var buf [4]byte
+	_, err := io.ReadFull(d.r, buf[:])
+	if err != nil {
+		return 0, err
+	}
+	return binary.LittleEndian.Uint32(buf[:]), nil
+}
+
+// ReadFixed64 reads a fixed-width 64-bit little-endian value.
+func (d *Decoder) ReadFixed64() (uint64, error) {
+	var buf [8]byte
+	_, err := io.ReadFull(d.r, buf[:])
+	if err != nil {
+		return 0, err
+	}
+	return binary.LittleEndian.Uint64(buf[:]), nil
+}
+
 // ReadFieldHeader reads a field header (tag + wire type)
 func (d *Decoder) ReadFieldHeader() (tag int, wireType int, err error) {
 	v, err := d.ReadVarint()

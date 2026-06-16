@@ -126,6 +126,35 @@ func TestFieldHeaderEncoding(t *testing.T) {
 	}
 }
 
+func TestFixedEncoding(t *testing.T) {
+	var buf bytes.Buffer
+	enc := NewEncoderValue(&buf)
+
+	if err := enc.WriteFixed32(0x12345678); err != nil {
+		t.Fatalf("WriteFixed32 failed: %v", err)
+	}
+	if err := enc.WriteFixed64(0x0102030405060708); err != nil {
+		t.Fatalf("WriteFixed64 failed: %v", err)
+	}
+
+	dec := NewDecoder(bytes.NewReader(buf.Bytes()))
+	value32, err := dec.ReadFixed32()
+	if err != nil {
+		t.Fatalf("ReadFixed32 failed: %v", err)
+	}
+	if value32 != 0x12345678 {
+		t.Fatalf("ReadFixed32() = %#x, want %#x", value32, uint32(0x12345678))
+	}
+
+	value64, err := dec.ReadFixed64()
+	if err != nil {
+		t.Fatalf("ReadFixed64 failed: %v", err)
+	}
+	if value64 != 0x0102030405060708 {
+		t.Fatalf("ReadFixed64() = %#x, want %#x", value64, uint64(0x0102030405060708))
+	}
+}
+
 func TestVarintCompactness(t *testing.T) {
 	var buf bytes.Buffer
 	enc := NewEncoder(&buf)

@@ -1,6 +1,9 @@
 package gocodegen
 
 import (
+	"os"
+	"os/exec"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -123,3 +126,171 @@ func TestGoGeneratorNestedTypes(t *testing.T) {
 		t.Error("Expected Metadata map[string]string")
 	}
 }
+
+func TestGoGeneratorEnumOnlyImportsFmt(t *testing.T) {
+	gen := New()
+	s := &schema.Schema{
+		Version:  "bymsg/v1",
+		Package:  "enumonly",
+		Messages: map[string]*schema.Message{},
+		Enums: map[string]*schema.Enum{
+			"Status": {
+				Values: map[string]int{
+					"UNKNOWN": 0,
+					"OK":      1,
+				},
+			},
+		},
+	}
+
+	files, err := gen.Generate(s, &codegen.GenerateOptions{})
+	if err != nil {
+		t.Fatalf("Generate failed: %v", err)
+	}
+	content := string(files[0].Content)
+	if !strings.Contains(content, "import \"fmt\"") {
+		t.Fatalf("enum-only generated code must import fmt:\n%s", content)
+	}
+}
+
+func TestGeneratedGoCodeCompilesAndRoundTrips(t *testing.T) {
+	gen := New()
+	s := &schema.Schema{
+		Version: "bymsg/v1",
+		Package: "protocol",
+		Messages: map[string]*schema.Message{
+			"Empty": {
+				PacketID: 1001,
+				Fields:   map[string]*schema.Field{},
+			},
+			"Inner": {
+				Fields: map[string]*schema.Field{
+					"score": {Type: "int32", Tag: 1},
+					"label": {Type: "string", Tag: 2},
+				},
+			},
+			"Player": {
+				PacketID: 1002,
+				Fields: map[string]*schema.Field{
+					"id":      {Type: "uint64", Tag: 1},
+					"active":  {Type: "bool", Tag: 2},
+					"power":   {Type: "float64", Tag: 3},
+					"mood":    {Type: "PlayerMood", Tag: 4},
+					"tags":    {Type: "list<string>", Tag: 5},
+					"attrs":   {Type: "map<string, uint32>", Tag: 6},
+					"nested":  {Type: "map<string, list<uint32>>", Tag: 7},
+					"inner":   {Type: "Inner", Tag: 8},
+					"inners":  {Type: "list<Inner>", Tag: 9},
+					"payload": {Type: "bytes", Tag: 10},
+				},
+			},
+		},
+		Enums: map[string]*schema.Enum{
+			"PlayerMood": {
+				Values: map[string]int{
+					"UNKNOWN": 0,
+					"HAPPY":   1,
+					"ANGRY":   2,
+				},
+			},
+		},
+	}
+
+	files, err := gen.Generate(s, &codegen.GenerateOptions{})
+	if err != nil {
+		t.Fatalf("Generate failed: %v", err)
+	}
+
+	tmpDir := t.TempDir()
+	repoRoot, err := filepath.Abs(filepath.Join("..", "..", ".."))
+	if err != nil {
+		t.Fatalf("resolve repo root: %v", err)
+	}
+	writeFile(t, filepath.Join(tmpDir, "go.mod"), "module generatedcheck\n\ngo 1.26\n\nrequire github.com/neko233-com/bytemsg233 v0.0.0\n\nreplace github.com/neko233-com/bytemsg233 => "+filepath.ToSlash(repoRoot)+"\n")
+	writeFile(t, filepath.Join(tmpDir, "types.go"), string(files[0].Content))
+	writeFile(t, filepath.Join(tmpDir, "types_test.go"), generatedGoRoundTripTest)
+
+	cmd := exec.Command("go", "test", "./...")
+	cmd.Dir = tmpDir
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("generated code test failed: %v\n%s", err, output)
+	}
+}
+
+func writeFile(t *testing.T, path string, content string) {
+	t.Helper()
+	if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
+		t.Fatalf("write %s: %v", path, err)
+	}
+}
+
+const generatedGoRoundTripTest = `package protocol
+
+import (
+	"bytes"
+	"reflect"
+	"testing"
+)
+
+func TestGeneratedRoundTripAndRegistry(t *testing.T) {
+	source := &Player{
+		Id: 42,
+		Active: true,
+		Power: 12.5,
+		Mood: PlayerMoodHappy,
+		Tags: []string{"alpha", "beta"},
+		Attrs: map[string]uint32{"level": 7, "vip": 2},
+		Nested: map[string][]uint32{"rewards": {1, 2, 3}},
+		Inner: Inner{Score: -9, Label: "core"},
+		Inners: []Inner{{Score: 1, Label: "a"}, {Score: -2, Label: "b"}},
+		Payload: []byte{1, 2, 3},
+	}
+
+	var buf bytes.Buffer
+	if err := source.MarshalByteMsgTo(&buf); err != nil {
+		t.Fatalf("marshal: %v", err)
+	}
+
+	target := AcquirePlayer()
+	defer ReleasePlayer(target)
+	if err := target.UnmarshalByteMsg(buf.Bytes()); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	if !reflect.DeepEqual(source, target) {
+		t.Fatalf("roundtrip mismatch:\nsource=%#v\ntarget=%#v", source, target)
+	}
+
+	packet, ok := AcquireByteMsgPacketById(1002)
+	if !ok {
+		t.Fatalf("packet id 1002 not registered")
+	}
+	if _, ok := packet.(*Player); !ok {
+		t.Fatalf("packet id 1002 type = %T, want *Player", packet)
+	}
+	if !ReleaseByteMsgPacket(1002, packet) {
+		t.Fatalf("release packet id 1002 failed")
+	}
+}
+
+func TestGeneratedEmptyPacketZeroAlloc(t *testing.T) {
+	packet := AcquireEmpty()
+	defer ReleaseEmpty(packet)
+
+	allocs := testing.AllocsPerRun(1000, func() {
+		var buf bytes.Buffer
+		if err := packet.MarshalByteMsgTo(&buf); err != nil {
+			panic(err)
+		}
+		if buf.Len() != 0 {
+			panic("empty packet encoded bytes")
+		}
+		if err := packet.UnmarshalByteMsg(nil); err != nil {
+			panic(err)
+		}
+	})
+	if allocs != 0 {
+		t.Fatalf("empty packet MarshalByteMsgTo/UnmarshalByteMsg allocs = %v, want 0", allocs)
+	}
+}
+`

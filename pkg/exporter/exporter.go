@@ -129,7 +129,9 @@ func Bmsg(s *schema.Schema) []byte {
 			field := msg.Fields[fieldName]
 			buf.WriteString(fmt.Sprintf("    %s %s = %d", field.Type, fieldName, field.Tag))
 			if field.Description != nil {
-				buf.WriteString(fmt.Sprintf(" // %q | %q", field.Description.Zh, field.Description.En))
+				if desc := bmsgInlineDescription(field.Description); desc != "" {
+					buf.WriteString(fmt.Sprintf(" // %s", desc))
+				}
 			}
 			buf.WriteString("\n")
 		}
@@ -225,7 +227,17 @@ func inlineMarkdown(value string) string {
 }
 
 func descriptionLine(desc *schema.Description) string {
-	return fmt.Sprintf("> zh: %s\n>\n> en: %s\n", desc.Zh, desc.En)
+	lines := make([]string, 0, 2)
+	if desc.Zh != "" {
+		lines = append(lines, fmt.Sprintf("> zh: %s", desc.Zh))
+	}
+	if desc.En != "" {
+		lines = append(lines, fmt.Sprintf("> en: %s", desc.En))
+	}
+	if len(lines) == 0 {
+		return ""
+	}
+	return strings.Join(lines, "\n") + "\n"
 }
 
 func inlineDescription(desc *schema.Description) string {
@@ -236,6 +248,17 @@ func inlineDescription(desc *schema.Description) string {
 		return desc.Zh
 	}
 	return desc.En
+}
+
+func bmsgInlineDescription(desc *schema.Description) string {
+	parts := make([]string, 0, 2)
+	if desc.Zh != "" {
+		parts = append(parts, desc.Zh)
+	}
+	if desc.En != "" {
+		parts = append(parts, desc.En)
+	}
+	return strings.Join(parts, " | ")
 }
 
 func fieldKind(s *schema.Schema, fieldType string) string {

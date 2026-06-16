@@ -37,6 +37,11 @@ func NewEncoder(w io.Writer) *Encoder {
 	return &Encoder{w: w}
 }
 
+// NewEncoderValue creates an encoder value that can stay on the caller stack.
+func NewEncoderValue(w io.Writer) Encoder {
+	return Encoder{w: w}
+}
+
 // WriteVarint writes a variable-length integer
 func (e *Encoder) WriteVarint(value uint64) error {
 	n := binary.PutUvarint(e.buf[:], value)
@@ -64,6 +69,22 @@ func (e *Encoder) WriteBytes(data []byte) error {
 		return err
 	}
 	_, err := e.w.Write(data)
+	return err
+}
+
+// WriteFixed32 writes a fixed-width 32-bit little-endian value.
+func (e *Encoder) WriteFixed32(value uint32) error {
+	var buf [4]byte
+	binary.LittleEndian.PutUint32(buf[:], value)
+	_, err := e.w.Write(buf[:])
+	return err
+}
+
+// WriteFixed64 writes a fixed-width 64-bit little-endian value.
+func (e *Encoder) WriteFixed64(value uint64) error {
+	var buf [8]byte
+	binary.LittleEndian.PutUint64(buf[:], value)
+	_, err := e.w.Write(buf[:])
 	return err
 }
 
