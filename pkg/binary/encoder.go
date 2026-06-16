@@ -237,6 +237,37 @@ func (e *AppendEncoder) WriteFieldHeader(tag int, wireType int) error {
 	return e.WriteVarint(uint64(tag<<3 | wireType))
 }
 
+// AppendVarint appends a variable-length integer to dst.
+func AppendVarint(dst []byte, value uint64) []byte {
+	for value >= 0x80 {
+		dst = append(dst, byte(value)|0x80)
+		value >>= 7
+	}
+	return append(dst, byte(value))
+}
+
+// AppendZigzag appends a zigzag-encoded integer to dst.
+func AppendZigzag(dst []byte, value int64) []byte {
+	return AppendVarint(dst, ZigzagEncode(value))
+}
+
+// AppendString appends a length-prefixed string to dst.
+func AppendString(dst []byte, value string) []byte {
+	dst = AppendVarint(dst, uint64(len(value)))
+	return append(dst, value...)
+}
+
+// AppendBytes appends length-prefixed bytes to dst.
+func AppendBytes(dst []byte, value []byte) []byte {
+	dst = AppendVarint(dst, uint64(len(value)))
+	return append(dst, value...)
+}
+
+// AppendFieldHeader appends a field header (tag + wire type) to dst.
+func AppendFieldHeader(dst []byte, tag int, wireType int) []byte {
+	return AppendVarint(dst, uint64(tag<<3|wireType))
+}
+
 // ZigzagEncode converts int64 to uint64 using zigzag encoding
 func ZigzagEncode(value int64) uint64 {
 	return uint64((value << 1) ^ (value >> 63))

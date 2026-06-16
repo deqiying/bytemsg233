@@ -235,6 +235,75 @@ func TestAppendEncoder(t *testing.T) {
 	}
 }
 
+func TestAppendAndSliceDecoder(t *testing.T) {
+	var data []byte
+	data = AppendFieldHeader(data, 1, 0)
+	data = AppendVarint(data, 300)
+	data = AppendFieldHeader(data, 2, 2)
+	data = AppendString(data, "Hello, 世界!")
+	data = AppendFieldHeader(data, 3, 0)
+	data = AppendZigzag(data, -42)
+	data = AppendFieldHeader(data, 4, 2)
+	data = AppendBytes(data, []byte{0x01, 0x02, 0xff})
+
+	dec := NewSliceDecoder(data)
+	tag, wt, err := dec.ReadFieldHeader()
+	if err != nil || tag != 1 || wt != 0 {
+		t.Fatalf("field 1 header = (%d, %d, %v), want (1, 0, nil)", tag, wt, err)
+	}
+	u, err := dec.ReadVarint()
+	if err != nil || u != 300 {
+		t.Fatalf("field 1 value = (%d, %v), want (300, nil)", u, err)
+	}
+
+	tag, wt, err = dec.ReadFieldHeader()
+	if err != nil || tag != 2 || wt != 2 {
+		t.Fatalf("field 2 header = (%d, %d, %v), want (2, 2, nil)", tag, wt, err)
+	}
+	s, err := dec.ReadString()
+	if err != nil || s != "Hello, 世界!" {
+		t.Fatalf("field 2 value = (%q, %v), want string", s, err)
+	}
+
+	tag, wt, err = dec.ReadFieldHeader()
+	if err != nil || tag != 3 || wt != 0 {
+		t.Fatalf("field 3 header = (%d, %d, %v), want (3, 0, nil)", tag, wt, err)
+	}
+	i, err := dec.ReadZigzag()
+	if err != nil || i != -42 {
+		t.Fatalf("field 3 value = (%d, %v), want (-42, nil)", i, err)
+	}
+
+	tag, wt, err = dec.ReadFieldHeader()
+	if err != nil || tag != 4 || wt != 2 {
+		t.Fatalf("field 4 header = (%d, %d, %v), want (4, 2, nil)", tag, wt, err)
+	}
+	b, err := dec.ReadBytes()
+	if err != nil || !bytes.Equal(b, []byte{0x01, 0x02, 0xff}) {
+		t.Fatalf("field 4 value = (%v, %v), want bytes", b, err)
+	}
+	if !dec.EOF() {
+		t.Fatalf("decoder has %d bytes remaining", dec.Remaining())
+	}
+}
+
+func TestSliceDecoderReadStringView(t *testing.T) {
+	var data []byte
+	data = AppendString(data, "zero-copy")
+
+	dec := NewSliceDecoder(data)
+	value, err := dec.ReadStringView()
+	if err != nil {
+		t.Fatalf("ReadStringView failed: %v", err)
+	}
+	if value != "zero-copy" {
+		t.Fatalf("ReadStringView() = %q, want zero-copy", value)
+	}
+	if !dec.EOF() {
+		t.Fatalf("decoder has %d bytes remaining", dec.Remaining())
+	}
+}
+
 func TestBufferPoolLimit(t *testing.T) {
 	bufferPool = bufferPool[:0]
 	for i := 0; i < ByteMsgBufferPoolLimit+1; i++ {

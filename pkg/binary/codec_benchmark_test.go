@@ -233,34 +233,32 @@ func benchMakeTasks(count int) []BenchTaskDto {
 // ==================== ByteMsg233 编码/解码 ====================
 
 func encodePlayerBmsg(p BenchPlayer) []byte {
-	buf := GetBuffer()
-	defer PutBuffer(buf)
-	enc := NewBufferEncoderValue(buf)
-	enc.WriteFieldHeader(1, 0)
-	enc.WriteVarint(p.Uid)
-	enc.WriteFieldHeader(2, 2)
-	enc.WriteString(p.Name)
-	enc.WriteFieldHeader(3, 0)
-	enc.WriteVarint(uint64(p.Level))
-	enc.WriteFieldHeader(4, 0)
-	enc.WriteVarint(uint64(p.VipLevel))
-	enc.WriteFieldHeader(5, 0)
-	enc.WriteVarint(uint64(p.Diamond))
-	enc.WriteFieldHeader(6, 0)
-	enc.WriteVarint(p.Gold)
-	enc.WriteFieldHeader(7, 0)
-	enc.WriteVarint(uint64(p.Energy))
-	enc.WriteFieldHeader(8, 0)
-	enc.WriteVarint(uint64(p.Avatar))
-	enc.WriteFieldHeader(9, 0)
-	enc.WriteVarint(uint64(p.GuildId))
-	enc.WriteFieldHeader(10, 2)
-	enc.WriteString(p.GuildName)
-	return append([]byte(nil), buf.Bytes()...)
+	buf := make([]byte, 0, 64)
+	buf = AppendFieldHeader(buf, 1, 0)
+	buf = AppendVarint(buf, p.Uid)
+	buf = AppendFieldHeader(buf, 2, 2)
+	buf = AppendString(buf, p.Name)
+	buf = AppendFieldHeader(buf, 3, 0)
+	buf = AppendVarint(buf, uint64(p.Level))
+	buf = AppendFieldHeader(buf, 4, 0)
+	buf = AppendVarint(buf, uint64(p.VipLevel))
+	buf = AppendFieldHeader(buf, 5, 0)
+	buf = AppendVarint(buf, uint64(p.Diamond))
+	buf = AppendFieldHeader(buf, 6, 0)
+	buf = AppendVarint(buf, p.Gold)
+	buf = AppendFieldHeader(buf, 7, 0)
+	buf = AppendVarint(buf, uint64(p.Energy))
+	buf = AppendFieldHeader(buf, 8, 0)
+	buf = AppendVarint(buf, uint64(p.Avatar))
+	buf = AppendFieldHeader(buf, 9, 0)
+	buf = AppendVarint(buf, uint64(p.GuildId))
+	buf = AppendFieldHeader(buf, 10, 2)
+	buf = AppendString(buf, p.GuildName)
+	return buf
 }
 
 func decodePlayerBmsg(data []byte) BenchPlayer {
-	dec := NewDecoder(bytes.NewReader(data))
+	dec := NewSliceDecoder(data)
 	var p BenchPlayer
 	for {
 		tag, wt, err := dec.ReadFieldHeader()
@@ -272,7 +270,7 @@ func decodePlayerBmsg(data []byte) BenchPlayer {
 			v, _ := dec.ReadVarint()
 			p.Uid = v
 		case tag == 2 && wt == 2:
-			v, _ := dec.ReadString()
+			v, _ := dec.ReadStringView()
 			p.Name = v
 		case tag == 3 && wt == 0:
 			v, _ := dec.ReadVarint()
@@ -296,7 +294,7 @@ func decodePlayerBmsg(data []byte) BenchPlayer {
 			v, _ := dec.ReadVarint()
 			p.GuildId = uint32(v)
 		case tag == 10 && wt == 2:
-			v, _ := dec.ReadString()
+			v, _ := dec.ReadStringView()
 			p.GuildName = v
 		default:
 			return p
@@ -306,24 +304,22 @@ func decodePlayerBmsg(data []byte) BenchPlayer {
 }
 
 func encodeChatBmsg2(c BenchChatMsg) []byte {
-	buf := GetBuffer()
-	defer PutBuffer(buf)
-	enc := NewEncoder(buf)
-	enc.WriteFieldHeader(1, 0)
-	enc.WriteVarint(uint64(c.Channel))
-	enc.WriteFieldHeader(2, 0)
-	enc.WriteVarint(uint64(c.SenderId))
-	enc.WriteFieldHeader(3, 2)
-	enc.WriteString(c.Sender)
-	enc.WriteFieldHeader(4, 2)
-	enc.WriteString(c.Content)
-	enc.WriteFieldHeader(5, 0)
-	enc.WriteVarint(c.Time)
-	return append([]byte(nil), buf.Bytes()...)
+	buf := make([]byte, 0, 64)
+	buf = AppendFieldHeader(buf, 1, 0)
+	buf = AppendVarint(buf, uint64(c.Channel))
+	buf = AppendFieldHeader(buf, 2, 0)
+	buf = AppendVarint(buf, uint64(c.SenderId))
+	buf = AppendFieldHeader(buf, 3, 2)
+	buf = AppendString(buf, c.Sender)
+	buf = AppendFieldHeader(buf, 4, 2)
+	buf = AppendString(buf, c.Content)
+	buf = AppendFieldHeader(buf, 5, 0)
+	buf = AppendVarint(buf, c.Time)
+	return buf
 }
 
 func decodeChatBmsg(data []byte) BenchChatMsg {
-	dec := NewDecoder(bytes.NewReader(data))
+	dec := NewSliceDecoder(data)
 	var c BenchChatMsg
 	for {
 		tag, wt, err := dec.ReadFieldHeader()
@@ -338,10 +334,10 @@ func decodeChatBmsg(data []byte) BenchChatMsg {
 			v, _ := dec.ReadVarint()
 			c.SenderId = uint32(v)
 		case tag == 3 && wt == 2:
-			v, _ := dec.ReadString()
+			v, _ := dec.ReadStringView()
 			c.Sender = v
 		case tag == 4 && wt == 2:
-			v, _ := dec.ReadString()
+			v, _ := dec.ReadStringView()
 			c.Content = v
 		case tag == 5 && wt == 0:
 			v, _ := dec.ReadVarint()
@@ -720,7 +716,7 @@ func encodeStringMapBmsg(values map[string]string) []byte {
 }
 
 func decodeChatDtoBmsg(data []byte) BenchChatDto {
-	dec := NewDecoder(bytes.NewReader(data))
+	dec := NewSliceDecoder(data)
 	var c BenchChatDto
 	for {
 		tag, wt, err := dec.ReadFieldHeader()
@@ -734,12 +730,12 @@ func decodeChatDtoBmsg(data []byte) BenchChatDto {
 			v, _ := dec.ReadVarint()
 			c.Channel = uint32(v)
 		case tag == 3 && wt == 2:
-			v, _ := dec.ReadBytes()
+			v, _ := dec.ReadBytesView()
 			c.Sender = decodeChatSenderBmsg(v)
 		case tag == 4 && wt == 2:
-			c.Content, _ = dec.ReadString()
+			c.Content, _ = dec.ReadStringView()
 		case tag == 5 && wt == 2:
-			c.Lang, _ = dec.ReadString()
+			c.Lang, _ = dec.ReadStringView()
 		case tag == 6 && wt == 0:
 			c.CreatedAt, _ = dec.ReadZigzag()
 		case tag == 7 && wt == 0:
@@ -755,21 +751,21 @@ func decodeChatDtoBmsg(data []byte) BenchChatDto {
 			v, _ := dec.ReadFixed64()
 			c.Score = math.Float64frombits(v)
 		case tag == 11 && wt == 2:
-			c.Raw, _ = dec.ReadBytes()
+			c.Raw, _ = dec.ReadBytesView()
 		case tag == 12 && wt == 2:
-			v, _ := dec.ReadBytes()
+			v, _ := dec.ReadBytesView()
 			c.Tags = decodeStringListBmsg(v)
 		case tag == 13 && wt == 2:
-			v, _ := dec.ReadBytes()
+			v, _ := dec.ReadBytesView()
 			c.Mentions = decodeUint64ListBmsg(v)
 		case tag == 14 && wt == 2:
-			v, _ := dec.ReadBytes()
+			v, _ := dec.ReadBytesView()
 			c.Args = decodeStringMapBmsg(v)
 		case tag == 15 && wt == 2:
-			v, _ := dec.ReadBytes()
+			v, _ := dec.ReadBytesView()
 			c.Items = decodeChatItemsBmsg(v)
 		case tag == 16 && wt == 2:
-			v, _ := dec.ReadBytes()
+			v, _ := dec.ReadBytesView()
 			c.Reply = decodeChatReplyBmsg(v)
 		default:
 			return c
@@ -779,7 +775,7 @@ func decodeChatDtoBmsg(data []byte) BenchChatDto {
 }
 
 func decodeChatSenderBmsg(data []byte) BenchChatSender {
-	dec := NewDecoder(bytes.NewReader(data))
+	dec := NewSliceDecoder(data)
 	var s BenchChatSender
 	for {
 		tag, wt, err := dec.ReadFieldHeader()
@@ -790,7 +786,7 @@ func decodeChatSenderBmsg(data []byte) BenchChatSender {
 		case tag == 1 && wt == 0:
 			s.Uid, _ = dec.ReadVarint()
 		case tag == 2 && wt == 2:
-			s.Name, _ = dec.ReadString()
+			s.Name, _ = dec.ReadStringView()
 		case tag == 3 && wt == 0:
 			v, _ := dec.ReadVarint()
 			s.Level = uint32(v)
@@ -798,7 +794,7 @@ func decodeChatSenderBmsg(data []byte) BenchChatSender {
 			v, _ := dec.ReadVarint()
 			s.Vip = uint32(v)
 		case tag == 5 && wt == 2:
-			s.Guild, _ = dec.ReadString()
+			s.Guild, _ = dec.ReadStringView()
 		case tag == 6 && wt == 0:
 			v, _ := dec.ReadVarint()
 			s.Online = v != 0
@@ -810,7 +806,7 @@ func decodeChatSenderBmsg(data []byte) BenchChatSender {
 }
 
 func decodeChatReplyBmsg(data []byte) BenchChatReply {
-	dec := NewDecoder(bytes.NewReader(data))
+	dec := NewSliceDecoder(data)
 	var r BenchChatReply
 	for {
 		tag, wt, err := dec.ReadFieldHeader()
@@ -821,7 +817,7 @@ func decodeChatReplyBmsg(data []byte) BenchChatReply {
 		case tag == 1 && wt == 0:
 			r.MsgId, _ = dec.ReadVarint()
 		case tag == 2 && wt == 2:
-			r.Summary, _ = dec.ReadString()
+			r.Summary, _ = dec.ReadStringView()
 		default:
 			return r
 		}
@@ -830,18 +826,18 @@ func decodeChatReplyBmsg(data []byte) BenchChatReply {
 }
 
 func decodeChatItemsBmsg(data []byte) []BenchChatItem {
-	dec := NewDecoder(bytes.NewReader(data))
+	dec := NewSliceDecoder(data)
 	count, _ := dec.ReadVarint()
 	items := make([]BenchChatItem, 0, count)
 	for i := uint64(0); i < count; i++ {
-		raw, _ := dec.ReadBytes()
+		raw, _ := dec.ReadBytesView()
 		items = append(items, decodeChatItemBmsg(raw))
 	}
 	return items
 }
 
 func decodeChatItemBmsg(data []byte) BenchChatItem {
-	dec := NewDecoder(bytes.NewReader(data))
+	dec := NewSliceDecoder(data)
 	var item BenchChatItem
 	for {
 		tag, wt, err := dec.ReadFieldHeader()
@@ -866,18 +862,18 @@ func decodeChatItemBmsg(data []byte) BenchChatItem {
 }
 
 func decodeStringListBmsg(data []byte) []string {
-	dec := NewDecoder(bytes.NewReader(data))
+	dec := NewSliceDecoder(data)
 	count, _ := dec.ReadVarint()
 	values := make([]string, 0, count)
 	for i := uint64(0); i < count; i++ {
-		value, _ := dec.ReadString()
+		value, _ := dec.ReadStringView()
 		values = append(values, value)
 	}
 	return values
 }
 
 func decodeUint64ListBmsg(data []byte) []uint64 {
-	dec := NewDecoder(bytes.NewReader(data))
+	dec := NewSliceDecoder(data)
 	count, _ := dec.ReadVarint()
 	values := make([]uint64, 0, count)
 	for i := uint64(0); i < count; i++ {
@@ -888,63 +884,59 @@ func decodeUint64ListBmsg(data []byte) []uint64 {
 }
 
 func decodeStringMapBmsg(data []byte) map[string]string {
-	dec := NewDecoder(bytes.NewReader(data))
+	dec := NewSliceDecoder(data)
 	count, _ := dec.ReadVarint()
 	values := make(map[string]string, count)
 	for i := uint64(0); i < count; i++ {
-		key, _ := dec.ReadString()
-		value, _ := dec.ReadString()
+		key, _ := dec.ReadStringView()
+		value, _ := dec.ReadStringView()
 		values[key] = value
 	}
 	return values
 }
 
 func encodeInputsBmsg(inputs []BenchBattleInput) []byte {
-	buf := GetBuffer()
-	defer PutBuffer(buf)
-	enc := NewEncoder(buf)
-	enc.WriteVarint(uint64(len(inputs)))
+	buf := make([]byte, 0, 256)
+	buf = AppendVarint(buf, uint64(len(inputs)))
 	for _, in := range inputs {
-		enc.WriteFieldHeader(1, 0)
-		enc.WriteVarint(uint64(in.PlayerId))
-		enc.WriteFieldHeader(2, 0)
-		enc.WriteVarint(uint64(in.HeroId))
-		enc.WriteFieldHeader(3, 0)
-		enc.WriteVarint(uint64(in.Action))
-		enc.WriteFieldHeader(4, 0)
-		enc.WriteVarint(uint64(in.SkillId))
-		enc.WriteFieldHeader(5, 0)
-		enc.WriteVarint(uint64(in.TargetId))
-		enc.WriteFieldHeader(6, 0)
-		enc.WriteZigzag(int64(in.X))
-		enc.WriteFieldHeader(7, 0)
-		enc.WriteZigzag(int64(in.Y))
-		enc.WriteFieldHeader(8, 0)
-		enc.WriteVarint(uint64(in.Dir))
+		buf = AppendFieldHeader(buf, 1, 0)
+		buf = AppendVarint(buf, uint64(in.PlayerId))
+		buf = AppendFieldHeader(buf, 2, 0)
+		buf = AppendVarint(buf, uint64(in.HeroId))
+		buf = AppendFieldHeader(buf, 3, 0)
+		buf = AppendVarint(buf, uint64(in.Action))
+		buf = AppendFieldHeader(buf, 4, 0)
+		buf = AppendVarint(buf, uint64(in.SkillId))
+		buf = AppendFieldHeader(buf, 5, 0)
+		buf = AppendVarint(buf, uint64(in.TargetId))
+		buf = AppendFieldHeader(buf, 6, 0)
+		buf = AppendZigzag(buf, int64(in.X))
+		buf = AppendFieldHeader(buf, 7, 0)
+		buf = AppendZigzag(buf, int64(in.Y))
+		buf = AppendFieldHeader(buf, 8, 0)
+		buf = AppendVarint(buf, uint64(in.Dir))
 	}
-	return append([]byte(nil), buf.Bytes()...)
+	return buf
 }
 
 func encodeLeaderboardBmsg2(entries []BenchRankEntry) []byte {
-	buf := GetBuffer()
-	defer PutBuffer(buf)
-	enc := NewEncoder(buf)
-	enc.WriteVarint(uint64(len(entries)))
+	buf := make([]byte, 0, 4096)
+	buf = AppendVarint(buf, uint64(len(entries)))
 	for _, e := range entries {
-		enc.WriteFieldHeader(1, 0)
-		enc.WriteVarint(uint64(e.Rank))
-		enc.WriteFieldHeader(2, 0)
-		enc.WriteVarint(e.PlayerId)
-		enc.WriteFieldHeader(3, 2)
-		enc.WriteString(e.Name)
-		enc.WriteFieldHeader(4, 0)
-		enc.WriteVarint(uint64(e.Level))
-		enc.WriteFieldHeader(5, 0)
-		enc.WriteVarint(e.Score)
-		enc.WriteFieldHeader(6, 2)
-		enc.WriteString(e.Guild)
+		buf = AppendFieldHeader(buf, 1, 0)
+		buf = AppendVarint(buf, uint64(e.Rank))
+		buf = AppendFieldHeader(buf, 2, 0)
+		buf = AppendVarint(buf, e.PlayerId)
+		buf = AppendFieldHeader(buf, 3, 2)
+		buf = AppendString(buf, e.Name)
+		buf = AppendFieldHeader(buf, 4, 0)
+		buf = AppendVarint(buf, uint64(e.Level))
+		buf = AppendFieldHeader(buf, 5, 0)
+		buf = AppendVarint(buf, e.Score)
+		buf = AppendFieldHeader(buf, 6, 2)
+		buf = AppendString(buf, e.Guild)
 	}
-	return append([]byte(nil), buf.Bytes()...)
+	return buf
 }
 
 func encodeTasksBmsg(tasks []BenchTaskDto) []byte {
@@ -1879,7 +1871,7 @@ func BenchmarkDecode_Battle_ByteMsg233(b *testing.B) {
 	data := encodeInputsBmsg(benchMakeBattleInputs())
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		dec := NewDecoder(bytes.NewReader(data))
+		dec := NewSliceDecoder(data)
 		cnt, _ := dec.ReadVarint()
 		for j := uint64(0); j < cnt; j++ {
 			for {

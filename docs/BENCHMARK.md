@@ -1,12 +1,12 @@
 # Performance
 
-> Go benchmark snapshot · Windows amd64 · AMD Ryzen 9 9950X
+> Go benchmark snapshot · Windows amd64 · AMD Ryzen 9 7900X3D
 
 This page explains what the numbers mean, not just who wins a table.
 
 ByteMsg233 is optimized for schema-driven game and client traffic: small field headers, varint integers, zigzag signed integers, no repeated field names, and generated APIs that can reuse memory. The target is a practical protocol: readable schema, compact packets, native generated code, high-throughput encode/decode on repeated DTO payloads, and a zero-GC hot path where the caller provides buffers and pools are prewarmed.
 
-The headline is intentionally modest: low allocation pressure, stable frame-time behavior, compact bytes, and strong repeated-structure throughput. Tiny packets can still favor mature specialized implementations; larger client payloads are where the design should show up most clearly.
+The headline is straightforward: the Go fast path now beats the Protobuf wire helper baselines in every Protobuf comparison in this suite, while keeping allocation pressure low and repeated client payloads compact.
 
 ## How To Read The Tables
 
@@ -47,55 +47,55 @@ Savings versus other codecs:
 
 ## Encode Speed
 
-Tiny packets are where mature libraries like Protobuf can still win. Bigger repeated structures are where ByteMsg233 becomes more interesting.
+Tiny packets and repeated structures both use the ByteMsg233 fast path in this snapshot.
 
 These values are duration. Lower `ns/op` is better.
 
 | Scenario | ByteMsg233 | Protobuf | JSON | MessagePack |
 |---|---:|---:|---:|---:|
-| Player profile | **137.8** | 139.1 | 390.0 | 477.3 |
-| Chat message | 143.4 | **89.6** | 281.9 | 337.4 |
-| ChatDto all types | **249.8** | 1005 | 2175 | 2266 |
-| Battle input | **822.6** | 1681 | 2228 | 3513 |
-| TaskDto list, 100 rows | **3231** | 23374 | 27944 | 46550 |
-| Leaderboard | **7367** | 23444 | 17085 | 39710 |
+| Player profile | **38.2** | 92.6 | 269.0 | 375.0 |
+| Chat message | **30.1** | 71.0 | 191.9 | 229.8 |
+| ChatDto all types | **254.8** | 1322 | 1695 | 1497 |
+| Battle input | **181.7** | 1286 | 2007 | 2674 |
+| TaskDto list, 100 rows | **3319** | 14699 | 24965 | 28419 |
+| Leaderboard | **1938** | 14193 | 15822 | 21406 |
 
 The same ChatDto result as throughput. Higher `ops/s` is better.
 
 | Codec | Encode ops/s | Decode ops/s |
 |---|---:|---:|
-| ByteMsg233 | **4003203** | 493097 |
-| Protobuf | 995025 | **914077** |
-| JSON | 459770 | 151630 |
-| MessagePack | 441306 | 444050 |
+| ByteMsg233 | **3924647** | **1676165** |
+| Protobuf | 756430 | 801282 |
+| JSON | 589971 | 127340 |
+| MessagePack | 668003 | 385802 |
 
 ChatDto relative view:
 
 | Codec | Encode duration | Decode duration | Encode throughput | Decode throughput |
 |---|---:|---:|---:|---:|
-| ByteMsg233 | **0.25x Protobuf** | 1.85x Protobuf | **4.02x Protobuf** | 0.54x Protobuf |
-| Protobuf | 4.02x ByteMsg233 | **0.54x ByteMsg233** | 0.25x ByteMsg233 | **1.85x ByteMsg233** |
-| JSON | 8.71x ByteMsg233 | 6.03x Protobuf | 0.11x ByteMsg233 | 0.17x Protobuf |
-| MessagePack | 9.07x ByteMsg233 | 2.06x Protobuf | 0.11x ByteMsg233 | 0.49x Protobuf |
+| ByteMsg233 | **0.19x Protobuf** | **0.48x Protobuf** | **5.19x Protobuf** | **2.09x Protobuf** |
+| Protobuf | 5.19x ByteMsg233 | 2.09x ByteMsg233 | 0.19x ByteMsg233 | 0.48x ByteMsg233 |
+| JSON | 6.65x ByteMsg233 | 6.29x Protobuf | 0.15x ByteMsg233 | 0.16x Protobuf |
+| MessagePack | 5.88x ByteMsg233 | 2.08x Protobuf | 0.17x ByteMsg233 | 0.48x Protobuf |
 
 Interpretation:
 
-- Protobuf is still excellent on tiny decode cases.
-- ByteMsg233 encode uses the append hot path: caller-owned buffer, precomputed nested sizes, no temporary nested buffers, `0 B/op`.
-- ByteMsg233 pulls ahead when repeated structures dominate.
+- ByteMsg233 simple DTO encode uses append helpers; complex generated-style DTO encode uses caller-owned buffers and precomputed nested sizes.
+- ByteMsg233 decode uses `SliceDecoder` and zero-copy string/bytes views for immutable payload buffers.
+- In this suite, ByteMsg233 is faster than Protobuf for every measured Protobuf encode/decode comparison.
 - JSON and MessagePack pay for dynamic object shape and field-name-heavy data.
-- The performance goal for generated decode is the same shape: reusable state, caller-owned storage where practical, and no hot-path GC after pool prewarm.
+- The performance goal for generated decode is reusable state, caller-owned storage where practical, and low hot-path GC after pool prewarm.
 
 ## Decode Speed
 
-Decode numbers are a baseline. Generated fast paths and pool-aware decoders are expected to improve this area.
+Decode uses the slice fast path. Lower `ns/op` is better.
 
 | Scenario | ByteMsg233 | Protobuf | JSON | MessagePack |
 |---|---:|---:|---:|---:|
-| Player profile | 226.9 | **88.7** | 1345 | 552.5 |
-| Chat message | 198.0 | **79.1** | 764.8 | 279.4 |
-| ChatDto all types | 2028 | **1094** | 6595 | 2252 |
-| Battle input | 889.1 | - | 156.4 | **70.6** |
+| Player profile | **52.0** | 111.8 | 1609 | 576.8 |
+| Chat message | **29.4** | 93.0 | 914.9 | 351.9 |
+| ChatDto all types | **596.6** | 1248 | 7853 | 2592 |
+| Battle input | 382.7 | - | 161.3 | **93.4** |
 
 ## Allocations
 
@@ -107,18 +107,18 @@ Allocations are where game clients feel pain: a small per-packet allocation can 
 |---|---:|---:|---:|---:|
 | Player profile | **64, 1** | 104, 3 | 176, 1 | 496, 4 |
 | ChatDto all types | **0, 0** | 1328, 22 | 1282, 11 | 2323, 7 |
-| Battle input | **288, 2** | 1560, 36 | 1177, 2 | 2059, 7 |
+| Battle input | **256, 1** | 1560, 36 | 1177, 2 | 2058, 7 |
 | TaskDto list, 100 rows | **0, 0** | 23160, 410 | 16446, 2 | 32830, 11 |
-| Leaderboard | **3488, 2** | 22136, 394 | 9773, 2 | 32830, 11 |
+| Leaderboard | **4096, 1** | 22136, 394 | 9766, 2 | 32809, 11 |
 
 ### Decode (`B/op`, `allocs/op`)
 
 | Scenario | ByteMsg233 | Protobuf | JSON | MessagePack |
 |---|---:|---:|---:|---:|
-| Player profile | 128, 5 | **40, 2** | 216, 4 | 48, 1 |
-| Chat message | 160, 5 | **56, 2** | 216, 4 | 48, 1 |
-| ChatDto all types | 1536, 56 | 752, 26 | 600, 28 | **296, 18** |
-| Battle input | **48, 1** | - | 144, 1 | **48, 1** |
+| Player profile | **0, 0** | 40, 2 | 216, 4 | 48, 1 |
+| Chat message | **0, 0** | 56, 2 | 216, 4 | 48, 1 |
+| ChatDto all types | **432, 5** | 752, 26 | 600, 28 | 296, 18 |
+| Battle input | **0, 0** | - | 144, 1 | 48, 1 |
 
 Generated object pools are separate from these raw codec benchmark numbers. They reduce application-level churn after code generation, especially in Unity-style gameplay code and client update loops. Runtime pools are single-threaded and lock-free by policy so hot-path memory reuse stays predictable.
 

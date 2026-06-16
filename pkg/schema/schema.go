@@ -1,6 +1,6 @@
 package schema
 
-// Schema represents a complete ByteMsg schema file.
+// Schema represents a complete ByteMsg233 schema file.
 type Schema struct {
 	Version  string              `yaml:"schema" json:"schema"`
 	Package  string              `yaml:"package" json:"package"`

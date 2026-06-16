@@ -55,15 +55,15 @@ bytemsg233/
 │       └── i18n_test.go               # i18n tests
 ├── runtime/
 │   ├── go/
-│   │   └── bytemsg.go                 # Go runtime library
+│   │   └── ByteMsg233.go                 # Go runtime library
 │   ├── csharp/
-│   │   └── ByteMsg.cs                 # C# runtime library
+│   │   └── ByteMsg233.cs                 # C# runtime library
 │   ├── java/
-│   │   └── ByteMsg.java              # Java runtime library
+│   │   └── ByteMsg233.java              # Java runtime library
 │   ├── typescript/
-│   │   └── bytemsg.ts                 # TypeScript runtime library
+│   │   └── ByteMsg233.ts                 # TypeScript runtime library
 │   └── python/
-│       └── bytemsg.py                 # Python runtime library
+│       └── ByteMsg233.py                 # Python runtime library
 ├── scripts/
 │   ├── install.sh                     # macOS/Linux one-click install
 │   └── install.ps1                    # Windows one-click install
@@ -228,7 +228,7 @@ import (
 
 func TestParseSchema(t *testing.T) {
 	yamlContent := `
-schema: bytemsg/v1
+schema: ByteMsg233/v1
 package: com.example.user
 
 messages:
@@ -263,8 +263,8 @@ enums:
 		t.Fatalf("Parse failed: %v", err)
 	}
 
-	if schema.Version != "bytemsg/v1" {
-		t.Errorf("Expected version 'bytemsg/v1', got '%s'", schema.Version)
+	if schema.Version != "ByteMsg233/v1" {
+		t.Errorf("Expected version 'ByteMsg233/v1', got '%s'", schema.Version)
 	}
 
 	if schema.Package != "com.example.user" {
@@ -315,7 +315,7 @@ enums:
 
 func TestParseNestedTypes(t *testing.T) {
 	yamlContent := `
-schema: bytemsg/v1
+schema: ByteMsg233/v1
 package: com.example.test
 
 messages:
@@ -1209,7 +1209,7 @@ func TestGoGenerator(t *testing.T) {
 	}
 
 	s := &schema.Schema{
-		Version: "bytemsg/v1",
+		Version: "ByteMsg233/v1",
 		Package: "user",
 		Messages: map[string]*schema.Message{
 			"UserProfile": {
@@ -1271,7 +1271,7 @@ func TestGoGeneratorWithI18n(t *testing.T) {
 	gen := New()
 
 	s := &schema.Schema{
-		Version: "bytemsg/v1",
+		Version: "ByteMsg233/v1",
 		Package: "user",
 		Messages: map[string]*schema.Message{
 			"UserProfile": {
@@ -1519,7 +1519,7 @@ func TestCSharpGenerator(t *testing.T) {
 	}
 
 	s := &schema.Schema{
-		Version: "bytemsg/v1",
+		Version: "ByteMsg233/v1",
 		Package: "Example.User",
 		Messages: map[string]*schema.Message{
 			"UserProfile": {
@@ -1798,7 +1798,7 @@ func TestTypeScriptGenerator(t *testing.T) {
 	}
 
 	s := &schema.Schema{
-		Version: "bytemsg/v1",
+		Version: "ByteMsg233/v1",
 		Package: "user",
 		Messages: map[string]*schema.Message{
 			"UserProfile": {
@@ -2231,7 +2231,7 @@ import (
 func TestJavaGenerator(t *testing.T) {
 	gen := New()
 	s := &schema.Schema{
-		Version: "bytemsg/v1",
+		Version: "ByteMsg233/v1",
 		Package: "com.example",
 		Messages: map[string]*schema.Message{
 			"User": {Fields: map[string]*schema.Field{
@@ -2267,7 +2267,7 @@ import (
 func TestPythonGenerator(t *testing.T) {
 	gen := New()
 	s := &schema.Schema{
-		Version: "bytemsg/v1",
+		Version: "ByteMsg233/v1",
 		Package: "user",
 		Messages: map[string]*schema.Message{
 			"User": {Fields: map[string]*schema.Field{
@@ -2330,7 +2330,7 @@ func TestCompiler(t *testing.T) {
 
 	// Create test schema file
 	schemaContent := `
-schema: bytemsg/v1
+schema: ByteMsg233/v1
 package: test
 
 messages:
@@ -2370,7 +2370,7 @@ func TestCompilerMultipleLanguages(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	schemaContent := `
-schema: bytemsg/v1
+schema: ByteMsg233/v1
 package: test
 
 messages:
@@ -2925,7 +2925,7 @@ git commit -m "test: add integration tests for CLI commands"
 - [ ] **Step 1: Create test schema file**
 
 ```yaml
-schema: bytemsg/v1
+schema: ByteMsg233/v1
 package: com.example.user
 
 messages:
@@ -3055,7 +3055,7 @@ bytemsg233 compile myapp.bmsg.yaml --lang go --lang csharp --lang typescript
 ### Schema Example
 
 ```yaml
-schema: bytemsg/v1
+schema: ByteMsg233/v1
 package: com.example
 
 messages:
@@ -3955,7 +3955,7 @@ git commit -m "feat: implement single-file .bmsg parser for agent-first workflow
         }
         .bar.protobuf { background: #ef4444; height: 0; }
         .bar.json { background: #f59e0b; height: 0; }
-        .bar.bytemsg { background: var(--success); height: 0; }
+        .bar.ByteMsg233 { background: var(--success); height: 0; }
         .bar-label { margin-top: 0.5rem; font-size: 0.85rem; color: var(--muted); }
         .bar-size { font-size: 1.2rem; font-weight: bold; margin-top: 0.3rem; }
 
@@ -4073,7 +4073,7 @@ git commit -m "feat: implement single-file .bmsg parser for agent-first workflow
 <span class="comment">// common.proto — 再一个文件</span>
 <span class="comment">// agent 需要解析 import 链...</span></pre>
         </div>
-        <div class="code-block" data-label="ByteMsg — 单文件 .bmsg">
+        <div class="code-block" data-label="ByteMsg233 — 单文件 .bmsg">
             <pre><span class="comment">// user.bmsg — 一切在此</span>
 <span class="highlight">schema:</span> bymsg/v1
 <span class="highlight">package:</span> com.example
@@ -4158,8 +4158,8 @@ git commit -m "feat: implement single-file .bmsg parser for agent-first workflow
             <div class="bar-size">160 B</div>
         </div>
         <div class="size-bar">
-            <div class="bar bytemsg" id="bar-bmsg" style="height:140px"></div>
-            <div class="bar-label">ByteMsg</div>
+            <div class="bar ByteMsg233" id="bar-bmsg" style="height:140px"></div>
+            <div class="bar-label">ByteMsg233</div>
             <div class="bar-size">70 B</div>
         </div>
     </div>

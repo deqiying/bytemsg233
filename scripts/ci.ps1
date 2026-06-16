@@ -44,7 +44,7 @@ Write-Host "  $coverLine"
 
 # 4. Size comparison
 Log "Step 4/6: Size comparison..."
-& go test ./pkg/binary/... -run "TestSizeComparison" -v 2>&1 | Select-String "(bytes|节省|ByteMsg|Protobuf|MsgPack|JSON)"
+& go test ./pkg/binary/... -run "TestSizeComparison" -v 2>&1 | Select-String "(bytes|节省|ByteMsg233|Protobuf|MsgPack|JSON)"
 
 # 5. Build
 Log "Step 5/6: Cross-platform build..."

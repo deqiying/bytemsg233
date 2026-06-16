@@ -1,4 +1,4 @@
-# bytemsg233
+# ByteMsg233
 
 ## Install
 
@@ -17,11 +17,15 @@ go install github.com/neko233-com/bytemsg233/cmd/bytemsg233@latest
 bytemsg233 version
 ```
 
-`bytemsg233` is a JSON-first binary schema toolchain for games, clients, and SDKs. It uses `.bmsg.json` as the protocol description DSL, generates native-feeling code, and keeps runtime libraries copyable into real projects even when package registry publishing is not available.
+**ByteMsg233** is a JSON-first binary schema toolchain for games, clients, and SDKs. It uses `.bmsg.json` as the protocol description DSL, generates native-feeling code, and keeps runtime libraries copyable into real projects even when package registry publishing is not available.
 
 The short version: JSON replaces `.proto`; generated code should not feel like Protobuf.
 
 Performance posture is deliberately practical: compact binary payloads, high-throughput generated encode/decode, very low memory churn, and 0-GC hot paths when callers use preallocated buffers plus prewarmed pools. Repeated game and business DTO workloads are the main optimization target.
+
+## Naming Standard
+
+The product and protocol brand is **ByteMsg233**. Documentation, generated protocol docs, benchmarks, UI labels, and release copy must use `ByteMsg233` as the display name. The lowercase `bytemsg233` spelling is reserved for the CLI command, Go module path, package names, repository names, and file paths.
 
 ## Quick Start
 
@@ -83,7 +87,7 @@ Top-level JSON keys are message names. Reserved keys such as `schema`, `package`
 }
 ```
 
-Only three things matter for fields: field name, type, and optional comment. `tag` is optional; when omitted, bytemsg233 assigns tags from JSON field order. `packetId` is optional and belongs on the message, which matches game protocol routing.
+Only three things matter for fields: field name, type, and optional comment. `tag` is optional; when omitted, ByteMsg233 assigns tags from JSON field order. `packetId` is optional and belongs on the message, which matches game protocol routing.
 
 Enums, lists, maps, and comments are first-class:
 

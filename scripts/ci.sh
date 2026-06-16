@@ -50,7 +50,7 @@ fi
 
 # 4. Size comparison
 log "Step 4/6: Size comparison..."
-go test ./pkg/binary/... -run "TestSizeComparison" -v 2>&1 | grep -E "(bytes|节省|ByteMsg|Protobuf|MsgPack|JSON)" || true
+go test ./pkg/binary/... -run "TestSizeComparison" -v 2>&1 | grep -E "(bytes|节省|ByteMsg233|Protobuf|MsgPack|JSON)" || true
 
 # 5. Build all platforms
 log "Step 5/6: Cross-platform build..."
