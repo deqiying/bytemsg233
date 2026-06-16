@@ -4,6 +4,13 @@
 
 - caveman full: 精简、专业但完整。
 
+## Docs Policy
+
+- Documentation updates that affect GitHub Docs must update every checked-in HTML page under `docs/`, including `docs/index.html` and `docs/demo/index.html`.
+- Markdown docs and HTML docs must stay consistent on product naming, benchmark numbers, install commands, and release-facing claims.
+- HTML docs are for human readers only. Do not include agent instructions, implementation plans, prompts, or internal workflow guidance in `docs/**/*.html`.
+- Put agent-facing guidance in `AGENTS.md` or developer-only Markdown docs, not public HTML.
+
 ## Performance Policy
 
 - bytemsg233 runtime and generated hot-path code must target ultra-high performance.
