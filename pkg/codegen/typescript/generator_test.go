@@ -15,9 +15,10 @@ func TestTypeScriptGenerator(t *testing.T) {
 		Package: "user",
 		Messages: map[string]*schema.Message{
 			"UserProfile": {
+				Description: &schema.Description{En: "User profile"},
 				Fields: map[string]*schema.Field{
-					"id":   {Type: "uint32", Tag: 1},
-					"name": {Type: "string", Tag: 2},
+					"id":   {Type: "uint32", Tag: 1, Description: &schema.Description{En: "User ID"}},
+					"name": {Type: "string", Tag: 2, Description: &schema.Description{En: "Display name"}},
 				},
 			},
 		},
@@ -34,17 +35,41 @@ func TestTypeScriptGenerator(t *testing.T) {
 	}
 
 	content := string(files[0].Content)
-	if !strings.Contains(content, "export interface UserProfile") {
-		t.Error("Expected UserProfile interface")
+	if !strings.Contains(content, "class ByteMsgObjectPool") {
+		t.Error("Expected shared object pool helper")
 	}
-	if !strings.Contains(content, "id: number") {
+	if !strings.Contains(content, "export class UserProfile") {
+		t.Error("Expected UserProfile class")
+	}
+	if !strings.Contains(content, "/** User profile */") {
+		t.Error("Expected class comment")
+	}
+	if !strings.Contains(content, "/** User ID */") {
+		t.Error("Expected field comment")
+	}
+	if !strings.Contains(content, "id: number = 0;") {
 		t.Error("Expected id: number")
 	}
-	if !strings.Contains(content, "name: string") {
+	if !strings.Contains(content, "name: string = \"\";") {
 		t.Error("Expected name: string")
 	}
 	if !strings.Contains(content, "export enum UserType") {
 		t.Error("Expected UserType enum")
+	}
+	if !strings.Contains(content, "export namespace UserType") {
+		t.Error("Expected enum namespace helper")
+	}
+	if !strings.Contains(content, "export function fromValue(value: number): UserType") {
+		t.Error("Expected enum fromValue helper")
+	}
+	if !strings.Contains(content, "static acquire(init?: Partial<UserProfile>): UserProfile") {
+		t.Error("Expected acquire helper")
+	}
+	if !strings.Contains(content, "release(): void") {
+		t.Error("Expected release helper")
+	}
+	if !strings.Contains(content, "reset(): void") {
+		t.Error("Expected reset method")
 	}
 }
 

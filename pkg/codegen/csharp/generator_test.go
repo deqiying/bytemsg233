@@ -20,9 +20,10 @@ func TestCSharpGenerator(t *testing.T) {
 		Package: "Example.User",
 		Messages: map[string]*schema.Message{
 			"UserProfile": {
+				Description: &schema.Description{En: "User profile"},
 				Fields: map[string]*schema.Field{
-					"id":   {Type: "uint32", Tag: 1},
-					"name": {Type: "string", Tag: 2},
+					"id":   {Type: "uint32", Tag: 1, Description: &schema.Description{En: "User ID"}},
+					"name": {Type: "string", Tag: 2, Description: &schema.Description{En: "Display name"}},
 				},
 			},
 		},
@@ -46,8 +47,14 @@ func TestCSharpGenerator(t *testing.T) {
 	if !strings.Contains(content, "namespace Example.User") {
 		t.Error("Expected namespace declaration")
 	}
-	if !strings.Contains(content, "public class UserProfile") {
+	if !strings.Contains(content, "public sealed class UserProfile") {
 		t.Error("Expected UserProfile class")
+	}
+	if !strings.Contains(content, "/// User profile") {
+		t.Error("Expected class comment")
+	}
+	if !strings.Contains(content, "/// User ID") {
+		t.Error("Expected field comment")
 	}
 	if !strings.Contains(content, "public uint Id") {
 		t.Error("Expected Id property")
@@ -57,6 +64,21 @@ func TestCSharpGenerator(t *testing.T) {
 	}
 	if !strings.Contains(content, "public enum UserType") {
 		t.Error("Expected UserType enum")
+	}
+	if !strings.Contains(content, "public static class UserTypeExtensions") {
+		t.Error("Expected enum extensions helper")
+	}
+	if !strings.Contains(content, "public static UserType FromValue(int raw)") {
+		t.Error("Expected enum FromValue helper")
+	}
+	if !strings.Contains(content, "public static UserProfile Rent()") {
+		t.Error("Expected pool rent helper")
+	}
+	if !strings.Contains(content, "public static void Return(UserProfile? value)") {
+		t.Error("Expected pool return helper")
+	}
+	if !strings.Contains(content, "public void Reset()") {
+		t.Error("Expected reset helper")
 	}
 }
 

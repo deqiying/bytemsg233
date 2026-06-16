@@ -1,0 +1,3 @@
+UNLICENSED
+
+This extension package is currently not licensed for public reuse.

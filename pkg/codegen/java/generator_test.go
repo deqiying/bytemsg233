@@ -15,9 +15,10 @@ func TestJavaGenerator(t *testing.T) {
 		Package: "com.example",
 		Messages: map[string]*schema.Message{
 			"User": {
+				Description: &schema.Description{En: "User profile"},
 				Fields: map[string]*schema.Field{
-					"name": {Type: "string", Tag: 1},
-					"age":  {Type: "uint32", Tag: 2},
+					"name": {Type: "string", Tag: 1, Description: &schema.Description{En: "Display name"}},
+					"age":  {Type: "uint32", Tag: 2, Description: &schema.Description{En: "Age"}},
 				},
 			},
 		},
@@ -33,24 +34,59 @@ func TestJavaGenerator(t *testing.T) {
 		t.Fatalf("Generate failed: %v", err)
 	}
 
-	content := string(files[0].Content)
-	if !strings.Contains(content, "package com.example;") {
+	if len(files) != 2 {
+		t.Fatalf("Expected 2 files, got %d", len(files))
+	}
+
+	var userContent string
+	var enumContent string
+	for _, file := range files {
+		switch file.Path {
+		case "User.java":
+			userContent = string(file.Content)
+		case "Status.java":
+			enumContent = string(file.Content)
+		}
+	}
+
+	if !strings.Contains(userContent, "package com.example;") {
 		t.Error("Expected package")
 	}
-	if !strings.Contains(content, "public class User") {
+	if !strings.Contains(userContent, "public class User") {
 		t.Error("Expected class")
 	}
-	if !strings.Contains(content, "private String name;") {
+	if !strings.Contains(userContent, "/** User profile */") {
+		t.Error("Expected class comment")
+	}
+	if !strings.Contains(userContent, "/** Display name */") {
+		t.Error("Expected field comment")
+	}
+	if !strings.Contains(userContent, "private String name = \"\";") {
 		t.Error("Expected String field")
 	}
-	if !strings.Contains(content, "public enum Status") {
+	if !strings.Contains(enumContent, "public enum Status") {
 		t.Error("Expected enum")
 	}
-	if !strings.Contains(content, "import java.util.List;") {
+	if !strings.Contains(enumContent, "public static boolean isDefined(int value)") {
+		t.Error("Expected enum isDefined helper")
+	}
+	if !strings.Contains(enumContent, "public static Status fromValue(int value)") {
+		t.Error("Expected enum fromValue helper")
+	}
+	if !strings.Contains(userContent, "import java.util.List;") {
 		t.Error("Expected List import")
 	}
-	if !strings.Contains(content, "import java.util.Map;") {
+	if !strings.Contains(userContent, "import java.util.Map;") {
 		t.Error("Expected Map import")
+	}
+	if !strings.Contains(userContent, "public static User acquire()") {
+		t.Error("Expected pool acquire helper")
+	}
+	if !strings.Contains(userContent, "public static void release(User value)") {
+		t.Error("Expected pool release helper")
+	}
+	if !strings.Contains(userContent, "public void reset()") {
+		t.Error("Expected reset helper")
 	}
 }
 

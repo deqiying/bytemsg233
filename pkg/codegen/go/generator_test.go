@@ -24,9 +24,10 @@ func TestGoGenerator(t *testing.T) {
 		Package: "user",
 		Messages: map[string]*schema.Message{
 			"UserProfile": {
+				Description: &schema.Description{En: "User profile"},
 				Fields: map[string]*schema.Field{
-					"id":   {Type: "uint32", Tag: 1},
-					"name": {Type: "string", Tag: 2},
+					"id":   {Type: "uint32", Tag: 1, Description: &schema.Description{En: "User ID"}},
+					"name": {Type: "string", Tag: 2, Description: &schema.Description{En: "Display name"}},
 				},
 			},
 		},
@@ -57,6 +58,12 @@ func TestGoGenerator(t *testing.T) {
 	if !strings.Contains(content, "type UserProfile struct") {
 		t.Error("Expected UserProfile struct")
 	}
+	if !strings.Contains(content, "// User profile") {
+		t.Error("Expected class comment")
+	}
+	if !strings.Contains(content, "// User ID") {
+		t.Error("Expected field comment")
+	}
 	if !strings.Contains(content, "Id uint32") {
 		t.Error("Expected Id field")
 	}
@@ -66,8 +73,23 @@ func TestGoGenerator(t *testing.T) {
 	if !strings.Contains(content, "type UserType int32") {
 		t.Error("Expected UserType enum")
 	}
-	if !strings.Contains(content, "UserTypeADMIN UserType = 0") {
+	if !strings.Contains(content, "UserTypeAdmin UserType = 0") {
 		t.Error("Expected ADMIN constant")
+	}
+	if !strings.Contains(content, "func ParseUserType(value int32) (UserType, bool)") {
+		t.Error("Expected enum parse helper")
+	}
+	if !strings.Contains(content, "func (x UserType) String() string") {
+		t.Error("Expected enum String helper")
+	}
+	if !strings.Contains(content, "func AcquireUserProfile() *UserProfile") {
+		t.Error("Expected pool acquire helper")
+	}
+	if !strings.Contains(content, "func ReleaseUserProfile(value *UserProfile)") {
+		t.Error("Expected pool release helper")
+	}
+	if !strings.Contains(content, "func (x *UserProfile) Reset()") {
+		t.Error("Expected reset method")
 	}
 }
 

@@ -15,9 +15,10 @@ func TestPythonGenerator(t *testing.T) {
 		Package: "user",
 		Messages: map[string]*schema.Message{
 			"User": {
+				Description: &schema.Description{En: "User profile"},
 				Fields: map[string]*schema.Field{
-					"name": {Type: "string", Tag: 1},
-					"age":  {Type: "uint32", Tag: 2},
+					"name": {Type: "string", Tag: 1, Description: &schema.Description{En: "Display name"}},
+					"age":  {Type: "uint32", Tag: 2, Description: &schema.Description{En: "Age"}},
 				},
 			},
 		},
@@ -43,17 +44,35 @@ func TestPythonGenerator(t *testing.T) {
 	if !strings.Contains(content, "class Status(IntEnum):") {
 		t.Error("Expected enum class")
 	}
+	if !strings.Contains(content, "def from_value(cls, value: int) -> \"Status\":") {
+		t.Error("Expected enum from_value helper")
+	}
 	if !strings.Contains(content, "@dataclass") {
 		t.Error("Expected dataclass decorator")
+	}
+	if !strings.Contains(content, "\"\"\"User profile\"\"\"") {
+		t.Error("Expected class docstring")
 	}
 	if !strings.Contains(content, "class User:") {
 		t.Error("Expected User class")
 	}
-	if !strings.Contains(content, "name: str") {
+	if !strings.Contains(content, "# Display name") {
+		t.Error("Expected field comment")
+	}
+	if !strings.Contains(content, "name: str = \"\"") {
 		t.Error("Expected str field")
 	}
-	if !strings.Contains(content, "age: int") {
+	if !strings.Contains(content, "age: int = 0") {
 		t.Error("Expected int field")
+	}
+	if !strings.Contains(content, "def acquire(cls) -> \"User\":") {
+		t.Error("Expected pool acquire helper")
+	}
+	if !strings.Contains(content, "def release(self) -> None:") {
+		t.Error("Expected pool release helper")
+	}
+	if !strings.Contains(content, "def reset(self) -> None:") {
+		t.Error("Expected reset helper")
 	}
 }
 

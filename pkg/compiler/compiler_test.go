@@ -102,11 +102,11 @@ message User {
 	}
 
 	expectedFiles := map[string]string{
-		"types.go":  "package test",
-		"Types.cs":  "namespace test",
-		"Types.java": "package test;",
-		"types.ts":  "export interface",
-		"types.py":  "from dataclasses",
+		"types.go":  "func AcquireUser() *User",
+		"Types.cs":  "public static User Rent()",
+		"User.java": "public static User acquire()",
+		"types.ts":  "export class User",
+		"types.py":  "def acquire(cls) -> \"User\":",
 	}
 
 	for file, expected := range expectedFiles {
