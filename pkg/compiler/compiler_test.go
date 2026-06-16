@@ -95,7 +95,7 @@ message User {
 	err := comp.Compile(&CompileOptions{
 		InputFile: schemaPath,
 		OutputDir: tmpDir,
-		Languages: []string{"go", "csharp", "java", "typescript", "python"},
+		Languages: []string{"go", "csharp", "java", "typescript", "rust", "python"},
 	})
 	if err != nil {
 		t.Fatalf("Compile failed: %v", err)
@@ -106,6 +106,7 @@ message User {
 		"Types.cs":  "public static User Rent()",
 		"User.java": "public static User acquire()",
 		"types.ts":  "export class User",
+		"types.rs":  "pub struct User",
 		"types.py":  "def acquire(cls) -> \"User\":",
 	}
 

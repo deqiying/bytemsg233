@@ -1,1998 +1,1174 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>bytemsg233 - 技术原理演示</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg: #07111a;
-            --bg-soft: #0d1b27;
-            --panel: rgba(12, 24, 35, 0.86);
-            --panel-strong: rgba(8, 17, 26, 0.94);
-            --line: rgba(137, 175, 201, 0.16);
-            --text: #e9f2f8;
-            --muted: #8fa5b6;
-            --accent: #54c7ec;
-            --accent-2: #f3b567;
-            --accent-3: #64d2b8;
-            --danger: #ff7a7a;
-            --shadow: 0 24px 60px rgba(0, 0, 0, 0.32);
-            --radius: 26px;
-            --radius-sm: 18px;
-            --content: min(1560px, calc(100vw - 48px));
-        }
-
-        * {
-            box-sizing: border-box;
-        }
-
-        html {
-            scroll-behavior: smooth;
-        }
-
-        body {
-            margin: 0;
-            font-family: "Space Grotesk", "PingFang SC", "Microsoft YaHei", sans-serif;
-            color: var(--text);
-            background:
-                radial-gradient(circle at top left, rgba(84, 199, 236, 0.18), transparent 32%),
-                radial-gradient(circle at 85% 12%, rgba(243, 181, 103, 0.16), transparent 24%),
-                linear-gradient(180deg, #06101a 0%, #08131d 35%, #091722 100%);
-            overflow-x: hidden;
-        }
-
-        body::before {
-            content: "";
-            position: fixed;
-            inset: 0;
-            background-image:
-                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-            background-size: 36px 36px;
-            opacity: 0.18;
-            pointer-events: none;
-            mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.85), transparent 90%);
-        }
-
-        a {
-            color: inherit;
-        }
-
-        code,
-        pre,
-        input,
-        select,
-        button {
-            font-family: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
-        }
-
-        section[id] {
-            scroll-margin-top: 96px;
-        }
-
-        .topbar {
-            position: sticky;
-            top: 0;
-            z-index: 20;
-            backdrop-filter: blur(16px);
-            background: rgba(6, 12, 19, 0.72);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-        }
-
-        .topbar-inner {
-            width: var(--content);
-            margin: 0 auto;
-            min-height: 72px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 24px;
-        }
-
-        .brand {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-        }
-
-        .brand-mark {
-            width: 40px;
-            height: 40px;
-            border-radius: 14px;
-            display: grid;
-            place-items: center;
-            background:
-                linear-gradient(145deg, rgba(84, 199, 236, 0.24), rgba(243, 181, 103, 0.2)),
-                rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
-            font-size: 0.82rem;
-            letter-spacing: 0.08em;
-        }
-
-        .brand-copy strong {
-            display: block;
-            font-size: 1rem;
-            letter-spacing: 0.02em;
-        }
-
-        .brand-copy span {
-            color: var(--muted);
-            font-size: 0.86rem;
-        }
-
-        .topbar-nav {
-            display: flex;
-            gap: 16px;
-            flex-wrap: wrap;
-            justify-content: flex-end;
-        }
-
-        .topbar-nav a {
-            text-decoration: none;
-            color: var(--muted);
-            font-size: 0.92rem;
-            transition: color 0.2s ease;
-        }
-
-        .topbar-nav a:hover {
-            color: var(--text);
-        }
-
-        .hero {
-            width: var(--content);
-            margin: 0 auto;
-            min-height: calc(100svh - 72px);
-            display: grid;
-            grid-template-columns: minmax(0, 1.18fr) minmax(420px, 0.82fr);
-            gap: 32px;
-            align-items: stretch;
-            padding: 44px 0 28px;
-        }
-
-        .hero-copy,
-        .hero-panel {
-            position: relative;
-            overflow: hidden;
-            border-radius: 34px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: var(--shadow);
-        }
-
-        .hero-copy {
-            background:
-                linear-gradient(150deg, rgba(84, 199, 236, 0.18), transparent 36%),
-                linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 80%),
-                rgba(7, 18, 28, 0.9);
-            padding: 44px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-
-        .hero-kicker {
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px 14px;
-            border-radius: 999px;
-            background: rgba(255, 255, 255, 0.06);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            color: var(--muted);
-            font-size: 0.86rem;
-            letter-spacing: 0.04em;
-            width: fit-content;
-        }
-
-        h1 {
-            margin: 20px 0 16px;
-            font-size: clamp(3.6rem, 8vw, 7.4rem);
-            line-height: 0.9;
-            letter-spacing: -0.06em;
-        }
-
-        .hero-copy h1 span {
-            display: block;
-            background: linear-gradient(135deg, var(--text), var(--accent));
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-        }
-
-        .hero-summary {
-            max-width: 720px;
-            font-size: clamp(1rem, 1.7vw, 1.2rem);
-            line-height: 1.75;
-            color: #d4e1ea;
-            margin-bottom: 28px;
-        }
-
-        .hero-actions {
-            display: flex;
-            gap: 14px;
-            flex-wrap: wrap;
-            margin-bottom: 30px;
-        }
-
-        .hero-actions a {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 48px;
-            padding: 0 18px;
-            border-radius: 999px;
-            text-decoration: none;
-            font-size: 0.92rem;
-        }
-
-        .hero-actions .primary {
-            background: linear-gradient(135deg, var(--accent), #7ad5ff);
-            color: #042033;
-            font-weight: 700;
-        }
-
-        .hero-actions .secondary {
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            color: var(--text);
-        }
-
-        .hero-stats {
-            display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 14px;
-        }
-
-        .hero-stat {
-            padding: 18px 18px 16px;
-            border-radius: 20px;
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-        }
-
-        .hero-stat strong {
-            display: block;
-            font-size: 1.9rem;
-            line-height: 1;
-            margin-bottom: 8px;
-        }
-
-        .hero-stat span {
-            color: var(--muted);
-            font-size: 0.88rem;
-        }
-
-        .hero-panel {
-            background:
-                radial-gradient(circle at top, rgba(84, 199, 236, 0.2), transparent 38%),
-                radial-gradient(circle at 75% 20%, rgba(243, 181, 103, 0.18), transparent 24%),
-                rgba(5, 13, 20, 0.96);
-            padding: 28px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-
-        .runtime-card {
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 24px;
-            padding: 18px;
-            margin-bottom: 18px;
-        }
-
-        .runtime-card h3,
-        .runtime-card h4 {
-            margin: 0 0 12px;
-            font-size: 1rem;
-        }
-
-        .schema-preview,
-        .runtime-console,
-        .code-block pre,
-        .code-surface pre,
-        .walk-content pre,
-        .encode-output {
-            background: rgba(4, 10, 16, 0.88);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 18px;
-            padding: 18px;
-            color: #d7e5ee;
-            font-size: 0.85rem;
-            line-height: 1.75;
-            overflow-x: auto;
-            margin: 0;
-        }
-
-        .runtime-console {
-            min-height: 170px;
-        }
-
-        .runtime-legend {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 10px;
-            margin-top: 10px;
-        }
-
-        .runtime-pill {
-            padding: 12px 14px;
-            border-radius: 16px;
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            color: var(--muted);
-            font-size: 0.84rem;
-        }
-
-        .overview-strip,
-        .toc-shell,
-        .demo-section {
-            width: var(--content);
-            margin: 0 auto 24px;
-        }
-
-        .overview-strip {
-            display: grid;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
-            gap: 14px;
-        }
-
-        .overview-card,
-        .feature,
-        .type-card,
-        .toc-card {
-            background: var(--panel);
-            border-radius: 22px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: var(--shadow);
-        }
-
-        .overview-card {
-            padding: 20px;
-            min-height: 150px;
-        }
-
-        .overview-card strong {
-            display: block;
-            margin-bottom: 10px;
-            font-size: 1rem;
-        }
-
-        .overview-card p,
-        .overview-card span,
-        .feature p,
-        .type-card p,
-        .section-note,
-        .panel-note,
-        .toc-card p {
-            color: var(--muted);
-            line-height: 1.7;
-        }
-
-        .toc-shell {
-            padding: 0 0 4px;
-        }
-
-        .toc-wrap {
-            display: grid;
-            grid-template-columns: minmax(0, 0.7fr) minmax(0, 1.3fr);
-            gap: 18px;
-        }
-
-        .toc-card {
-            padding: 26px;
-        }
-
-        .toc-card h3 {
-            margin: 0 0 12px;
-            font-size: 1.2rem;
-        }
-
-        .toc-grid {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 12px;
-        }
-
-        .toc-grid a {
-            display: block;
-            padding: 18px 18px 16px;
-            border-radius: 18px;
-            text-decoration: none;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            transition: transform 0.2s ease, border-color 0.2s ease;
-        }
-
-        .toc-grid a:hover {
-            transform: translateY(-3px);
-            border-color: rgba(84, 199, 236, 0.5);
-        }
-
-        .toc-grid strong {
-            display: block;
-            margin-bottom: 6px;
-            font-size: 0.95rem;
-        }
-
-        .toc-grid span {
-            display: block;
-            color: var(--muted);
-            font-size: 0.84rem;
-            line-height: 1.6;
-        }
-
-        .demo-section {
-            display: grid;
-            gap: 18px;
-        }
-
-        .section-head {
-            display: grid;
-            grid-template-columns: minmax(0, 1fr) minmax(260px, 0.4fr);
-            gap: 18px;
-            align-items: end;
-        }
-
-        .section-kicker {
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            padding: 8px 12px;
-            border-radius: 999px;
-            background: rgba(255, 255, 255, 0.05);
-            color: var(--muted);
-            font-size: 0.8rem;
-            letter-spacing: 0.04em;
-            margin-bottom: 14px;
-        }
-
-        .demo-title {
-            margin: 0;
-            font-size: clamp(2rem, 3vw, 3.2rem);
-            line-height: 1;
-            letter-spacing: -0.04em;
-        }
-
-        .demo-subtitle {
-            color: #d6e6ef;
-            font-size: 1.02rem;
-            line-height: 1.75;
-            max-width: 860px;
-        }
-
-        .section-note {
-            padding: 18px 20px;
-            border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            background: rgba(255, 255, 255, 0.03);
-        }
-
-        .section-frame,
-        .binary-demo,
-        .walkthrough,
-        .zigzag-demo,
-        .encode-interactive,
-        .i18n-demo,
-        .single-file {
-            background: var(--panel);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: var(--radius);
-            box-shadow: var(--shadow);
-        }
-
-        .section-frame,
-        .binary-demo,
-        .walkthrough,
-        .zigzag-demo,
-        .encode-interactive,
-        .i18n-demo,
-        .single-file {
-            padding: 28px;
-        }
-
-        .single-file {
-            display: grid;
-            gap: 24px;
-        }
-
-        .file-tree {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 18px;
-        }
-
-        .file-group {
-            padding: 22px;
-            border-radius: 22px;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-        }
-
-        .file-group h3,
-        .feature h3,
-        .walk-content h4 {
-            margin: 0 0 14px;
-        }
-
-        .file-item {
-            padding: 12px 14px;
-            border-radius: 14px;
-            margin-bottom: 10px;
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            font-size: 0.88rem;
-        }
-
-        .file-item.highlight {
-            border-color: rgba(84, 199, 236, 0.45);
-            color: var(--accent);
-            box-shadow: inset 0 0 0 1px rgba(84, 199, 236, 0.15);
-        }
-
-        .code-compare {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 18px;
-        }
-
-        .code-block,
-        .code-surface {
-            position: relative;
-            overflow: hidden;
-            border-radius: 24px;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-        }
-
-        .code-block::before,
-        .code-surface::before {
-            content: attr(data-label);
-            display: block;
-            padding: 14px 18px;
-            color: var(--muted);
-            font-size: 0.8rem;
-            letter-spacing: 0.04em;
-            text-transform: uppercase;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-            background: rgba(255, 255, 255, 0.03);
-        }
-
-        .code-block pre,
-        .code-surface pre {
-            border: none;
-            border-radius: 0 0 24px 24px;
-            background: transparent;
-        }
-
-        .hl { color: #80d8ff; }
-        .hl2 { color: #ffd28a; }
-        .hl3 { color: #87e8c7; }
-        .hl4 { color: #ffbe6b; }
-        .hl5 { color: #ff9e9e; }
-        .cm { color: #7d93a3; }
-
-        .binary-demo {
-            display: grid;
-            gap: 18px;
-        }
-
-        .binary-row {
-            display: grid;
-            grid-template-columns: 160px minmax(0, 1fr) 210px;
-            gap: 14px;
-            align-items: center;
-        }
-
-        .binary-label {
-            text-align: right;
-            color: var(--muted);
-            font-size: 0.9rem;
-        }
-
-        .binary-bits,
-        .byte-row {
-            display: flex;
-            gap: 6px;
-            flex-wrap: wrap;
-        }
-
-        .bit {
-            width: 40px;
-            height: 40px;
-            border-radius: 12px;
-            display: grid;
-            place-items: center;
-            font-size: 0.8rem;
-            font-weight: 700;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            opacity: 0;
-            transform: scale(0.84);
-            animation: bitAppear 0.3s ease forwards;
-        }
-
-        .bit.active { background: rgba(84, 199, 236, 0.2); border-color: rgba(84, 199, 236, 0.45); color: var(--accent); }
-        .bit.zero { color: #648093; }
-        .bit.cont { background: rgba(84, 199, 236, 0.12); border-color: rgba(84, 199, 236, 0.32); color: var(--accent); }
-        .bit.tag { background: rgba(243, 181, 103, 0.13); border-color: rgba(243, 181, 103, 0.28); color: var(--accent-2); }
-        .bit.wt { background: rgba(100, 210, 184, 0.13); border-color: rgba(100, 210, 184, 0.28); color: var(--accent-3); }
-        .bit.neg { background: rgba(255, 122, 122, 0.14); border-color: rgba(255, 122, 122, 0.28); color: var(--danger); }
-
-        .wire-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.92rem;
-        }
-
-        .wire-table th,
-        .wire-table td {
-            padding: 16px 14px;
-            text-align: left;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-            vertical-align: top;
-        }
-
-        .wire-table th {
-            color: var(--muted);
-            font-weight: 500;
-        }
-
-        .wire-table tr:hover {
-            background: rgba(255, 255, 255, 0.03);
-        }
-
-        .legend {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 16px;
-        }
-
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            color: var(--muted);
-            font-size: 0.88rem;
-        }
-
-        .legend-dot {
-            width: 12px;
-            height: 12px;
-            border-radius: 4px;
-        }
-
-        .zigzag-demo {
-            display: grid;
-            grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
-            gap: 24px;
-            align-items: start;
-        }
-
-        .zigzag-input {
-            display: grid;
-            gap: 16px;
-        }
-
-        .zigzag-input input[type=range] {
-            width: 100%;
-            accent-color: var(--accent);
-        }
-
-        .zigzag-result {
-            display: grid;
-            gap: 14px;
-            padding: 20px;
-            border-radius: 20px;
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            font-size: 0.98rem;
-        }
-
-        .zigzag-result span {
-            font-size: 1.35rem;
-            font-weight: 700;
-        }
-
-        .walkthrough {
-            display: grid;
-            gap: 18px;
-        }
-
-        .walk-step {
-            display: grid;
-            grid-template-columns: 58px minmax(0, 1fr);
-            gap: 18px;
-        }
-
-        .walk-num {
-            width: 58px;
-            height: 58px;
-            border-radius: 18px;
-            display: grid;
-            place-items: center;
-            background: linear-gradient(135deg, rgba(84, 199, 236, 0.28), rgba(243, 181, 103, 0.26));
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            font-weight: 700;
-        }
-
-        .walk-content {
-            display: grid;
-            gap: 10px;
-        }
-
-        .byte-cell {
-            display: grid;
-            justify-items: center;
-            gap: 4px;
-        }
-
-        .byte-val {
-            min-width: 44px;
-            height: 32px;
-            display: grid;
-            place-items: center;
-            border-radius: 10px;
-            font-size: 0.78rem;
-            font-weight: 700;
-        }
-
-        .byte-lbl {
-            font-size: 0.68rem;
-            color: var(--muted);
-        }
-
-        .encode-interactive {
-            display: grid;
-            grid-template-columns: minmax(320px, 0.42fr) minmax(0, 0.58fr);
-            gap: 24px;
-            align-items: start;
-        }
-
-        .encode-fields {
-            display: grid;
-            gap: 14px;
-        }
-
-        .encode-field {
-            display: grid;
-            gap: 8px;
-        }
-
-        .encode-field label {
-            color: var(--muted);
-            font-size: 0.88rem;
-        }
-
-        .encode-field input,
-        .encode-field select {
-            min-height: 50px;
-            border-radius: 16px;
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            background: rgba(255, 255, 255, 0.04);
-            color: var(--text);
-            padding: 0 14px;
-            font-size: 0.94rem;
-        }
-
-        .encode-field input:focus,
-        .encode-field select:focus {
-            outline: none;
-            border-color: rgba(84, 199, 236, 0.55);
-            box-shadow: 0 0 0 4px rgba(84, 199, 236, 0.12);
-        }
-
-        .encode-btn,
-        .tab,
-        .i18n-btn {
-            cursor: pointer;
-            transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
-        }
-
-        .encode-btn {
-            min-height: 52px;
-            border: none;
-            border-radius: 16px;
-            background: linear-gradient(135deg, var(--accent), #91dfff);
-            color: #052239;
-            font-size: 0.94rem;
-            font-weight: 700;
-            padding: 0 18px;
-        }
-
-        .encode-btn:hover,
-        .tab:hover,
-        .i18n-btn:hover {
-            transform: translateY(-2px);
-        }
-
-        .encode-output {
-            min-height: 420px;
-            white-space: pre-wrap;
-            word-break: break-word;
-        }
-
-        .flow {
-            display: grid;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
-            gap: 16px;
-        }
-
-        .flow-node {
-            padding: 24px;
-            border-radius: 22px;
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            display: grid;
-            gap: 8px;
-            opacity: 0;
-            animation: fadeInUp 0.6s ease forwards;
-        }
-
-        .flow-node .icon {
-            font-size: 2rem;
-        }
-
-        .flow-node .label {
-            color: var(--muted);
-            font-size: 0.86rem;
-        }
-
-        .flow-arrow {
-            display: none;
-        }
-
-        .size-compare {
-            display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 18px;
-            align-items: end;
-        }
-
-        .size-bar {
-            padding: 20px;
-            border-radius: 24px;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            text-align: center;
-        }
-
-        .bar {
-            width: 100%;
-            max-width: 150px;
-            margin: 0 auto;
-            border-radius: 20px 20px 12px 12px;
-            transition: height 1s ease;
-        }
-
-        .bar.protobuf { background: linear-gradient(180deg, #ff8d8d, #ff6969); height: 220px; }
-        .bar.json { background: linear-gradient(180deg, #ffd68c, #ffb35c); height: 340px; }
-        .bar.bytemsg { background: linear-gradient(180deg, #87e8c7, #45c8a3); height: 156px; }
-
-        .bar-label {
-            margin-top: 14px;
-            color: var(--muted);
-            font-size: 0.9rem;
-        }
-
-        .bar-size {
-            margin-top: 6px;
-            font-size: 1.55rem;
-            font-weight: 700;
-        }
-
-        .type-grid,
-        .features {
-            display: grid;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
-            gap: 16px;
-        }
-
-        .type-card,
-        .feature {
-            padding: 22px;
-        }
-
-        .type-card .type-name {
-            font-size: 1rem;
-            margin-bottom: 8px;
-        }
-
-        .type-card .type-wire {
-            color: var(--accent);
-            font-size: 0.84rem;
-            margin-bottom: 10px;
-        }
-
-        .i18n-demo {
-            display: grid;
-            grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
-            gap: 24px;
-            align-items: start;
-        }
-
-        .i18n-toggle,
-        .tabs {
-            display: inline-flex;
-            gap: 4px;
-            padding: 4px;
-            border-radius: 999px;
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            flex-wrap: wrap;
-        }
-
-        .tab,
-        .i18n-btn {
-            border: none;
-            background: transparent;
-            color: var(--muted);
-            min-height: 40px;
-            padding: 0 16px;
-            border-radius: 999px;
-            font-size: 0.85rem;
-        }
-
-        .tab.active,
-        .i18n-btn.active {
-            background: rgba(84, 199, 236, 0.16);
-            color: var(--text);
-        }
-
-        .tab-content {
-            display: none;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        .i18n-output {
-            min-height: 200px;
-            display: grid;
-            align-content: start;
-            gap: 4px;
-        }
-
-        .animate-on-scroll {
-            opacity: 0;
-            transform: translateY(26px);
-            transition: opacity 0.7s ease, transform 0.7s ease;
-        }
-
-        .animate-on-scroll.visible {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        footer {
-            width: var(--content);
-            margin: 10px auto 40px;
-            padding: 24px 0 10px;
-            color: var(--muted);
-            text-align: center;
-            border-top: 1px solid rgba(255, 255, 255, 0.08);
-        }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes bitAppear {
-            to {
-                opacity: 1;
-                transform: scale(1);
-            }
-        }
-
-        @media (max-width: 1200px) {
-            .hero,
-            .toc-wrap,
-            .zigzag-demo,
-            .encode-interactive,
-            .i18n-demo,
-            .section-head {
-                grid-template-columns: 1fr;
-            }
-
-            .overview-strip,
-            .type-grid,
-            .features,
-            .flow {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-            }
-        }
-
-        @media (max-width: 900px) {
-            :root {
-                --content: min(100vw - 24px, 100vw - 24px);
-            }
-
-            .topbar-inner {
-                min-height: auto;
-                padding: 16px 0;
-                align-items: flex-start;
-                flex-direction: column;
-            }
-
-            .topbar-nav {
-                width: 100%;
-                display: grid;
-                grid-template-columns: repeat(3, minmax(0, 1fr));
-                gap: 8px;
-            }
-
-            .topbar-nav a {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                min-height: 38px;
-                padding: 0 10px;
-                border-radius: 999px;
-                font-size: 0.76rem;
-                background: rgba(255, 255, 255, 0.04);
-                border: 1px solid rgba(255, 255, 255, 0.08);
-            }
-
-            .hero-copy,
-            .hero-panel,
-            .section-frame,
-            .binary-demo,
-            .walkthrough,
-            .zigzag-demo,
-            .encode-interactive,
-            .i18n-demo,
-            .single-file,
-            .toc-card {
-                padding: 22px;
-            }
-
-            .hero-stats,
-            .overview-strip,
-            .code-compare,
-            .file-tree,
-            .toc-grid,
-            .size-compare,
-            .type-grid,
-            .features {
-                grid-template-columns: 1fr;
-            }
-
-            .binary-row {
-                grid-template-columns: 1fr;
-            }
-
-            .binary-label {
-                text-align: left;
-            }
-
-            .walk-step {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>bytemsg233 - JSON-first binary schema toolchain</title>
+  <meta name="description" content="bytemsg233 是 JSON-first 的二进制 schema 工具链，提供多语言生成、对象池、enum 适配和性能对比。" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0b1117;
+      --bg-2: #101820;
+      --paper: #f4ead8;
+      --paper-2: #fff8eb;
+      --ink: #111820;
+      --text: #eef4ee;
+      --muted: #98a8a0;
+      --line: rgba(238, 244, 238, 0.13);
+      --line-strong: rgba(238, 244, 238, 0.24);
+      --accent: #e0b66d;
+      --accent-2: #7bd6bd;
+      --danger: #ef7b66;
+      --code: #10161d;
+      --code-line: rgba(255, 255, 255, 0.08);
+      --max: 1680px;
+      --rail: 254px;
+      --radius: 30px;
+      --shadow: 0 28px 80px rgba(0, 0, 0, 0.34);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      color: var(--text);
+      font-family: "Instrument Sans", "PingFang SC", "Microsoft YaHei", sans-serif;
+      background:
+        linear-gradient(90deg, rgba(224, 182, 109, 0.08) 0 1px, transparent 1px 100%),
+        linear-gradient(rgba(255, 255, 255, 0.035) 0 1px, transparent 1px 100%),
+        radial-gradient(circle at 78% 8%, rgba(123, 214, 189, 0.16), transparent 28%),
+        radial-gradient(circle at 16% 0%, rgba(224, 182, 109, 0.18), transparent 32%),
+        linear-gradient(135deg, #090e13 0%, #111820 48%, #0c141a 100%);
+      background-size: 88px 88px, 88px 88px, auto, auto, auto;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background: linear-gradient(90deg, rgba(11, 17, 23, 0.98), transparent 16%, transparent 84%, rgba(11, 17, 23, 0.92));
+      z-index: -1;
+    }
+
+    a {
+      color: inherit;
+    }
+
+    code,
+    pre,
+    button,
+    input {
+      font-family: "JetBrains Mono", Consolas, monospace;
+    }
+
+    .progress {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 0;
+      height: 3px;
+      z-index: 80;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    }
+
+    .shell {
+      width: min(var(--max), calc(100vw - 32px));
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: var(--rail) minmax(0, 1fr);
+      gap: 30px;
+      align-items: start;
+    }
+
+    .rail {
+      position: sticky;
+      top: 0;
+      min-height: 100vh;
+      padding: 28px 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      border-right: 1px solid var(--line);
+    }
+
+    .brand {
+      display: grid;
+      gap: 22px;
+      padding-right: 24px;
+    }
+
+    .brand-mark {
+      width: 56px;
+      height: 56px;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--line-strong);
+      border-radius: 18px;
+      background: linear-gradient(145deg, rgba(244, 234, 216, 0.13), rgba(224, 182, 109, 0.15));
+      color: var(--accent);
+      font-weight: 800;
+      letter-spacing: -0.08em;
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: clamp(2.8rem, 7vw, 6.9rem);
+      line-height: 0.84;
+      letter-spacing: -0.08em;
+      max-width: 7ch;
+    }
+
+    .brand p {
+      margin: 0;
+      max-width: 210px;
+      color: var(--muted);
+      line-height: 1.7;
+      font-size: 0.96rem;
+    }
+
+    .nav {
+      display: grid;
+      gap: 6px;
+      padding-right: 24px;
+      margin-top: 28px;
+    }
+
+    .nav a {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 0;
+      color: var(--muted);
+      text-decoration: none;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.055);
+      transition: color 0.18s ease, padding-left 0.18s ease;
+    }
+
+    .nav a:hover,
+    .nav a.active {
+      color: var(--text);
+      padding-left: 8px;
+    }
+
+    .rail-foot {
+      padding-right: 24px;
+      color: var(--muted);
+      font-size: 0.82rem;
+      line-height: 1.6;
+    }
+
+    main {
+      padding: 28px 0 80px;
+    }
+
+    section {
+      scroll-margin-top: 30px;
+    }
+
+    .hero {
+      min-height: calc(100svh - 56px);
+      display: grid;
+      grid-template-rows: auto 1fr;
+      gap: 26px;
+    }
+
+    .topline {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .topline a {
+      text-decoration: none;
+      color: var(--paper);
+      border-bottom: 1px solid rgba(244, 234, 216, 0.32);
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.02fr) minmax(460px, 0.98fr);
+      gap: 24px;
+      align-items: stretch;
+    }
+
+    .poster {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 670px;
+      padding: clamp(28px, 4vw, 56px);
+      border-radius: var(--radius);
+      background:
+        linear-gradient(145deg, rgba(244, 234, 216, 0.09), transparent 38%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.025));
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .poster::after {
+      content: "";
+      position: absolute;
+      width: 520px;
+      height: 520px;
+      right: -180px;
+      bottom: -190px;
+      border-radius: 50%;
+      border: 1px solid rgba(224, 182, 109, 0.18);
+      background: radial-gradient(circle, rgba(224, 182, 109, 0.12), transparent 64%);
+      pointer-events: none;
+    }
+
+    .poster h2 {
+      margin: 0;
+      max-width: 920px;
+      font-size: clamp(3.4rem, 7.6vw, 8.2rem);
+      line-height: 0.86;
+      letter-spacing: -0.085em;
+    }
+
+    .poster h2 span {
+      color: var(--accent);
+    }
+
+    .poster-copy {
+      position: relative;
+      z-index: 1;
+      max-width: 760px;
+      color: #dbe5df;
+      font-size: clamp(1.06rem, 1.6vw, 1.28rem);
+      line-height: 1.7;
+      margin: 28px 0 0;
+    }
+
+    .install-strip {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      gap: 14px;
+      margin-top: 44px;
+    }
+
+    .terminal {
+      background: var(--code);
+      border: 1px solid var(--code-line);
+      border-radius: 22px;
+      overflow: hidden;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    }
+
+    .terminal-head {
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      color: var(--muted);
+      border-bottom: 1px solid var(--code-line);
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .copy-btn {
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 999px;
+      padding: 8px 12px;
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.04);
+      cursor: pointer;
+      font-size: 0.74rem;
+      transition: transform 0.16s ease, border-color 0.16s ease;
+    }
+
+    .copy-btn:hover {
+      transform: translateY(-1px);
+      border-color: rgba(224, 182, 109, 0.45);
+    }
+
+    pre {
+      margin: 0;
+      padding: 22px;
+      overflow-x: auto;
+      color: #eaf2ed;
+      line-height: 1.72;
+      font-size: 0.9rem;
+    }
+
+    .install-strip pre {
+      overflow-x: hidden;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-rows: auto 1fr;
+      gap: 18px;
+    }
+
+    .yaml-panel,
+    .metric-panel,
+    .open-panel,
+    .language-panel {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.045);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .yaml-panel {
+      min-height: 420px;
+    }
+
+    .panel-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 18px 22px;
+      border-bottom: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 0.84rem;
+    }
+
+    .panel-title strong {
+      color: var(--text);
+      font-size: 0.98rem;
+    }
+
+    .quick-facts {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: var(--line);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .fact {
+      background: rgba(255, 255, 255, 0.045);
+      padding: 22px;
+      min-height: 142px;
+    }
+
+    .fact strong {
+      display: block;
+      font-size: 1.9rem;
+      letter-spacing: -0.05em;
+      color: var(--paper);
+      margin-bottom: 12px;
+    }
+
+    .fact span {
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    .section {
+      padding: 74px 0 0;
+      display: grid;
+      gap: 22px;
+    }
+
+    .section-head {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(280px, 0.36fr);
+      gap: 28px;
+      align-items: end;
+      border-top: 1px solid var(--line);
+      padding-top: 30px;
+    }
+
+    .section-head h2 {
+      margin: 0;
+      font-size: clamp(2.4rem, 4.4vw, 5.4rem);
+      line-height: 0.92;
+      letter-spacing: -0.07em;
+    }
+
+    .section-head p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.75;
+    }
+
+    .split {
+      display: grid;
+      grid-template-columns: minmax(0, 0.92fr) minmax(420px, 1.08fr);
+      gap: 22px;
+    }
+
+    .open-panel {
+      padding: 32px;
+      display: grid;
+      align-content: space-between;
+      min-height: 420px;
+    }
+
+    .open-panel h3 {
+      margin: 0 0 18px;
+      font-size: clamp(1.8rem, 3vw, 3.1rem);
+      line-height: 1;
+      letter-spacing: -0.055em;
+    }
+
+    .open-panel p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.75;
+      max-width: 620px;
+    }
+
+    .rule-list {
+      display: grid;
+      gap: 1px;
+      background: var(--line);
+      overflow: hidden;
+      border-radius: 24px;
+      margin-top: 28px;
+    }
+
+    .rule {
+      display: grid;
+      grid-template-columns: 150px minmax(0, 1fr);
+      gap: 18px;
+      padding: 18px;
+      background: rgba(255, 255, 255, 0.045);
+    }
+
+    .rule strong {
+      color: var(--paper);
+    }
+
+    .rule span {
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    .language-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 1px;
+      background: var(--line);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .language-panel {
+      border: 0;
+      border-radius: 0;
+      box-shadow: none;
+      padding: 24px;
+      min-height: 250px;
+    }
+
+    .language-panel h3 {
+      margin: 0 0 16px;
+      font-size: 1.3rem;
+      color: var(--paper);
+    }
+
+    .language-panel p {
+      color: var(--muted);
+      line-height: 1.6;
+      margin: 0 0 16px;
+    }
+
+    .language-panel code {
+      display: block;
+      color: var(--accent-2);
+      font-size: 0.78rem;
+      line-height: 1.6;
+      white-space: pre-wrap;
+    }
+
+    .bench-wrap {
+      display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(360px, 0.85fr);
+      gap: 22px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th,
+    td {
+      padding: 17px 16px;
+      text-align: left;
+      border-bottom: 1px solid var(--line);
+      vertical-align: top;
+    }
+
+    th {
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 0.82rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    td {
+      color: #dfe8e3;
+    }
+
+    td strong {
+      color: var(--accent-2);
+    }
+
+    .metric-panel {
+      padding: 0;
+    }
+
+    .meter {
+      padding: 24px;
+      display: grid;
+      gap: 16px;
+    }
+
+    .meter-row {
+      display: grid;
+      grid-template-columns: 110px minmax(0, 1fr) 82px;
+      gap: 14px;
+      align-items: center;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .bar-track {
+      height: 13px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--accent-2), var(--accent));
+      transform-origin: left;
+      animation: grow 1s ease both;
+    }
+
+    .lab {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--paper);
+      color: var(--ink);
+      display: grid;
+      grid-template-columns: minmax(320px, 0.8fr) minmax(0, 1.2fr);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+
+    .lab-form {
+      padding: 30px;
+      background: var(--paper-2);
+      border-right: 1px solid rgba(17, 24, 32, 0.13);
+      display: grid;
+      gap: 18px;
+      align-content: start;
+    }
+
+    .lab-form h3 {
+      margin: 0;
+      font-size: 2.3rem;
+      line-height: 0.95;
+      letter-spacing: -0.06em;
+    }
+
+    label {
+      display: grid;
+      gap: 8px;
+      font-size: 0.83rem;
+      color: rgba(17, 24, 32, 0.68);
+      font-weight: 700;
+    }
+
+    input {
+      width: 100%;
+      border: 1px solid rgba(17, 24, 32, 0.18);
+      border-radius: 14px;
+      padding: 13px 14px;
+      color: var(--ink);
+      background: #fffdf6;
+      font-size: 0.95rem;
+      outline: none;
+    }
+
+    input:focus {
+      border-color: rgba(17, 24, 32, 0.45);
+      box-shadow: 0 0 0 3px rgba(224, 182, 109, 0.28);
+    }
+
+    .lab-output {
+      padding: 30px;
+      background: #15191d;
+      color: var(--text);
+      display: grid;
+      gap: 18px;
+    }
+
+    .hex-line {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .byte {
+      display: inline-grid;
+      place-items: center;
+      min-width: 42px;
+      min-height: 42px;
+      border-radius: 12px;
+      background: rgba(123, 214, 189, 0.14);
+      color: var(--accent-2);
+      border: 1px solid rgba(123, 214, 189, 0.28);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.82rem;
+    }
+
+    .output-note {
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .doc-rules {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 1px;
+      border-radius: var(--radius);
+      overflow: hidden;
+      border: 1px solid var(--line);
+      background: var(--line);
+    }
+
+    .doc-rule {
+      padding: 28px;
+      background: rgba(255, 255, 255, 0.045);
+      min-height: 220px;
+    }
+
+    .doc-rule h3 {
+      margin: 0 0 16px;
+      font-size: 1.35rem;
+      color: var(--paper);
+    }
+
+    .doc-rule p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    footer {
+      margin-top: 84px;
+      padding: 30px 0 0;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+
+    .kw { color: #8fe0c9; }
+    .st { color: #f5d390; }
+    .nu { color: #91b7ff; }
+    .cm { color: #7d8a83; }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.55s ease, transform 0.55s ease;
+    }
+
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @keyframes grow {
+      from { transform: scaleX(0); }
+      to { transform: scaleX(1); }
+    }
+
+    @media (max-width: 1120px) {
+      .shell {
+        grid-template-columns: 1fr;
+      }
+
+      .rail {
+        position: relative;
+        min-height: auto;
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .brand {
+        grid-template-columns: auto 1fr;
+        align-items: center;
+      }
+
+      .brand p,
+      .rail-foot {
+        max-width: none;
+      }
+
+      .nav {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .hero,
+      .poster {
+        min-height: auto;
+      }
+
+      .hero-grid,
+      .split,
+      .bench-wrap,
+      .lab {
+        grid-template-columns: 1fr;
+      }
+
+      .language-grid,
+      .doc-rules {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 720px) {
+      .shell {
+        width: min(100% - 22px, var(--max));
+      }
+
+      .brand {
+        grid-template-columns: 1fr;
+      }
+
+      .nav,
+      .quick-facts,
+      .language-grid,
+      .doc-rules {
+        grid-template-columns: 1fr;
+      }
+
+      .section-head,
+      .rule,
+      .meter-row {
+        grid-template-columns: 1fr;
+      }
+
+      .poster,
+      .open-panel,
+      .lab-form,
+      .lab-output {
+        padding: 22px;
+      }
+
+      .hero-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .topline {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      th,
+      td {
+        padding: 14px 10px;
+        font-size: 0.86rem;
+      }
+    }
+  </style>
 </head>
 <body>
-<header class="topbar">
-    <div class="topbar-inner">
+  <div class="progress" id="progress"></div>
+  <div class="shell">
+    <aside class="rail">
+      <div>
         <div class="brand">
-            <div class="brand-mark">BMSG</div>
-            <div class="brand-copy">
-                <strong>bytemsg233</strong>
-                <span>Single-file schema for agents and client SDKs</span>
-            </div>
+          <div class="brand-mark">b</div>
+          <div>
+            <h1>byte msg 233</h1>
+            <p>JSON-first binary schema toolchain for clients, SDKs, and agent-assisted codebases.</p>
+          </div>
         </div>
-        <nav class="topbar-nav">
-            <a href="#single-file">Schema</a>
-            <a href="#binary-encoding">Encoding</a>
-            <a href="#encode-interactive">Playground</a>
-            <a href="#cli">CLI</a>
-            <a href="https://github.com/neko233-com/bytemsg233" target="_blank" rel="noreferrer">GitHub</a>
+        <nav class="nav" aria-label="Page navigation">
+          <a href="#install"><span>Install</span><small>01</small></a>
+          <a href="#json"><span>JSON DSL</span><small>02</small></a>
+          <a href="#languages"><span>Languages</span><small>03</small></a>
+          <a href="#performance"><span>Performance</span><small>04</small></a>
+          <a href="#lab"><span>Binary Lab</span><small>05</small></a>
+          <a href="#docs"><span>Docs Rules</span><small>06</small></a>
         </nav>
-    </div>
-</header>
+      </div>
+      <div class="rail-foot">
+        JSON replaces .proto. YAML remains supported when a team wants it.
+      </div>
+    </aside>
 
-<section class="hero">
-    <div class="hero-copy">
-        <div>
-            <div class="hero-kicker">AGENT-FIRST BINARY SCHEMA</div>
-            <h1><span>bytemsg233</span></h1>
-            <p class="hero-summary">
-                一个把 schema、注释、多语言 SDK、对象池和紧凑编码都压缩到单条工作流里的序列化框架。
-                它不是“又一个协议格式说明页”，而是一套让人和 Agent 都能直接上手的生成系统。
-            </p>
-            <div class="hero-actions">
-                <a class="primary" href="#encode-interactive">打开在线编码体验</a>
-                <a class="secondary" href="#serialization-flow">查看生成链路</a>
+    <main>
+      <section class="hero" id="install">
+        <div class="topline">
+          <span>bytemsg233 / schema compiler / binary runtime</span>
+          <a href="https://github.com/neko233-com/bytemsg233">GitHub repository</a>
+        </div>
+
+        <div class="hero-grid">
+          <div class="poster reveal">
+            <div>
+              <h2>Install first. <span>Ship schema next.</span></h2>
+              <p class="poster-copy">bytemsg233 turns one JSON schema into native-feeling Go, C#, Java, TypeScript, Rust, and Python models with object pooling, enum helpers, localized comments, and compact binary payloads.</p>
             </div>
-        </div>
-        <div class="hero-stats">
-            <div class="hero-stat">
-                <strong>5</strong>
-                <span>目标语言内置支持对象池</span>
-            </div>
-            <div class="hero-stat">
-                <strong>1</strong>
-                <span>单文件 `.bmsg`，不追 import 链</span>
-            </div>
-            <div class="hero-stat">
-                <strong>-56%</strong>
-                <span>同类场景下比 JSON 更紧凑</span>
-            </div>
-        </div>
-    </div>
 
-    <div class="hero-panel">
-        <div class="runtime-card">
-            <h3>Schema Poster</h3>
-            <pre class="schema-preview">schema: bymsg/v1
-package: com.example.game
-
-enum HeroState {
-  IDLE = 0
-  MOVING = 1
-  DEAD = 2
-}
-
-message Hero {
-  uint32 id = 1       // "英雄 ID" | "Hero ID"
-  string name = 2     // "名称" | "Name"
-  list&lt;string&gt; tags = 3
-  map&lt;string, string&gt; attrs = 4
-  HeroState state = 5
-}</pre>
-        </div>
-        <div class="runtime-card">
-            <h4>Generated Runtime Shape</h4>
-            <pre class="runtime-console">// TypeScript
-export class Hero {
-  id: number = 0;
-  tags: string[] = [];
-  attrs: Record&lt;string, string&gt; = {};
-  state: HeroState = HeroState.Idle;
-
-  static acquire(init?: Partial&lt;Hero&gt;): Hero
-  release(): void
-  reset(): void
-}
-
-HeroState.fromValue(1)
-
-// Go
-func AcquireHero() *Hero
-func ReleaseHero(value *Hero)
-func (x *Hero) Reset()</pre>
-            <div class="runtime-legend">
-                <div class="runtime-pill">Class comment / field comment native output</div>
-                <div class="runtime-pill">Per-language built-in pooling, zero dependency</div>
-                <div class="runtime-pill">List / map / bytes reset cleanly before reuse</div>
-                <div class="runtime-pill">Enum helper generated natively per language</div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<section class="overview-strip animate-on-scroll">
-    <div class="overview-card">
-        <strong>Why It Feels Different</strong>
-        <p>不是“协议语法 + 工具链拼装”，而是把 schema 定义、注释语言切换、对象池约定和客户端可用代码一次性输出。</p>
-    </div>
-    <div class="overview-card">
-        <strong>For Agent Workflows</strong>
-        <p>一个 `.bmsg` 文件就能跑完整解析链，适合自动生成、审查和跨语言 SDK 维护。</p>
-    </div>
-    <div class="overview-card">
-        <strong>For Human Docs</strong>
-        <p>这个 HTML 是完整的人类阅读面，不跳 Markdown，不把仓库说明当页面渲染依赖。</p>
-    </div>
-    <div class="overview-card">
-        <strong>For Client Runtimes</strong>
-        <p>每门语言自带 acquire / release / reset，减少重复分配和旧数据残留。</p>
-    </div>
-</section>
-
-<section class="toc-shell animate-on-scroll">
-    <div class="toc-wrap">
-        <div class="toc-card">
-            <h3>这页不是窄文档列</h3>
-            <p>这里把 schema、编码、对象池、国际化和 CLI 放在同一张宽幅技术展示页里。你可以按主题跳，也可以顺着整条生成链往下看。</p>
-        </div>
-        <div class="toc-card">
-            <div class="toc-grid">
-                <a href="#single-file"><strong>单文件 schema</strong><span>为什么 `.bmsg` 更适合 Agent 解析</span></a>
-                <a href="#binary-encoding"><strong>Varint 编码</strong><span>每个字节怎么省出来的</span></a>
-                <a href="#field-header"><strong>Field Header</strong><span>tag 和 wire type 如何压缩</span></a>
-                <a href="#zigzag"><strong>Zigzag</strong><span>负数不再白白浪费 10 字节</span></a>
-                <a href="#encoding-walkthrough"><strong>完整走查</strong><span>一条消息如何变成 bytes</span></a>
-                <a href="#encode-interactive"><strong>在线体验</strong><span>输入字段，实时看十六进制输出</span></a>
-                <a href="#serialization-flow"><strong>生成链路</strong><span>从 schema 到多语言运行时</span></a>
-                <a href="#i18n"><strong>注释与国际化</strong><span>双语描述如何进入代码</span></a>
-            </div>
-        </div>
-    </div>
-</section>
-
-<section class="demo-section animate-on-scroll" id="single-file">
-    <div class="section-head">
-        <div>
-            <div class="section-kicker">01 / SCHEMA SURFACE</div>
-            <h2 class="demo-title">单文件 vs 散落文件</h2>
-            <p class="demo-subtitle">bytemsg233 的价值，不只是少一个 import。它把“被机器读”和“被人读”这两件事同时压到了同一份输入里。</p>
-        </div>
-        <div class="section-note">一个 `.bmsg` 文件负责结构、描述、tag、国际化注释。没有 schema 链路追踪，也没有“先跳去别的文件再理解这里”的心智摩擦。</div>
-    </div>
-    <div class="single-file">
-        <div class="file-tree">
-            <div class="file-group">
-                <h3>Protobuf / 多文件散落</h3>
-                <div class="file-item">user.proto</div>
-                <div class="file-item">types.proto</div>
-                <div class="file-item">common.proto</div>
-                <div class="file-item">service.proto</div>
-                <div class="file-item">agent 需要继续解析 import 链</div>
-            </div>
-            <div class="file-group">
-                <h3>ByteMsg / 单文件闭环</h3>
-                <div class="file-item highlight">user.bmsg</div>
-                <div class="file-item">定义、注释、tag、i18n 一次写完</div>
-                <div class="file-item">不需要 import，不需要前向声明</div>
-            </div>
-        </div>
-        <div class="code-compare">
-            <div class="code-block" data-label="Protobuf">
-                <pre><span class="cm">// user.proto</span>
-<span class="hl">import</span> <span class="hl2">"types.proto"</span>;
-<span class="hl">import</span> <span class="hl2">"common.proto"</span>;
-
-<span class="hl">message</span> User {
-  <span class="hl">uint32</span> id = <span class="hl2">1</span>;
-  <span class="hl">string</span> name = <span class="hl2">2</span>;
-}</pre>
-            </div>
-            <div class="code-block" data-label="ByteMsg - .bmsg">
-                <pre><span class="cm">// user.bmsg - everything lives here</span>
-<span class="hl">schema:</span> bymsg/v1
-<span class="hl">package:</span> com.example
-
-<span class="hl">enum</span> <span class="hl2">UserType</span> {
-  ADMIN = <span class="hl2">0</span>
-  USER = <span class="hl2">1</span>
-}
-
-<span class="hl">message</span> <span class="hl2">User</span> {
-  <span class="hl">uint32</span> id = <span class="hl2">1</span> <span class="cm">// "ID" | "ID"</span>
-  <span class="hl">string</span> name = <span class="hl2">2</span> <span class="cm">// "名称" | "Name"</span>
-}</pre>
-            </div>
-        </div>
-    </div>
-</section>
-
-<section class="demo-section animate-on-scroll" id="binary-encoding">
-    <div class="section-head">
-        <div>
-            <div class="section-kicker">02 / VARINT</div>
-            <h2 class="demo-title">二进制编码原理</h2>
-            <p class="demo-subtitle">Varint 的核心不是“很技术”，而是按数字规模计费。小值只拿走很少的字节，大值才继续扩展。</p>
-        </div>
-        <div class="section-note">每字节 7 bit 数据 + 1 bit 是否续写。小数字在大多数业务消息里出现得最频繁，所以整体收益非常稳定。</div>
-    </div>
-    <div class="binary-demo">
-        <div class="binary-row">
-            <span class="binary-label">值 = 1</span>
-            <div class="binary-bits" id="bits-1"></div>
-            <span style="color:var(--accent-3)">1 字节</span>
-        </div>
-        <div class="binary-row">
-            <span class="binary-label">值 = 127</span>
-            <div class="binary-bits" id="bits-127"></div>
-            <span style="color:var(--accent-3)">1 字节，单字节上限</span>
-        </div>
-        <div class="binary-row">
-            <span class="binary-label">值 = 128</span>
-            <div class="binary-bits" id="bits-128"></div>
-            <span style="color:var(--accent)">2 字节，开始续写</span>
-        </div>
-        <div class="binary-row">
-            <span class="binary-label">值 = 300</span>
-            <div class="binary-bits" id="bits-300"></div>
-            <span style="color:var(--accent)">2 字节</span>
-        </div>
-        <div class="binary-row">
-            <span class="binary-label">值 = 16384</span>
-            <div class="binary-bits" id="bits-16384"></div>
-            <span style="color:var(--accent-2)">3 字节</span>
-        </div>
-        <div class="binary-row">
-            <span class="binary-label">值 = 100000</span>
-            <div class="binary-bits" id="bits-100000"></div>
-            <span style="color:var(--accent-2)">3 字节</span>
-        </div>
-    </div>
-</section>
-
-<section class="demo-section animate-on-scroll" id="wire-types">
-    <div class="section-head">
-        <div>
-            <div class="section-kicker">03 / WIRE TYPES</div>
-            <h2 class="demo-title">Wire Type 类型表</h2>
-            <p class="demo-subtitle">ByteMsg 刻意只保留最常用的编码形态，避免把 runtime 复杂度和心智负担一并带到 client 里。</p>
-        </div>
-        <div class="section-note">只用 Varint(0) 和 Length-delimited(2)。解析分支更少，生成器约束更明确，SDK 行为更稳定。</div>
-    </div>
-    <div class="section-frame">
-        <table class="wire-table">
-            <thead>
-                <tr><th>Wire Type</th><th>值</th><th>含义</th><th>适用类型</th><th>格式</th></tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td><code>Varint</code></td>
-                    <td><code>0</code></td>
-                    <td>可变长度整数</td>
-                    <td>int32 / int64 / uint32 / uint64 / sint32 / sint64 / bool / enum</td>
-                    <td>Tag + Varint 值</td>
-                </tr>
-                <tr>
-                    <td><code>Length-delimited</code></td>
-                    <td><code>2</code></td>
-                    <td>长度前缀数据</td>
-                    <td>string / bytes / message / list / map</td>
-                    <td>Tag + Length + Data</td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-</section>
-
-<section class="demo-section animate-on-scroll" id="field-header">
-    <div class="section-head">
-        <div>
-            <div class="section-kicker">04 / HEADER</div>
-            <h2 class="demo-title">Field Header 编码</h2>
-            <p class="demo-subtitle">每个字段的头部都把 tag 和 wire type 压成一个 Varint。这个动作很小，但对整体开销极关键。</p>
-        </div>
-        <div class="section-note">公式是 `(tag << 3) | wireType`。tag 1-15 的高频字段基本都能把 header 压在 1 个字节里。</div>
-    </div>
-    <div class="binary-demo">
-        <div class="legend">
-            <div class="legend-item"><div class="legend-dot" style="background:var(--accent-2)"></div>Tag</div>
-            <div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div>Wire Type</div>
-        </div>
-        <div class="binary-row">
-            <span class="binary-label">Field 1 / Varint</span>
-            <div class="binary-bits" id="fh-1-0"></div>
-            <span style="color:var(--muted)">(1 &lt;&lt; 3) | 0 = 8</span>
-        </div>
-        <div class="binary-row">
-            <span class="binary-label">Field 2 / String</span>
-            <div class="binary-bits" id="fh-2-2"></div>
-            <span style="color:var(--muted)">(2 &lt;&lt; 3) | 2 = 18</span>
-        </div>
-        <div class="binary-row">
-            <span class="binary-label">Field 3 / Bytes</span>
-            <div class="binary-bits" id="fh-3-2"></div>
-            <span style="color:var(--muted)">(3 &lt;&lt; 3) | 2 = 26</span>
-        </div>
-        <div class="binary-row">
-            <span class="binary-label">Field 5 / Varint</span>
-            <div class="binary-bits" id="fh-5-0"></div>
-            <span style="color:var(--muted)">(5 &lt;&lt; 3) | 0 = 40</span>
-        </div>
-    </div>
-</section>
-
-<section class="demo-section animate-on-scroll" id="zigzag">
-    <div class="section-head">
-        <div>
-            <div class="section-kicker">05 / SIGNED INTS</div>
-            <h2 class="demo-title">Zigzag 编码</h2>
-            <p class="demo-subtitle">负数之所以会“膨胀”，不是值本身大，而是普通 Varint 看的是补码。Zigzag 做的是重新映射，而不是魔法压缩。</p>
-        </div>
-        <div class="section-note">把 `-1` 映射到 `1`，把 `-2` 映射到 `3`。这样常见负值也能回到 1 字节区间。</div>
-    </div>
-    <div class="zigzag-demo">
-        <div class="section-frame">
-            <table class="wire-table">
-                <thead>
-                    <tr><th>原始值</th><th>Zigzag</th><th>字节数</th><th>说明</th></tr>
-                </thead>
-                <tbody>
-                    <tr><td><code>0</code></td><td><code>0</code></td><td>1</td><td>0 -> 0</td></tr>
-                    <tr><td><code>-1</code></td><td><code>1</code></td><td>1</td><td>-1 -> 1</td></tr>
-                    <tr><td><code>1</code></td><td><code>2</code></td><td>1</td><td>1 -> 2</td></tr>
-                    <tr><td><code>-2</code></td><td><code>3</code></td><td>1</td><td>-2 -> 3</td></tr>
-                    <tr><td><code>-2147483648</code></td><td><code>4294967295</code></td><td>5</td><td>最小 int32 映射到最大 uint32</td></tr>
-                </tbody>
-            </table>
-        </div>
-        <div class="zigzag-input">
-            <div class="zigzag-result">
-                <div>原始值: <span id="zigzag-orig">0</span></div>
-                <div>Zigzag: <span id="zigzag-encoded">0</span> <strong id="zigzag-bytes">(1 字节)</strong></div>
-                <div id="zigzag-formula">公式: (0 &lt;&lt; 1) ^ (0 &gt;&gt; 31) = 0</div>
-            </div>
-            <input type="range" id="zigzag-slider" min="-64" max="64" value="0">
-        </div>
-    </div>
-</section>
-
-<section class="demo-section animate-on-scroll" id="string-encoding">
-    <div class="section-head">
-        <div>
-            <div class="section-kicker">06 / LENGTH DELIMITED</div>
-            <h2 class="demo-title">字符串 / 字节编码</h2>
-            <p class="demo-subtitle">字符串、bytes、嵌套 message、list、map 都走同一类包装：先长度，再内容。统一得足够少，SDK 才能稳定得足够久。</p>
-        </div>
-        <div class="section-note">先写长度，后写内容。对 runtime 来说，这意味着边界永远清晰，跳过未知字段也简单。</div>
-    </div>
-    <div class="code-compare">
-        <div class="code-surface" data-label="String Bytes">
-            <pre><span class="cm">// "Hello"</span>
-<span class="hl4">05</span>                 <span class="cm">// 长度 = 5</span>
-<span class="hl3">48 65 6C 6C 6F</span>     <span class="cm">// UTF-8 bytes</span>
-
-<span class="cm">// "Hi, 世界!"</span>
-<span class="hl4">0B</span>                 <span class="cm">// 长度 = 11</span>
-<span class="hl3">48 69 2C 20 E4 B8 96 E7 95 8C 21</span></pre>
-        </div>
-        <div class="code-surface" data-label="Nested Message">
-            <pre><span class="cm">// 子 message 先写入临时 buffer</span>
-<span class="hl4">12</span>                 <span class="cm">// field 2, wire type = 2</span>
-<span class="hl4">08</span>                 <span class="cm">// 子 message 长度 = 8</span>
-<span class="hl3">08 7B</span>              <span class="cm">// field 1: id = 123</span>
-<span class="hl3">12 05</span>              <span class="cm">// field 2: len = 5</span>
-<span class="hl3">48 65 6C 6C 6F</span>     <span class="cm">// "Hello"</span></pre>
-        </div>
-    </div>
-</section>
-
-<section class="demo-section animate-on-scroll" id="encoding-walkthrough">
-    <div class="section-head">
-        <div>
-            <div class="section-kicker">07 / FULL PATH</div>
-            <h2 class="demo-title">完整编码走查</h2>
-            <p class="demo-subtitle">把 `{id: 123, name: "Hi"}` 拆到字节层之后，你会发现 ByteMsg 省出来的不是“黑盒优化”，而是每一步都少了一点浪费。</p>
-        </div>
-        <div class="section-note">观察每一步的 header、length、content，就能理解为什么字段名不落地到 payload 时会明显变小。</div>
-    </div>
-    <div class="walkthrough">
-        <div class="walk-step">
-            <div class="walk-num">1</div>
-            <div class="walk-content">
-                <h4>字段 1: id = 123</h4>
-                <div class="byte-row" id="walk-step1"></div>
-                <pre>Field Header: (1 &lt;&lt; 3) | 0 = 8  -> 08
-Value: 123 -> 7B
-合计: 08 7B</pre>
-            </div>
-        </div>
-        <div class="walk-step">
-            <div class="walk-num">2</div>
-            <div class="walk-content">
-                <h4>字段 2: name = "Hi"</h4>
-                <div class="byte-row" id="walk-step2"></div>
-                <pre>Field Header: (2 &lt;&lt; 3) | 2 = 18 -> 12
-Length: 2 -> 02
-Content: 48 69
-合计: 12 02 48 69</pre>
-            </div>
-        </div>
-        <div class="walk-step">
-            <div class="walk-num">3</div>
-            <div class="walk-content">
-                <h4>最终输出</h4>
-                <div class="byte-row" id="walk-final"></div>
-                <pre>完整编码: 08 7B 12 02 48 69
-总长度: 6 B
-对比 JSON: {"id":123,"name":"Hi"} -> 20 B
-体积节省: 70%</pre>
-            </div>
-        </div>
-    </div>
-</section>
-
-<section class="demo-section animate-on-scroll" id="encode-interactive">
-    <div class="section-head">
-        <div>
-            <div class="section-kicker">08 / PLAYGROUND</div>
-            <h2 class="demo-title">在线编码体验</h2>
-            <p class="demo-subtitle">给字段填值，直接看 Field Header、Varint、Zigzag 和最终 Hex。这个区域就是给“我想马上理解它到底怎么编码”的人准备的。</p>
-        </div>
-        <div class="section-note">它不是文档截图，而是一块真正可玩的解释器面板。</div>
-    </div>
-    <div class="encode-interactive">
-        <div class="section-frame">
-            <div class="encode-fields">
-                <div class="encode-field">
-                    <label for="enc-id">id (uint32)</label>
-                    <input id="enc-id" type="number" value="123">
+            <div class="install-strip">
+              <div class="terminal">
+                <div class="terminal-head">
+                  <span>Install</span>
+                  <button class="copy-btn" data-copy="curl -fsSL https://raw.githubusercontent.com/neko233-com/bytemsg233/main/scripts/install.sh | bash">Copy</button>
                 </div>
-                <div class="encode-field">
-                    <label for="enc-name">name (string)</label>
-                    <input id="enc-name" type="text" value="Hero">
+                <pre><code>curl -fsSL https://raw.githubusercontent.com/neko233-com/bytemsg233/main/scripts/install.sh | bash</code></pre>
+              </div>
+              <div class="terminal">
+                <div class="terminal-head">
+                  <span>Windows PowerShell</span>
+                  <button class="copy-btn" data-copy="irm https://raw.githubusercontent.com/neko233-com/bytemsg233/main/scripts/install.ps1 | iex">Copy</button>
                 </div>
-                <div class="encode-field">
-                    <label for="enc-score">score (sint32)</label>
-                    <input id="enc-score" type="number" value="-5">
-                </div>
-                <button class="encode-btn" type="button" onclick="encodeInteractive()">编码并解释</button>
+                <pre><code>irm https://raw.githubusercontent.com/neko233-com/bytemsg233/main/scripts/install.ps1 | iex</code></pre>
+              </div>
             </div>
-        </div>
-        <pre class="encode-output" id="enc-output">点击「编码并解释」查看结果</pre>
-    </div>
-</section>
+          </div>
 
-<section class="demo-section animate-on-scroll" id="nested">
-    <div class="section-head">
-        <div>
-            <div class="section-kicker">09 / COLLECTIONS</div>
-            <h2 class="demo-title">Map / List 嵌套编码</h2>
-            <p class="demo-subtitle">集合是业务消息里的主角，所以 bytemsg233 把它们直接当一等公民处理，而不是额外拼补丁。</p>
-        </div>
-        <div class="section-note">同时，这也决定了对象池 reset 逻辑必须原生懂得怎样把 list / map 清干净。</div>
-    </div>
-    <div class="code-compare">
-        <div class="code-surface" data-label="Schema">
-            <pre>message UserProfile {
-  uint32 id = 1
-  string name = 2
-  list&lt;string&gt; tags = 3
-  map&lt;string, string&gt; meta = 4
-}</pre>
-        </div>
-        <div class="code-surface" data-label="Binary Shape">
-            <pre><span class="hl4">1A</span>                   <span class="cm">// field 3, wire type = 2</span>
-<span class="hl4">10</span>                   <span class="cm">// 总长度 = 16</span>
-<span class="hl2">05</span>                   <span class="cm">// list 长度 = 2</span>
-<span class="hl3">05 61 64 6D 69 6E</span>   <span class="cm">// "admin"</span>
-<span class="hl3">04 75 73 65 72</span>      <span class="cm">// "user"</span>
-
-<span class="hl4">22</span>                   <span class="cm">// field 4, wire type = 2</span>
-<span class="hl4">08</span>                   <span class="cm">// 总长度 = 8</span>
-<span class="hl2">01</span>                   <span class="cm">// entry 数量 = 1</span>
-<span class="hl3">01 6B</span>                <span class="cm">// key "k"</span>
-<span class="hl3">01 76</span>                <span class="cm">// value "v"</span></pre>
-        </div>
-    </div>
-</section>
-
-<section class="demo-section animate-on-scroll" id="serialization-flow">
-    <div class="section-head">
-        <div>
-            <div class="section-kicker">10 / PIPELINE</div>
-            <h2 class="demo-title">序列化流程</h2>
-            <p class="demo-subtitle">从 schema 到运行时，不只是“生成类型”。现在每门语言都把注释、默认值和对象池契约一起带出来。</p>
-        </div>
-        <div class="section-note">这条链越完整，client 端越不需要再维护一套“拿对象、还对象、清状态”的额外逻辑。</div>
-    </div>
-    <div class="section-frame">
-        <div class="flow" id="flow-diagram">
-            <div class="flow-node" style="animation-delay:.1s">
-                <div class="icon">.bmsg</div>
-                <strong>Single File</strong>
-                <div class="label">结构、tag、双语注释</div>
+          <div class="workspace reveal">
+            <div class="quick-facts">
+              <div class="fact"><strong>JSON</strong><span>Default DSL. Top-level keys are message names.</span></div>
+              <div class="fact"><strong>5 langs</strong><span>Go, C#, TypeScript, Rust, and Java are the 1.0 priority path.</span></div>
+              <div class="fact"><strong>0 plugin</strong><span>No custom `.bmsg` plugin required for the main authoring path.</span></div>
             </div>
-            <div class="flow-node" style="animation-delay:.25s">
-                <div class="icon">AST</div>
-                <strong>Parser</strong>
-                <div class="label">统一 schema 语义树</div>
-            </div>
-            <div class="flow-node" style="animation-delay:.4s">
-                <div class="icon">SDK</div>
-                <strong>Codegen</strong>
-                <div class="label">类注释、字段注释、对象池</div>
-            </div>
-            <div class="flow-node" style="animation-delay:.55s">
-                <div class="icon">HEX</div>
-                <strong>Binary</strong>
-                <div class="label">紧凑 payload，适合高频消息</div>
-            </div>
-        </div>
-        <div class="code-surface" data-label="CLI" style="margin-top:18px;">
-            <pre><span class="cm"># 编译 .bmsg 为 Go 代码</span>
-$ bytemsg233 compile user.bmsg -l go -o ./gen
 
-<span class="cm"># 编译为多语言运行时</span>
-$ bytemsg233 compile user.bmsg -l go,csharp,java,typescript,python -o ./gen
-
-<span class="cm"># 指定中文注释</span>
-$ bytemsg233 compile user.bmsg -l go --locale zh -o ./gen</pre>
-        </div>
-    </div>
-</section>
-
-<section class="demo-section animate-on-scroll" id="size-compare">
-    <div class="section-head">
-        <div>
-            <div class="section-kicker">11 / PAYLOAD SIZE</div>
-            <h2 class="demo-title">体积对比</h2>
-            <p class="demo-subtitle">字段名不进 payload、header 更紧凑、小整数更省字节，这三个点叠起来之后，体积差距不是个位数。</p>
-        </div>
-        <div class="section-note">示例数据：`UserProfile`，包含 id、name、email、3 个 tags、2 个 metadata。</div>
-    </div>
-    <div class="section-frame">
-        <div class="size-compare">
-            <div class="size-bar">
-                <div class="bar protobuf"></div>
-                <div class="bar-label">Protobuf</div>
-                <div class="bar-size">100 B</div>
-            </div>
-            <div class="size-bar">
-                <div class="bar json"></div>
-                <div class="bar-label">JSON</div>
-                <div class="bar-size">160 B</div>
-            </div>
-            <div class="size-bar">
-                <div class="bar bytemsg"></div>
-                <div class="bar-label">ByteMsg</div>
-                <div class="bar-size">70 B</div>
-            </div>
-        </div>
-        <table class="wire-table" style="margin-top:20px;">
-            <thead><tr><th>格式</th><th>体积</th><th>相对 JSON</th><th>说明</th></tr></thead>
-            <tbody>
-                <tr><td><code>ByteMsg</code></td><td><strong style="color:var(--accent-3)">~70 B</strong></td><td style="color:var(--accent-3)">-56%</td><td>Varint + 压缩 header</td></tr>
-                <tr><td><code>Protobuf v3</code></td><td><strong style="color:var(--accent)">~85 B</strong></td><td style="color:var(--accent)">-47%</td><td>相近策略，但链路更重</td></tr>
-                <tr><td><code>MessagePack</code></td><td><strong style="color:var(--accent-2)">~130 B</strong></td><td style="color:var(--accent-2)">-19%</td><td>字段语义仍偏 JSON 形态</td></tr>
-                <tr><td><code>JSON</code></td><td><strong style="color:var(--danger)">~160 B</strong></td><td>-</td><td>字段名重复落地</td></tr>
-            </tbody>
-        </table>
-    </div>
-</section>
-
-<section class="demo-section animate-on-scroll" id="types">
-    <div class="section-head">
-        <div>
-            <div class="section-kicker">12 / TYPE SYSTEM</div>
-            <h2 class="demo-title">支持的类型</h2>
-            <p class="demo-subtitle">用更少的 wire type 处理更多的业务结构，是 bytemsg233 的一个刻意取舍。</p>
-        </div>
-        <div class="section-note">这页展示的是 schema 能写什么；对象池负责的是这些类型在各语言里如何被安全地复用。</div>
-    </div>
-    <div class="type-grid">
-        <div class="type-card"><div class="type-name">uint32 / uint64</div><div class="type-wire">WireType: 0</div><p>无符号整数，小值高效。</p></div>
-        <div class="type-card"><div class="type-name">int32 / int64</div><div class="type-wire">WireType: 0</div><p>标准有符号整数。</p></div>
-        <div class="type-card"><div class="type-name">sint32 / sint64</div><div class="type-wire">WireType: 0 + Zigzag</div><p>负数也能保持短编码。</p></div>
-        <div class="type-card"><div class="type-name">bool</div><div class="type-wire">WireType: 0</div><p>true = 1，false = 0。</p></div>
-        <div class="type-card"><div class="type-name">string</div><div class="type-wire">WireType: 2</div><p>UTF-8 文本。</p></div>
-        <div class="type-card"><div class="type-name">bytes</div><div class="type-wire">WireType: 2</div><p>原始字节数据。</p></div>
-        <div class="type-card"><div class="type-name">list&lt;T&gt;</div><div class="type-wire">WireType: 2</div><p>有序列表，适合反复复用对象池容器。</p></div>
-        <div class="type-card"><div class="type-name">map&lt;K,V&gt;</div><div class="type-wire">WireType: 2</div><p>键值对，业务里的一等公民。</p></div>
-        <div class="type-card"><div class="type-name">enum</div><div class="type-wire">WireType: 0</div><p>序列化为整数。</p></div>
-        <div class="type-card"><div class="type-name">message</div><div class="type-wire">WireType: 2</div><p>可嵌套复合结构。</p></div>
-    </div>
-</section>
-
-<section class="demo-section animate-on-scroll" id="i18n">
-    <div class="section-head">
-        <div>
-            <div class="section-kicker">13 / COMMENTS</div>
-            <h2 class="demo-title">国际化演示</h2>
-            <p class="demo-subtitle">双语注释不是展示彩蛋，而是代码生成的一部分。现在 class / struct 注释和字段注释都会一起落到输出里。</p>
-        </div>
-        <div class="section-note">`.bmsg` 里写一次 `// "中文" | "English"`，不同语言输出时按 locale 自动切换。</div>
-    </div>
-    <div class="i18n-demo">
-        <div class="section-frame">
-            <div class="i18n-toggle">
-                <button class="i18n-btn active" onclick="setLang('zh', this)">中文</button>
-                <button class="i18n-btn" onclick="setLang('en', this)">English</button>
-            </div>
-            <p class="panel-note">不只是 Go 注释。TypeScript class、Java Javadoc、C# XML 注释、Python 字段说明都会按 locale 生成。</p>
-        </div>
-        <div class="code-surface" data-label="Generated Comment Output">
-            <div class="i18n-output" id="i18n-output">
-                <code>// 用户资料</code>
-                <code>type UserProfile struct {</code>
-                <code>&nbsp;&nbsp;// 用户ID</code>
-                <code>&nbsp;&nbsp;Id uint32 `bytemsg:"1"`</code>
-                <code>&nbsp;&nbsp;// 用户名</code>
-                <code>&nbsp;&nbsp;Name string `bytemsg:"2"`</code>
-                <code>}</code>
-            </div>
-        </div>
-    </div>
-</section>
-
-<section class="demo-section animate-on-scroll" id="cli">
-    <div class="section-head">
-        <div>
-            <div class="section-kicker">14 / TOOLING</div>
-            <h2 class="demo-title">CLI 使用</h2>
-            <p class="demo-subtitle">初始化、编译、多语言输出、locale 切换，都是同一套 CLI 路径。这个工具链应该是顺手的，而不是“先装三层插件”。</p>
-        </div>
-        <div class="section-note">目标不是“看起来功能很多”，而是让你从 schema 到可用 SDK 的路径尽量短。</div>
-    </div>
-    <div class="code-compare">
-        <div class="code-block" data-label="初始化 .bmsg">
-            <pre><span class="cm"># 创建新的 schema 文件</span>
-$ bytemsg233 init myproject
-
-<span class="cm"># 自动生成 myproject.bmsg</span>
-<span class="hl">schema:</span> bymsg/v1
-<span class="hl">package:</span> myproject
-
-<span class="hl">message</span> Example {
-  <span class="hl">uint32</span> id = <span class="hl2">1</span> <span class="cm">// "ID" | "ID"</span>
-  <span class="hl">string</span> name = <span class="hl2">2</span> <span class="cm">// "名称" | "Name"</span>
-}</pre>
-        </div>
-        <div class="code-block" data-label="编译 & 生成">
-            <pre><span class="cm"># 生成 Go</span>
-$ bytemsg233 compile user.bmsg -l go -o ./gen
-
-<span class="cm"># 生成多语言，并带对象池辅助代码</span>
-$ bytemsg233 compile user.bmsg \
-    -l go,csharp,java,typescript,python \
-    -o ./gen
-
-<span class="cm"># 输出中文注释</span>
-$ bytemsg233 compile user.bmsg -l go --locale zh -o ./gen</pre>
-        </div>
-    </div>
-</section>
-
-<section class="demo-section animate-on-scroll">
-    <div class="section-head">
-        <div>
-            <div class="section-kicker">15 / PRODUCT SHAPE</div>
-            <h2 class="demo-title">核心特性</h2>
-            <p class="demo-subtitle">这是 bytemsg233 现在真正的产品轮廓：不只是更小，也更像一套能长期维护的跨语言 schema runtime。</p>
-        </div>
-        <div class="section-note">更完整的生成物，意味着更少的二次封装、更少的手写池、更少的注释遗漏。</div>
-    </div>
-    <div class="features">
-        <div class="feature"><h3>单文件 .bmsg</h3><p>一个文件写完定义，不需要 import 链回溯。</p></div>
-        <div class="feature"><h3>紧凑二进制</h3><p>Varint、Zigzag、压缩 header 组合起来稳定省空间。</p></div>
-        <div class="feature"><h3>多语言输出</h3><p>Go / C# / Java / TypeScript / Python 同步生成。</p></div>
-        <div class="feature"><h3>原生对象池</h3><p>每门语言自带 acquire / release / reset 约定。</p></div>
-        <div class="feature"><h3>注释内建</h3><p>class 注释和字段注释按 locale 原生输出。</p></div>
-        <div class="feature"><h3>Map / List 一等公民</h3><p>集合不是旁路特性，reset 逻辑直接理解它们。</p></div>
-        <div class="feature"><h3>Agent 友好</h3><p>输入更少、更平、更容易被自动系统消费。</p></div>
-        <div class="feature"><h3>HTML 独立面</h3><p>人类展示页自包含，不把 Markdown 当页面依赖。</p></div>
-    </div>
-</section>
-
-<footer>
-    <p>bytemsg233 - by neko233-com - MIT License</p>
-</footer>
-
-<script>
-const observer = new IntersectionObserver(entries => {
-    entries.forEach(entry => {
-        if (entry.isIntersecting) entry.target.classList.add('visible');
-    });
-}, { threshold: 0.1 });
-
-document.querySelectorAll('.animate-on-scroll').forEach(el => observer.observe(el));
-
-function renderBits(id, value, bits, labels) {
-    const container = document.getElementById(id);
-    if (!container) return;
-
-    const bin = value.toString(2).padStart(bits, '0');
-    container.innerHTML = '';
-    bin.split('').forEach((bit, index) => {
-        const el = document.createElement('span');
-        let cls = 'bit ';
-        if (labels) {
-            cls += labels[index] || (bit === '1' ? 'active' : 'zero');
-        } else {
-            cls += bit === '1' ? 'active' : 'zero';
-        }
-        el.className = cls;
-        el.textContent = bit;
-        el.style.animationDelay = `${index * 0.05}s`;
-        container.appendChild(el);
-    });
-}
-
-const binaryObserver = new IntersectionObserver(entries => {
-    entries.forEach(entry => {
-        if (!entry.isIntersecting) return;
-        renderBits('bits-1', 1, 8);
-        renderBits('bits-127', 127, 8);
-        renderBits('bits-128', 128, 16);
-        renderBits('bits-300', 300, 16);
-        renderBits('bits-16384', 16384, 16);
-        renderBits('bits-100000', 100000, 24);
-        binaryObserver.unobserve(entry.target);
-    });
-}, { threshold: 0.25 });
-
-const binaryDemo = document.querySelector('#binary-encoding .binary-demo');
-if (binaryDemo) binaryObserver.observe(binaryDemo);
-
-const fieldHeaderObserver = new IntersectionObserver(entries => {
-    entries.forEach(entry => {
-        if (!entry.isIntersecting) return;
-        renderBits('fh-1-0', 8, 8, ['zero','zero','zero','zero','zero','active','zero','zero']);
-        renderBits('fh-2-2', 18, 8, ['zero','zero','zero','active','zero','zero','active','zero']);
-        renderBits('fh-3-2', 26, 8, ['zero','zero','zero','active','active','zero','active','zero']);
-        renderBits('fh-5-0', 40, 8, ['zero','zero','active','zero','active','zero','zero','zero']);
-        fieldHeaderObserver.unobserve(entry.target);
-    });
-}, { threshold: 0.25 });
-
-const headerSection = document.getElementById('field-header');
-if (headerSection) fieldHeaderObserver.observe(headerSection);
-
-const zigzagSlider = document.getElementById('zigzag-slider');
-if (zigzagSlider) {
-    zigzagSlider.addEventListener('input', function() {
-        const value = parseInt(this.value, 10);
-        const encoded = (value << 1) ^ (value >> 31);
-        const raw = encoded >>> 0;
-        const bitCount = raw.toString(2).length;
-        const byteCount = Math.ceil(bitCount / 7) || 1;
-
-        document.getElementById('zigzag-orig').textContent = value;
-        document.getElementById('zigzag-encoded').textContent = raw;
-        document.getElementById('zigzag-bytes').textContent = `(${byteCount} 字节)`;
-        document.getElementById('zigzag-formula').textContent = `公式: (${value} << 1) ^ (${value} >> 31) = ${raw}`;
-    });
-}
-
-function renderByteRow(id, bytes) {
-    const container = document.getElementById(id);
-    if (!container) return;
-    container.innerHTML = '';
-
-    bytes.forEach(byte => {
-        const cell = document.createElement('div');
-        cell.className = 'byte-cell';
-
-        const val = document.createElement('div');
-        val.className = 'byte-val';
-        val.style.background = byte.bg;
-        val.style.color = byte.color || '#fff';
-        val.textContent = byte.hex;
-
-        const label = document.createElement('div');
-        label.className = 'byte-lbl';
-        label.textContent = byte.label || '';
-
-        cell.appendChild(val);
-        cell.appendChild(label);
-        container.appendChild(cell);
-    });
-}
-
-const walkObserver = new IntersectionObserver(entries => {
-    entries.forEach(entry => {
-        if (!entry.isIntersecting) return;
-        renderByteRow('walk-step1', [
-            { hex: '08', bg: 'rgba(243,181,103,.28)', color: '#ffd28a', label: 'Header' },
-            { hex: '7B', bg: 'rgba(84,199,236,.25)', color: '#80d8ff', label: '123' }
-        ]);
-        renderByteRow('walk-step2', [
-            { hex: '12', bg: 'rgba(243,181,103,.28)', color: '#ffd28a', label: 'Header' },
-            { hex: '02', bg: 'rgba(84,199,236,.18)', color: '#80d8ff', label: 'Len' },
-            { hex: '48', bg: 'rgba(100,210,184,.22)', color: '#87e8c7', label: 'H' },
-            { hex: '69', bg: 'rgba(100,210,184,.22)', color: '#87e8c7', label: 'i' }
-        ]);
-        renderByteRow('walk-final', [
-            { hex: '08', bg: 'rgba(243,181,103,.28)', color: '#ffd28a', label: 'Hdr' },
-            { hex: '7B', bg: 'rgba(84,199,236,.25)', color: '#80d8ff', label: '123' },
-            { hex: '12', bg: 'rgba(243,181,103,.28)', color: '#ffd28a', label: 'Hdr' },
-            { hex: '02', bg: 'rgba(84,199,236,.18)', color: '#80d8ff', label: 'Len' },
-            { hex: '48', bg: 'rgba(100,210,184,.22)', color: '#87e8c7', label: 'H' },
-            { hex: '69', bg: 'rgba(100,210,184,.22)', color: '#87e8c7', label: 'i' }
-        ]);
-        walkObserver.unobserve(entry.target);
-    });
-}, { threshold: 0.25 });
-
-const walkSection = document.getElementById('encoding-walkthrough');
-if (walkSection) walkObserver.observe(walkSection);
-
-function zigzagEncode(value) {
-    return (value << 1) ^ (value >> 31);
-}
-
-function toVarint(value) {
-    const bytes = [];
-    let current = value >>> 0;
-    while (current >= 0x80) {
-        bytes.push((current & 0x7F) | 0x80);
-        current >>>= 7;
+            <div class="yaml-panel">
+              <div class="panel-title">
+                <strong>user.bmsg.json</strong>
+                <span>default schema shape</span>
+              </div>
+              <pre><code>{
+  <span class="kw">"schema"</span>: <span class="st">"bymsg/v1"</span>,
+  <span class="kw">"package"</span>: <span class="st">"com.example.game"</span>,
+  <span class="kw">"enums"</span>: {
+    <span class="kw">"HeroState"</span>: {
+      <span class="kw">"values"</span>: {
+        <span class="kw">"IDLE"</span>: <span class="nu">0</span>,
+        <span class="kw">"MOVING"</span>: <span class="nu">1</span>,
+        <span class="kw">"DEAD"</span>: <span class="nu">2</span>
+      }
     }
-    bytes.push(current);
-    return bytes;
-}
+  },
+  <span class="kw">"Hero"</span>: {
+    <span class="kw">"description"</span>: {
+      <span class="kw">"zh"</span>: <span class="st">"英雄资料"</span>,
+      <span class="kw">"en"</span>: <span class="st">"Hero profile"</span>
+    },
+    <span class="kw">"id"</span>: { <span class="kw">"type"</span>: <span class="st">"uint32"</span>, <span class="kw">"tag"</span>: <span class="nu">1</span> },
+    <span class="kw">"name"</span>: { <span class="kw">"type"</span>: <span class="st">"string"</span>, <span class="kw">"tag"</span>: <span class="nu">2</span> },
+    <span class="kw">"skill_ids"</span>: { <span class="kw">"type"</span>: <span class="st">"list&lt;uint32&gt;"</span>, <span class="kw">"tag"</span>: <span class="nu">3</span> },
+    <span class="kw">"state"</span>: { <span class="kw">"type"</span>: <span class="st">"HeroState"</span>, <span class="kw">"tag"</span>: <span class="nu">4</span> }
+  }
+}</code></pre>
+            </div>
+          </div>
+        </div>
+      </section>
 
-function toHex(bytes) {
-    return bytes.map(byte => byte.toString(16).toUpperCase().padStart(2, '0')).join(' ');
-}
+      <section class="section reveal" id="json">
+        <div class="section-head">
+          <h2>The DSL is JSON because big protocols need structure.</h2>
+          <p>When messages grow, JSON keeps message names, fields, enum maps, and generated diffs predictable. YAML remains supported; JSON is the native contract.</p>
+        </div>
 
-function encodeStr(value) {
-    return Array.from(new TextEncoder().encode(value));
-}
+        <div class="split">
+          <div class="open-panel">
+            <div>
+              <h3>One file. Structured comments. Stable diffs.</h3>
+              <p>Descriptions live as fields, not line comments. That lets class comments and field comments generate cleanly in every target language and locale.</p>
+            </div>
+            <div class="rule-list">
+              <div class="rule"><strong>message key</strong><span>Top-level keys such as `Hero` and `InventoryItem` map to native classes or structs.</span></div>
+              <div class="rule"><strong>fields</strong><span>Every field declares `type`, `tag`, and optional localized descriptions.</span></div>
+              <div class="rule"><strong>enums</strong><span>Enum values generate native enum helpers instead of forcing raw integers.</span></div>
+              <div class="rule"><strong>exports</strong><span>Generate `.md` for people and `.bmsg` for legacy/future DSL tooling.</span></div>
+            </div>
+          </div>
 
-function encodeInteractive() {
-    const id = parseInt(document.getElementById('enc-id').value, 10) || 0;
-    const name = document.getElementById('enc-name').value || '';
-    const score = parseInt(document.getElementById('enc-score').value, 10) || 0;
+          <div class="terminal">
+            <div class="terminal-head"><span>CLI</span><span>schema to SDK</span></div>
+            <pre><code><span class="cm"># create user.bmsg.json</span>
+bytemsg233 init user
 
-    const header1 = toVarint((1 << 3) | 0);
-    const idBytes = toVarint(id);
+<span class="cm"># generate all supported languages</span>
+bytemsg233 compile user.bmsg.json \
+  -l go,csharp,typescript,rust,java \
+  -o ./gen
 
-    const header2 = toVarint((2 << 3) | 2);
-    const nameBytes = encodeStr(name);
-    const nameLen = toVarint(nameBytes.length);
+<span class="cm"># export docs and extension-friendly .bmsg</span>
+bytemsg233 export user.bmsg.json \
+  -f md,bmsg \
+  -o ./protocol</code></pre>
+          </div>
+        </div>
+      </section>
 
-    const header3 = toVarint((3 << 3) | 0);
-    const zigzag = zigzagEncode(score);
-    const scoreBytes = toVarint(zigzag);
+      <section class="section reveal" id="languages">
+        <div class="section-head">
+          <h2>Generated code should feel native, not translated.</h2>
+          <p>Each target gets its own pool pattern, enum helpers, comments, and naming style. The schema is shared; the developer experience is language-specific.</p>
+        </div>
 
-    const allBytes = [...header1, ...idBytes, ...header2, ...nameLen, ...nameBytes, ...header3, ...scoreBytes];
-    const jsonStr = JSON.stringify({ id, name, score });
+        <div class="language-grid">
+          <article class="language-panel">
+            <h3>Go</h3>
+            <p>Struct tags, exported fields, and `sync.Pool` style helpers.</p>
+            <code>hero := AcquireHero()
+defer ReleaseHero(hero)
+hero.State = HeroStateMOVING</code>
+          </article>
+          <article class="language-panel">
+            <h3>C# / Unity</h3>
+            <p>Sealed classes, XML docs, native collections, and Unity-friendly pooling.</p>
+            <code>var hero = Hero.Rent();
+hero.State = HeroState.MOVING;
+hero.Release();</code>
+          </article>
+          <article class="language-panel">
+            <h3>Java</h3>
+            <p>Javadoc, getters/setters, enum value lookup, queue-backed pooling.</p>
+            <code>Hero hero = Hero.acquire();
+hero.setState(HeroState.MOVING);
+hero.release();</code>
+          </article>
+          <article class="language-panel">
+            <h3>TypeScript</h3>
+            <p>Runtime JS plus `.d.ts`, suitable for web and frontend build systems.</p>
+            <code>const hero = Hero.acquire();
+hero.state = HeroState.MOVING;
+hero.release();</code>
+          </article>
+          <article class="language-panel">
+            <h3>Python</h3>
+            <p>Dataclasses, IntEnum, type hints, and a small class-level object pool.</p>
+            <code>hero = Hero.acquire()
+hero.state = HeroState.MOVING
+hero.release()</code>
+          </article>
+        </div>
+      </section>
 
-    let output = '';
-    output += '=== 编码过程 ===\n\n';
-    output += `字段 1: id = ${id} (uint32)\n`;
-    output += `  Header: ${(1 << 3) | 0} -> ${toHex(header1)}\n`;
-    output += `  Value : ${id} -> ${toHex(idBytes)}\n`;
-    output += `  合计  : ${toHex([...header1, ...idBytes])}\n\n`;
+      <section class="section reveal" id="performance">
+        <div class="section-head">
+          <h2>Small payloads, strong large-message behavior.</h2>
+          <p>Numbers below are benchmark snapshots. Protobuf still wins some tiny decode and encode paths; bytemsg233 is designed to stay compact while keeping authoring and generated APIs simpler.</p>
+        </div>
 
-    output += `字段 2: name = "${name}" (string)\n`;
-    output += `  Header: ${(2 << 3) | 2} -> ${toHex(header2)}\n`;
-    output += `  Length: ${nameBytes.length} -> ${toHex(nameLen)}\n`;
-    output += `  Value : ${toHex(nameBytes)}\n`;
-    output += `  合计  : ${toHex([...header2, ...nameLen, ...nameBytes])}\n\n`;
+        <div class="bench-wrap">
+          <div class="metric-panel">
+            <div class="panel-title">
+              <strong>Payload size</strong>
+              <span>lower is better</span>
+            </div>
+            <table>
+              <thead>
+                <tr><th>Scenario</th><th>ByteMsg</th><th>Protobuf</th><th>MsgPack</th><th>JSON</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Player profile</td><td><strong>61 B</strong></td><td>61 B</td><td>155 B</td><td>173 B</td></tr>
+                <tr><td>Chat message</td><td><strong>57 B</strong></td><td>57 B</td><td>103 B</td><td>116 B</td></tr>
+                <tr><td>Battle input</td><td><strong>247 B</strong></td><td>266 B</td><td>931 B</td><td>1,097 B</td></tr>
+                <tr><td>Leaderboard</td><td><strong>3,409 B</strong></td><td>3,608 B</td><td>8,711 B</td><td>9,602 B</td></tr>
+              </tbody>
+            </table>
+          </div>
 
-    output += `字段 3: score = ${score} (sint32)\n`;
-    output += `  Header: ${(3 << 3) | 0} -> ${toHex(header3)}\n`;
-    output += `  Zigzag: ${score} -> ${zigzag >>> 0} -> ${toHex(scoreBytes)}\n`;
-    output += `  合计  : ${toHex([...header3, ...scoreBytes])}\n\n`;
+          <div class="metric-panel">
+            <div class="panel-title">
+              <strong>Encode speed</strong>
+              <span>ns/op</span>
+            </div>
+            <div class="meter">
+              <div class="meter-row"><span>ByteMsg</span><div class="bar-track"><div class="bar-fill" style="width:35%"></div></div><strong>979</strong></div>
+              <div class="meter-row"><span>Protobuf</span><div class="bar-track"><div class="bar-fill" style="width:72%"></div></div><strong>2,030</strong></div>
+              <div class="meter-row"><span>MsgPack</span><div class="bar-track"><div class="bar-fill" style="width:100%"></div></div><strong>3,994</strong></div>
+              <div class="meter-row"><span>JSON</span><div class="bar-track"><div class="bar-fill" style="width:86%"></div></div><strong>2,836</strong></div>
+            </div>
+            <div class="panel-title">
+              <span>Battle input, 10 players. Run `go test ./pkg/binary/... -bench=BenchmarkEncode_ -benchmem` locally.</span>
+            </div>
+          </div>
+        </div>
+      </section>
 
-    output += '=== 最终结果 ===\n';
-    output += `Hex     : ${toHex(allBytes)}\n`;
-    output += `总字节  : ${allBytes.length} B\n`;
-    output += `JSON    : ${jsonStr.length} B -> ${jsonStr}\n`;
-    output += `节省比例: ${Math.round((1 - allBytes.length / jsonStr.length) * 100)}%`;
+      <section class="section reveal" id="lab">
+        <div class="section-head">
+          <h2>See why field tags matter.</h2>
+          <p>The payload does not repeat field names. The demo below encodes a tiny object with field headers and values, then compares it with JSON text length.</p>
+        </div>
 
-    document.getElementById('enc-output').textContent = output;
-}
+        <div class="lab">
+          <div class="lab-form">
+            <h3>Binary lab</h3>
+            <label>ID <input id="enc-id" type="number" value="123" min="0" /></label>
+            <label>Name <input id="enc-name" type="text" value="Neko" /></label>
+            <label>Score <input id="enc-score" type="number" value="-18" /></label>
+          </div>
+          <div class="lab-output">
+            <div class="panel-title" style="padding:0;border:0;">
+              <strong>Encoded bytes</strong>
+              <span id="byte-count">0 B</span>
+            </div>
+            <div class="hex-line" id="hex-line"></div>
+            <p class="output-note" id="compare-note"></p>
+            <pre style="padding:0;background:transparent;"><code id="encode-detail"></code></pre>
+          </div>
+        </div>
+      </section>
 
-const i18n = {
-    zh: [
-        '<code>// 用户资料</code>',
-        '<code>type UserProfile struct {</code>',
-        '<code>&nbsp;&nbsp;// 用户ID</code>',
-        '<code>&nbsp;&nbsp;Id uint32 `bytemsg:"1"`</code>',
-        '<code>&nbsp;&nbsp;// 用户名</code>',
-        '<code>&nbsp;&nbsp;Name string `bytemsg:"2"`</code>',
-        '<code>}</code>'
-    ].join(''),
-    en: [
-        '<code>// User Profile</code>',
-        '<code>export class UserProfile {</code>',
-        '<code>&nbsp;&nbsp;/** User ID */</code>',
-        '<code>&nbsp;&nbsp;id: number = 0;</code>',
-        '<code>&nbsp;&nbsp;/** Display name */</code>',
-        '<code>&nbsp;&nbsp;name: string = "";</code>',
-        '<code>}</code>'
-    ].join('')
-};
+      <section class="section reveal" id="docs">
+        <div class="section-head">
+          <h2>Markdown and HTML have different jobs.</h2>
+          <p>Repository docs and public demo pages should not pretend to be the same surface. This page is standalone and written for humans browsing the project.</p>
+        </div>
 
-function setLang(lang, button) {
-    document.querySelectorAll('.i18n-btn').forEach(btn => btn.classList.remove('active'));
-    button.classList.add('active');
-    document.getElementById('i18n-output').innerHTML = i18n[lang];
-}
-</script>
+        <div class="doc-rules">
+          <article class="doc-rule">
+            <h3>README.md</h3>
+            <p>Install first, then fastest successful path, then enough context to decide whether the project is worth using.</p>
+          </article>
+          <article class="doc-rule">
+            <h3>docs/*.md</h3>
+            <p>Developer-facing details: CLI flags, schema rules, benchmarks, migration notes, and implementation constraints.</p>
+          </article>
+          <article class="doc-rule">
+            <h3>docs/**/*.html</h3>
+            <p>Public-facing pages. They must be complete on their own and must not require reading Markdown to understand the product.</p>
+          </article>
+        </div>
+      </section>
+
+      <footer>
+        <span>bytemsg233 by neko233-com</span>
+        <span>JSON-first. Binary payloads. Native generated APIs.</span>
+      </footer>
+    </main>
+  </div>
+
+  <script>
+    const progress = document.getElementById("progress");
+    const navLinks = Array.from(document.querySelectorAll(".nav a"));
+    const sections = navLinks.map((link) => document.querySelector(link.getAttribute("href"))).filter(Boolean);
+
+    function updateProgress() {
+      const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+      const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+      progress.style.width = `${height ? (scrollTop / height) * 100 : 0}%`;
+
+      let active = sections[0];
+      for (const section of sections) {
+        if (section.getBoundingClientRect().top < 160) active = section;
+      }
+      navLinks.forEach((link) => {
+        link.classList.toggle("active", active && link.getAttribute("href") === `#${active.id}`);
+      });
+    }
+
+    window.addEventListener("scroll", updateProgress, { passive: true });
+    updateProgress();
+
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) entry.target.classList.add("visible");
+      });
+    }, { threshold: 0.12 });
+    document.querySelectorAll(".reveal").forEach((node) => revealObserver.observe(node));
+
+    document.querySelectorAll(".copy-btn").forEach((button) => {
+      button.addEventListener("click", async () => {
+        await navigator.clipboard.writeText(button.dataset.copy);
+        const old = button.textContent;
+        button.textContent = "Copied";
+        setTimeout(() => { button.textContent = old; }, 1200);
+      });
+    });
+
+    function varint(value) {
+      const bytes = [];
+      let current = value >>> 0;
+      while (current >= 0x80) {
+        bytes.push((current & 0x7f) | 0x80);
+        current >>>= 7;
+      }
+      bytes.push(current);
+      return bytes;
+    }
+
+    function zigzag(value) {
+      return ((value << 1) ^ (value >> 31)) >>> 0;
+    }
+
+    function utf8(value) {
+      return Array.from(new TextEncoder().encode(value));
+    }
+
+    function hex(byte) {
+      return byte.toString(16).toUpperCase().padStart(2, "0");
+    }
+
+    function renderLab() {
+      const id = Number.parseInt(document.getElementById("enc-id").value, 10) || 0;
+      const name = document.getElementById("enc-name").value || "";
+      const score = Number.parseInt(document.getElementById("enc-score").value, 10) || 0;
+      const nameBytes = utf8(name);
+      const bytes = [
+        ...varint((1 << 3) | 0), ...varint(id),
+        ...varint((2 << 3) | 2), ...varint(nameBytes.length), ...nameBytes,
+        ...varint((3 << 3) | 0), ...varint(zigzag(score)),
+      ];
+      const json = JSON.stringify({ id, name, score });
+
+      document.getElementById("hex-line").innerHTML = bytes.map((byte) => `<span class="byte">${hex(byte)}</span>`).join("");
+      document.getElementById("byte-count").textContent = `${bytes.length} B`;
+      document.getElementById("compare-note").textContent = `JSON is ${json.length} B for the same values. This tiny payload saves ${Math.max(0, Math.round((1 - bytes.length / json.length) * 100))}% before compression.`;
+      document.getElementById("encode-detail").textContent = [
+        `field 1 id    -> header ${hex((1 << 3) | 0)}, value ${varint(id).map(hex).join(" ")}`,
+        `field 2 name  -> header ${hex((2 << 3) | 2)}, len ${nameBytes.length}, value ${nameBytes.map(hex).join(" ") || "(empty)"}`,
+        `field 3 score -> header ${hex((3 << 3) | 0)}, zigzag ${zigzag(score)}, value ${varint(zigzag(score)).map(hex).join(" ")}`,
+      ].join("\n");
+    }
+
+    ["enc-id", "enc-name", "enc-score"].forEach((id) => {
+      document.getElementById(id).addEventListener("input", renderLab);
+    });
+    renderLab();
+  </script>
 </body>
 </html>

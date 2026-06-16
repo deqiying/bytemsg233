@@ -10,3 +10,12 @@
 [submodule "libs/typescript"]
 	path = libs/typescript
 	url = https://github.com/neko233-com/bytemsg233-lib-typescript.git
+[submodule "libs/go"]
+	path = libs/go
+	url = https://github.com/neko233-com/bytemsg233-lib-go.git
+[submodule "libs/rust"]
+	path = libs/rust
+	url = https://github.com/neko233-com/bytemsg233-lib-rust.git
+[submodule "libs/java"]
+	path = libs/java
+	url = https://github.com/neko233-com/bytemsg233-lib-java.git

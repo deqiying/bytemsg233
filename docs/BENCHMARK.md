@@ -1,142 +1,116 @@
-# bytemsg233 性能与体积对比
+# Performance
 
-> Go 1.26 · AMD Ryzen 9 7900X3D · Windows amd64
+> Go benchmark snapshot · Windows amd64 · AMD Ryzen 9 7900X3D
 
-## 设计哲学：扁平化 Message
+bytemsg233 is optimized for schema-driven binary payloads with small field headers, varint integers, zigzag signed integers, and no repeated field names. The goal is not to beat Protobuf in every microcase. The goal is a compact wire format with simpler JSON schema authoring, native language APIs, object pooling, localized comments, and strong large-message behavior.
 
-bytemsg233 的 message **不支持嵌套定义**，所有 message 都是扁平的"平铺类"：
+## Payload Size
 
-```
-# ✅ 正确 — 扁平 message，写了即可引用
-message Hero {
-    uint32 id = 1
-    string name = 2
-    uint32 weapon_id = 3       // 直接引用 weapon 的 id
-    list<uint32> skill_ids = 4 // 直接引用 skill 的 id 列表
-}
+Lower is better.
 
-message Weapon {
-    uint32 id = 1
-    string name = 2
-    uint32 attack = 3
-}
+| Scenario | bytemsg233 | Protobuf | MessagePack | JSON |
+|---|---:|---:|---:|---:|
+| Player profile, 10 fields | **61 B** | 61 B | 155 B | 173 B |
+| Chat message, 5 fields | **57 B** | 57 B | 103 B | 116 B |
+| Battle input, 10 players x 8 fields | **247 B** | 266 B | 931 B | 1,097 B |
+| Leaderboard, 100 rows x 6 fields | **3,409 B** | 3,608 B | 8,711 B | 9,602 B |
 
-# ❌ 错误 — 不允许嵌套结构
-message Hero {
-    Weapon weapon = 1           // 不允许！
-    list<Skill> skills = 2      // 不允许！
-}
-```
+| Scenario | vs Protobuf | vs MessagePack | vs JSON |
+|---|---:|---:|---:|
+| Player profile | 0% | -60.6% | -64.7% |
+| Chat message | 0% | -44.7% | -50.9% |
+| Battle input | -7.1% | -73.5% | -77.5% |
+| Leaderboard | -5.5% | -60.9% | -64.5% |
 
-**为什么扁平更好？**
-- 无需前向定义，写了即可用
-- Agent 解析更简单，一个 message 就是一个独立单元
-- 数据库/Redis 存储天然扁平，无需反序列化整棵树才能读单个字段
-- 跨语言映射更直接，每种语言都是独立的 class/struct
-- 减少序列化开销，不需要嵌套长度前缀
+## Encode Speed
 
-## 一、体积对比
+Lower ns/op is better.
 
-| 场景 | bytemsg233 | Protobuf | MessagePack | JSON |
-|------|-----------|----------|-------------|------|
-| 玩家信息 (10 fields) | **61 B** | 61 B | 155 B | 173 B |
-| 聊天消息 (5 fields) | **57 B** | 57 B | 103 B | 116 B |
-| 战斗输入 (10人×8 fields) | **247 B** | 266 B | 931 B | 1,097 B |
-| 排行榜 (100人×6 fields) | **3,409 B** | 3,608 B | 8,711 B | 9,602 B |
+| Scenario | bytemsg233 | Protobuf | MessagePack | JSON |
+|---|---:|---:|---:|---:|
+| Player profile | 140 | **90** | 513 | 387 |
+| Chat message | 154 | **107** | 375 | 317 |
+| Battle input | **979** | 2,030 | 3,994 | 2,836 |
+| Leaderboard | **9,277** | 26,729 | 52,826 | 21,990 |
 
-### 节省比例
+Interpretation:
 
-| 场景 | vs Protobuf | vs MessagePack | vs JSON |
-|------|-------------|----------------|---------|
-| 玩家信息 | 0% | **-60.6%** | **-64.7%** |
-| 聊天消息 | 0% | **-44.7%** | **-50.9%** |
-| 战斗输入 | **-7.1%** | **-73.5%** | **-77.5%** |
-| 排行榜 | **-5.5%** | **-60.9%** | **-64.5%** |
+- Protobuf is faster on tiny encode cases.
+- bytemsg233 pulls ahead as payloads become larger and repeated structures dominate.
+- MessagePack and JSON pay heavily for map-like payload shape and field names.
 
-bytemsg233 体积与 Protobuf 持平或更小，远优于 MessagePack 和 JSON。
+## Decode Speed
 
-## 二、编码速度 (ns/op — 越小越好)
+Lower ns/op is better.
 
-| 场景 | bytemsg233 | Protobuf | MessagePack | JSON |
-|------|-----------|----------|-------------|------|
-| 玩家信息 | 140 | **90** | 513 | 387 |
-| 聊天消息 | 154 | **107** | 375 | 317 |
-| 战斗输入 (10人) | **979** | 2,030 | 3,994 | 2,836 |
-| 排行榜 (100人) | **9,277** | 26,729 | 52,826 | 21,990 |
+| Scenario | bytemsg233 | Protobuf | MessagePack | JSON |
+|---|---:|---:|---:|---:|
+| Player profile | 279 | **104** | 612 | 1,636 |
+| Chat message | 224 | **86** | 349 | 969 |
+| Battle input | 1,001 | - | **90** | 172 |
 
-### 编码速度倍率
+Decode still has room for generated fast paths. Current numbers are useful as a baseline, not the ceiling.
 
-| 场景 | vs Protobuf | vs MessagePack | vs JSON |
-|------|-------------|----------------|---------|
-| 玩家信息 | 0.6x | **3.6x 快** | **2.8x 快** |
-| 聊天消息 | 0.7x | **2.4x 快** | **2.1x 快** |
-| 战斗输入 | **2.1x 快** | **4.1x 快** | **2.9x 快** |
-| 排行榜 | **2.9x 快** | **5.7x 快** | **2.4x 快** |
+## Allocations
 
-小数据 Protobuf 编码更快（开销更低），大数据场景 bytemsg233 编码速度远超所有格式。
+Lower allocs/op is better.
 
-## 三、解码速度 (ns/op — 越小越好)
+### Encode
 
-| 场景 | bytemsg233 | Protobuf | MessagePack | JSON |
-|------|-----------|----------|-------------|------|
-| 玩家信息 | 279 | **104** | 612 | 1,636 |
-| 聊天消息 | 224 | **86** | 349 | 969 |
-| 战斗输入 (10人) | 1,001 | — | **90** | 172 |
+| Scenario | bytemsg233 | Protobuf | MessagePack | JSON |
+|---|---:|---:|---:|---:|
+| Player profile | 2 | 3 | 4 | 1 |
+| Battle input | 2 | 36 | 7 | 2 |
+| Leaderboard | 2 | 394 | 11 | 2 |
 
-### 解码速度倍率
+### Decode
 
-| 场景 | vs MessagePack | vs JSON |
-|------|----------------|---------|
-| 玩家信息 | **2.2x 快** | **5.9x 快** |
-| 聊天消息 | **1.6x 快** | **4.3x 快** |
+| Scenario | bytemsg233 | Protobuf | MessagePack | JSON |
+|---|---:|---:|---:|---:|
+| Player profile | 5 | 2 | 1 | 4 |
+| Chat message | 5 | 2 | 1 | 4 |
 
-解码目前手写 switch-case，优化空间大。Protobuf 解码最快（编译生成的代码）。
+Generated object pools are separate from these raw codec benchmark numbers. They are designed to reduce application-level churn after code generation, especially in client loops and Unity-style gameplay code.
 
-## 四、内存分配 (allocs/op — 越小越好)
-
-### 编码
-
-| 场景 | bytemsg233 | Protobuf | MessagePack | JSON |
-|------|-----------|----------|-------------|------|
-| 玩家信息 | 2 | 3 | 4 | 1 |
-| 战斗输入 | 2 | 36 | 7 | 2 |
-| 排行榜 | 2 | 394 | 11 | 2 |
-
-### 解码
-
-| 场景 | bytemsg233 | Protobuf | MessagePack | JSON |
-|------|-----------|----------|-------------|------|
-| 玩家信息 | 5 | 2 | 1 | 4 |
-| 聊天消息 | 5 | 2 | 1 | 4 |
-
-## 五、综合评分
-
-| 维度 | bytemsg233 | Protobuf | MessagePack | JSON |
-|------|-----------|----------|-------------|------|
-| 体积 | ★★★★★ | ★★★★★ | ★★★ | ★★ |
-| 编码速度 | ★★★★ | ★★★★★ | ★★★ | ★★★ |
-| 解码速度 | ★★★ | ★★★★★ | ★★★★ | ★★ |
-| 内存分配 | ★★★★★ | ★★★ | ★★★★ | ★★★★ |
-| Schema 定义 | ★★★★★ | ★★★ | 无 | 无 |
-| 多语言生成 | ★★★★★ | ★★★★ | 无 | 无 |
-| i18n 支持 | ★★★★★ | ★ | 无 | 无 |
-| 扁平化设计 | ★★★★★ | ★★★ | N/A | N/A |
-| Agent 友好 | ★★★★★ | ★★★ | ★★★ | ★★★★ |
-
-**bytemsg233 的核心优势不在单一维度碾压，而是在体积、速度、可维护性、多语言、i18n 之间取得最佳平衡。**
-
-## 六、运行基准测试
+## Run Locally
 
 ```bash
-# 体积对比
+# Payload size comparison
 go test ./pkg/binary/... -run "TestBenchmark_SizeComparison" -v
 
-# 编码基准
+# Encoding benchmarks
 go test ./pkg/binary/... -bench="BenchmarkEncode_" -benchmem
 
-# 解码基准
+# Decoding benchmarks
 go test ./pkg/binary/... -bench="BenchmarkDecode_" -benchmem
 
-# 全部基准
+# Full benchmark set
 go test ./pkg/binary/... -bench="Benchmark(Encode|Decode)_" -benchmem
 ```
+
+## JSON Schema Used By New Examples
+
+```json
+{
+  "schema": "bymsg/v1",
+  "package": "com.example.benchmark",
+  "PlayerProfile": {
+    "id": { "type": "uint64", "tag": 1 },
+    "name": { "type": "string", "tag": 2 },
+    "level": { "type": "uint32", "tag": 3 },
+    "exp": { "type": "uint64", "tag": 4 },
+    "tags": { "type": "list<string>", "tag": 5 },
+    "attrs": { "type": "map<string, string>", "tag": 6 }
+  }
+}
+```
+
+## Summary
+
+bytemsg233 is strongest when the project needs all of these at once:
+
+- payload size close to Protobuf and far below JSON/MessagePack;
+- generated APIs that feel native in Go, C#, Java, TypeScript, and Python;
+- built-in object pooling for client-heavy workloads;
+- JSON schema files that work in normal editors and GitHub without custom plugins;
+- localized class and field comments from the schema itself.

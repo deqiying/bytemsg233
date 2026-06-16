@@ -10,12 +10,13 @@ import (
 	_ "github.com/neko233-com/bytemsg233/pkg/codegen/go"
 	_ "github.com/neko233-com/bytemsg233/pkg/codegen/java"
 	_ "github.com/neko233-com/bytemsg233/pkg/codegen/python"
+	_ "github.com/neko233-com/bytemsg233/pkg/codegen/rust"
 	_ "github.com/neko233-com/bytemsg233/pkg/codegen/typescript"
 	"github.com/neko233-com/bytemsg233/pkg/i18n"
 	"github.com/neko233-com/bytemsg233/pkg/schema"
 )
 
-// Compiler compiles .bmsg and .bmsg.yaml files
+// Compiler compiles JSON/YAML schema files, with legacy .bmsg compatibility.
 type Compiler struct{}
 
 // New creates a new compiler
@@ -36,6 +37,10 @@ func (c *Compiler) Compile(options *CompileOptions) error {
 	s, err := schema.ParseFile(options.InputFile)
 	if err != nil {
 		return fmt.Errorf("failed to parse schema: %w", err)
+	}
+
+	if err := os.MkdirAll(options.OutputDir, 0755); err != nil {
+		return fmt.Errorf("failed to create output directory %s: %w", options.OutputDir, err)
 	}
 
 	if options.Locale != "" {
@@ -60,6 +65,9 @@ func (c *Compiler) Compile(options *CompileOptions) error {
 
 		for _, file := range files {
 			path := filepath.Join(options.OutputDir, file.Path)
+			if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
+				return fmt.Errorf("failed to create output directory for %s: %w", path, err)
+			}
 			if err := os.WriteFile(path, file.Content, 0644); err != nil {
 				return fmt.Errorf("failed to write file %s: %w", path, err)
 			}

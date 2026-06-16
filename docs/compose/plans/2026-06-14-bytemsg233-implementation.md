@@ -1,5 +1,7 @@
 # bytemsg233 Implementation Plan
 
+> **Current direction:** The public DSL is JSON-first. New schemas should use `.bmsg.json`; YAML remains supported and legacy `.bmsg` parsing/export remains for compatibility and future tooling. Sections below that discuss a custom `.bmsg` DSL are historical implementation notes.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use compose:subagent (recommended) or compose:execute to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Build a complete serialization framework with YAML schema, protobuf-style binary encoding, multi-language code generation, and cross-platform CLI.

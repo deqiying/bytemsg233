@@ -1,9 +1,9 @@
 package schema
 
-// Schema represents a complete .bmsg schema file
+// Schema represents a complete ByteMsg schema file.
 type Schema struct {
-	Version  string            `yaml:"schema" json:"schema"`
-	Package  string            `yaml:"package" json:"package"`
+	Version  string              `yaml:"schema" json:"schema"`
+	Package  string              `yaml:"package" json:"package"`
 	Messages map[string]*Message `yaml:"messages" json:"messages"`
 	Enums    map[string]*Enum    `yaml:"enums" json:"enums"`
 }
