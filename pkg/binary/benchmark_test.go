@@ -95,14 +95,14 @@ func TestSizeComparison(t *testing.T) {
 	t.Logf("========================================")
 	t.Logf("  单条记录体积对比 (Single Record)")
 	t.Logf("========================================")
-	t.Logf("  ByteMsg:     %3d bytes", len(bmsgData))
+	t.Logf("  ByteMsg233:  %3d bytes", len(bmsgData))
 	t.Logf("  Protobuf v3: %3d bytes (理论值)", protoSize)
 	t.Logf("  JSON:        %3d bytes", len(jsonData))
 	t.Logf("  MessagePack: %3d bytes", len(msgpackData))
 	t.Logf("========================================")
-	t.Logf("  ByteMsg / Protobuf = %.1f%%", float64(len(bmsgData))/float64(protoSize)*100)
-	t.Logf("  ByteMsg / JSON     = %.1f%%", float64(len(bmsgData))/float64(len(jsonData))*100)
-	t.Logf("  ByteMsg / MsgPack  = %.1f%%", float64(len(bmsgData))/float64(len(msgpackData))*100)
+	t.Logf("  ByteMsg233 / Protobuf = %.1f%%", float64(len(bmsgData))/float64(protoSize)*100)
+	t.Logf("  ByteMsg233 / JSON     = %.1f%%", float64(len(bmsgData))/float64(len(jsonData))*100)
+	t.Logf("  ByteMsg233 / MsgPack  = %.1f%%", float64(len(bmsgData))/float64(len(msgpackData))*100)
 	t.Logf("========================================")
 
 	// Verify roundtrip
@@ -134,7 +134,7 @@ func TestSizeComparisonBatch(t *testing.T) {
 		{Id: 42, Name: "Eve", Email: "e@x.co", Tags: nil, Metadata: nil},
 	}
 
-	// ByteMsg
+	// ByteMsg233
 	var bmsgBuf bytes.Buffer
 	enc := NewEncoder(&bmsgBuf)
 	for _, user := range users {
@@ -173,14 +173,14 @@ func TestSizeComparisonBatch(t *testing.T) {
 	t.Logf("========================================")
 	t.Logf("  批量记录体积对比 (5 Records)")
 	t.Logf("========================================")
-	t.Logf("  ByteMsg:     %3d bytes", bmsgBuf.Len())
+	t.Logf("  ByteMsg233:  %3d bytes", bmsgBuf.Len())
 	t.Logf("  Protobuf v3: %3d bytes (理论值)", protoSize)
 	t.Logf("  JSON:        %3d bytes", len(jsonData))
 	t.Logf("  MessagePack: %3d bytes", len(msgpackData))
 	t.Logf("========================================")
-	t.Logf("  ByteMsg / Protobuf = %.1f%%", float64(bmsgBuf.Len())/float64(protoSize)*100)
-	t.Logf("  ByteMsg / JSON     = %.1f%%", float64(bmsgBuf.Len())/float64(len(jsonData))*100)
-	t.Logf("  ByteMsg / MsgPack  = %.1f%%", float64(bmsgBuf.Len())/float64(len(msgpackData))*100)
+	t.Logf("  ByteMsg233 / Protobuf = %.1f%%", float64(bmsgBuf.Len())/float64(protoSize)*100)
+	t.Logf("  ByteMsg233 / JSON     = %.1f%%", float64(bmsgBuf.Len())/float64(len(jsonData))*100)
+	t.Logf("  ByteMsg233 / MsgPack  = %.1f%%", float64(bmsgBuf.Len())/float64(len(msgpackData))*100)
 	t.Logf("========================================")
 	t.Logf("  节省 vs JSON:      %.1f%%", (1-float64(bmsgBuf.Len())/float64(len(jsonData)))*100)
 	t.Logf("  节省 vs MsgPack:   %.1f%%", (1-float64(bmsgBuf.Len())/float64(len(msgpackData)))*100)
@@ -202,7 +202,7 @@ func TestSizeComparisonIntensive(t *testing.T) {
 		{1000000, 2000000, 3000000, 4000000},
 	}
 
-	// ByteMsg
+	// ByteMsg233
 	var bmsgBuf bytes.Buffer
 	enc := NewEncoder(&bmsgBuf)
 	for _, r := range records {
@@ -231,14 +231,14 @@ func TestSizeComparisonIntensive(t *testing.T) {
 	t.Logf("========================================")
 	t.Logf("  整数密集型体积对比 (Int-Heavy)")
 	t.Logf("========================================")
-	t.Logf("  ByteMsg:     %3d bytes", bmsgBuf.Len())
+	t.Logf("  ByteMsg233:  %3d bytes", bmsgBuf.Len())
 	t.Logf("  Protobuf v3: %3d bytes (理论值)", protoSize)
 	t.Logf("  JSON:        %3d bytes", len(jsonData))
 	t.Logf("  MessagePack: %3d bytes", len(msgpackData))
 	t.Logf("========================================")
-	t.Logf("  ByteMsg / Protobuf = %.1f%%", float64(bmsgBuf.Len())/float64(protoSize)*100)
-	t.Logf("  ByteMsg / JSON     = %.1f%%", float64(bmsgBuf.Len())/float64(len(jsonData))*100)
-	t.Logf("  ByteMsg / MsgPack  = %.1f%%", float64(bmsgBuf.Len())/float64(len(msgpackData))*100)
+	t.Logf("  ByteMsg233 / Protobuf = %.1f%%", float64(bmsgBuf.Len())/float64(protoSize)*100)
+	t.Logf("  ByteMsg233 / JSON     = %.1f%%", float64(bmsgBuf.Len())/float64(len(jsonData))*100)
+	t.Logf("  ByteMsg233 / MsgPack  = %.1f%%", float64(bmsgBuf.Len())/float64(len(msgpackData))*100)
 }
 
 func BenchmarkBytemsgEncode(b *testing.B) {

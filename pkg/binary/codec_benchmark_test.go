@@ -155,7 +155,7 @@ func benchMakeTasks(count int) []BenchTaskDto {
 	return tasks
 }
 
-// ==================== ByteMsg 编码/解码 ====================
+// ==================== ByteMsg233 编码/解码 ====================
 
 func encodePlayerBmsg(p BenchPlayer) []byte {
 	buf := GetBuffer()
@@ -610,20 +610,20 @@ func TestBenchmark_SizeComparison(t *testing.T) {
 	t.Logf("╔══════════════════════════════════════════════════════════════════════╗")
 	t.Logf("║                        体积对比 (bytes)                             ║")
 	t.Logf("╠══════════════════════════════════════════════════════════════════════╣")
-	t.Logf("║  %-30s │ %6s │ %6s │ %6s │ %6s ║", "场景", "ByteMsg", "Proto", "JSON", "MsgPk")
+	t.Logf("║  %-30s │ %6s │ %6s │ %6s │ %6s ║", "场景", "ByteMsg233", "Proto", "JSON", "MsgPk")
 	t.Logf("╠══════════════════════════════════════════════════════════════════════╣")
 	for _, r := range rows {
 		t.Logf("║  %-30s │ %6d │ %6d │ %6d │ %6d ║", r.Name, r.Bmsg, r.Proto, r.JSON, r.Mp)
 	}
 	t.Logf("╚══════════════════════════════════════════════════════════════════════╝")
 	t.Logf("")
-	t.Logf("  ByteMsg vs Protobuf:")
+	t.Logf("  ByteMsg233 vs Protobuf:")
 	for _, r := range rows {
 		ratio := float64(r.Bmsg) / float64(r.Proto) * 100
 		t.Logf("    %-24s  %.1f%%", r.Name, ratio)
 	}
 	t.Logf("")
-	t.Logf("  ByteMsg vs JSON:")
+	t.Logf("  ByteMsg233 vs JSON:")
 	for _, r := range rows {
 		saved := (1 - float64(r.Bmsg)/float64(r.JSON)) * 100
 		t.Logf("    %-24s  -%.1f%%", r.Name, saved)
@@ -632,7 +632,7 @@ func TestBenchmark_SizeComparison(t *testing.T) {
 
 // ==================== 编码 Benchmark ====================
 
-func BenchmarkEncode_Player_ByteMsg(b *testing.B) {
+func BenchmarkEncode_Player_ByteMsg233(b *testing.B) {
 	p := benchMakePlayer()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -661,7 +661,7 @@ func BenchmarkEncode_Player_Msgpack(b *testing.B) {
 	}
 }
 
-func BenchmarkEncode_Chat_ByteMsg(b *testing.B) {
+func BenchmarkEncode_Chat_ByteMsg233(b *testing.B) {
 	c := benchMakeChat()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -690,7 +690,7 @@ func BenchmarkEncode_Chat_Msgpack(b *testing.B) {
 	}
 }
 
-func BenchmarkEncode_Battle_ByteMsg(b *testing.B) {
+func BenchmarkEncode_Battle_ByteMsg233(b *testing.B) {
 	in := benchMakeBattleInputs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -719,7 +719,7 @@ func BenchmarkEncode_Battle_Msgpack(b *testing.B) {
 	}
 }
 
-func BenchmarkEncode_TaskList_ByteMsg(b *testing.B) {
+func BenchmarkEncode_TaskList_ByteMsg233(b *testing.B) {
 	tasks := benchMakeTasks(100)
 	dst := make([]byte, 0, len(encodeTasksBmsg(tasks)))
 	enc := NewAppendEncoderValue(dst)
@@ -771,7 +771,7 @@ func BenchmarkEncode_TaskList_Msgpack(b *testing.B) {
 	}
 }
 
-func BenchmarkEncode_Leaderboard_ByteMsg(b *testing.B) {
+func BenchmarkEncode_Leaderboard_ByteMsg233(b *testing.B) {
 	lb := benchMakeLeaderboard()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -802,7 +802,7 @@ func BenchmarkEncode_Leaderboard_Msgpack(b *testing.B) {
 
 // ==================== 解码 Benchmark ====================
 
-func BenchmarkDecode_Player_ByteMsg(b *testing.B) {
+func BenchmarkDecode_Player_ByteMsg233(b *testing.B) {
 	data := encodePlayerBmsg(benchMakePlayer())
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -833,7 +833,7 @@ func BenchmarkDecode_Player_Msgpack(b *testing.B) {
 	}
 }
 
-func BenchmarkDecode_Chat_ByteMsg(b *testing.B) {
+func BenchmarkDecode_Chat_ByteMsg233(b *testing.B) {
 	data := encodeChatBmsg2(benchMakeChat())
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -864,7 +864,7 @@ func BenchmarkDecode_Chat_Msgpack(b *testing.B) {
 	}
 }
 
-func BenchmarkDecode_Battle_ByteMsg(b *testing.B) {
+func BenchmarkDecode_Battle_ByteMsg233(b *testing.B) {
 	data := encodeInputsBmsg(benchMakeBattleInputs())
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {

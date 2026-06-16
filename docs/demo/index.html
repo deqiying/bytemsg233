@@ -500,7 +500,7 @@
 
     .language-grid {
       display: grid;
-      grid-template-columns: repeat(5, minmax(0, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
       gap: 1px;
       background: var(--line);
       border: 1px solid var(--line);
@@ -534,6 +534,74 @@
       font-size: 0.78rem;
       line-height: 1.6;
       white-space: pre-wrap;
+    }
+
+    .integration-tabs {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      overflow: hidden;
+      background: rgba(255, 255, 255, 0.045);
+      box-shadow: var(--shadow);
+    }
+
+    .tab-list {
+      display: flex;
+      gap: 1px;
+      overflow-x: auto;
+      background: var(--line);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .tab-button {
+      flex: 0 0 auto;
+      border: 0;
+      padding: 14px 18px;
+      color: var(--muted);
+      background: rgba(255, 255, 255, 0.045);
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 0.82rem;
+    }
+
+    .tab-button.active {
+      color: var(--ink);
+      background: linear-gradient(90deg, var(--accent-2), var(--accent));
+    }
+
+    .tab-panel {
+      display: none;
+      grid-template-columns: minmax(220px, 0.34fr) minmax(0, 1fr);
+      gap: 1px;
+      background: var(--line);
+    }
+
+    .tab-panel.active {
+      display: grid;
+    }
+
+    .tab-copy,
+    .tab-code {
+      background: rgba(13, 20, 27, 0.92);
+    }
+
+    .tab-copy {
+      padding: 26px;
+    }
+
+    .tab-copy h3 {
+      margin: 0 0 14px;
+      color: var(--paper);
+      font-size: 1.4rem;
+    }
+
+    .tab-copy p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+
+    .tab-code pre {
+      min-height: 260px;
     }
 
     .bench-wrap {
@@ -861,7 +929,7 @@
           <div class="brand-mark">b</div>
           <div>
             <h1>byte msg 233</h1>
-            <p data-i18n="brand.copy">JSON-first binary schema toolchain for clients, SDKs, and agent-assisted codebases.</p>
+          <p data-i18n="brand.copy">JSON-first binary schema toolchain for games, clients, and SDKs.</p>
           </div>
         </div>
         <nav class="nav" aria-label="Page navigation">
@@ -1029,13 +1097,144 @@ hero.release();</code>
 hero.state = HeroState.MOVING
 hero.release()</code>
           </article>
+          <article class="language-panel">
+            <h3>Rust</h3>
+            <p data-i18n="lang.rust">Traits, explicit pools, and zero-copy friendly buffer APIs.</p>
+            <code>let mut hero = pool.acquire();
+hero.state = HeroState::Moving;
+pool.release(hero);</code>
+          </article>
+          <article class="language-panel">
+            <h3>C++</h3>
+            <p data-i18n="lang.cpp">Header/runtime split for engines, tools, and native clients.</p>
+            <code>auto hero = pool.Acquire();
+hero-&gt;state = HeroState::Moving;
+pool.Release(hero);</code>
+          </article>
+          <article class="language-panel">
+            <h3>C</h3>
+            <p data-i18n="lang.c">Caller-owned buffers and contexts for embedded or FFI hosts.</p>
+            <code>ByteMsgHero hero;
+bytemsg_hero_init(&amp;hero);
+bytemsg_hero_reset(&amp;hero);</code>
+          </article>
+          <article class="language-panel">
+            <h3>Kotlin / Swift</h3>
+            <p data-i18n="lang.mobile">Mobile-native constructors, extension methods, and pool helpers.</p>
+            <code>val hero = Hero.acquire()
+hero.state = HeroState.MOVING
+hero.release()</code>
+          </article>
+        </div>
+
+        <div class="integration-tabs">
+          <div class="panel-title">
+            <strong data-i18n="integrations.title">Integration tabs</strong>
+            <span data-i18n="integrations.copy">Pick a target and copy the shape into a client, server, or engine runtime.</span>
+          </div>
+          <div class="tab-list" role="tablist" aria-label="Language integration examples">
+            <button class="tab-button active" type="button" data-tab="go">Go</button>
+            <button class="tab-button" type="button" data-tab="csharp">C# / Unity</button>
+            <button class="tab-button" type="button" data-tab="typescript">TypeScript</button>
+            <button class="tab-button" type="button" data-tab="rust">Rust</button>
+            <button class="tab-button" type="button" data-tab="cpp">C++</button>
+            <button class="tab-button" type="button" data-tab="c">C</button>
+            <button class="tab-button" type="button" data-tab="kotlin">Kotlin</button>
+            <button class="tab-button" type="button" data-tab="swift">Swift</button>
+          </div>
+          <div class="tab-panel active" data-tab-panel="go" role="tabpanel">
+            <div class="tab-copy"><h3>Go</h3><p data-i18n="tab.go.copy">Use sidecar methods in the same package for custom behavior. Pool flow should reuse message storage.</p></div>
+            <div class="tab-code"><pre><code>hero := bytemsg233.AcquireHero()
+defer bytemsg233.ReleaseHero(hero)
+
+hero.Id = 1001
+hero.State = bytemsg233.HeroStateMOVING
+
+buf := make([]byte, 0, 256)
+buf, err := hero.MarshalByteMsgAppend(buf)</code></pre></div>
+          </div>
+          <div class="tab-panel" data-tab-panel="csharp" role="tabpanel">
+            <div class="tab-copy"><h3>C# / Unity</h3><p data-i18n="tab.csharp.copy">Generated messages are partial classes. Prewarm during loading, then rent and release in gameplay hot paths.</p></div>
+            <div class="tab-code"><pre><code>Hero.Prewarm(256);
+
+var hero = Hero.Rent();
+hero.Id = 1001;
+hero.State = HeroState.MOVING;
+
+writer.Reset(buffer);
+hero.WriteTo(ref writer);
+hero.Release();</code></pre></div>
+          </div>
+          <div class="tab-panel" data-tab-panel="typescript" role="tabpanel">
+            <div class="tab-copy"><h3>TypeScript</h3><p data-i18n="tab.ts.copy">Use normal constructors for tools and acquire/release for hot client loops.</p></div>
+            <div class="tab-code"><pre><code>const hero = Hero.acquire();
+hero.id = 1001;
+hero.state = HeroState.MOVING;
+
+const writer = ByteMsgWriter.from(buffer);
+hero.writeTo(writer);
+hero.release();</code></pre></div>
+          </div>
+          <div class="tab-panel" data-tab-panel="rust" role="tabpanel">
+            <div class="tab-copy"><h3>Rust</h3><p data-i18n="tab.rust.copy">Keep extension traits outside generated files and reuse Vec-backed buffers for encode/decode.</p></div>
+            <div class="tab-code"><pre><code>let mut hero = pool.acquire();
+hero.id = 1001;
+hero.state = HeroState::Moving;
+
+buffer.clear();
+hero.write_to(&amp;mut buffer)?;
+pool.release(hero);</code></pre></div>
+          </div>
+          <div class="tab-panel" data-tab-panel="cpp" role="tabpanel">
+            <div class="tab-copy"><h3>C++</h3><p data-i18n="tab.cpp.copy">Use generated headers plus a small runtime. Engines can bind pools to arenas or frame allocators.</p></div>
+            <div class="tab-code"><pre><code>auto hero = heroPool.Acquire();
+hero-&gt;id = 1001;
+hero-&gt;state = HeroState::Moving;
+
+ByteMsgWriter writer(buffer);
+hero-&gt;WriteTo(writer);
+heroPool.Release(hero);</code></pre></div>
+          </div>
+          <div class="tab-panel" data-tab-panel="c" role="tabpanel">
+            <div class="tab-copy"><h3>C</h3><p data-i18n="tab.c.copy">Use caller-owned structs, buffers, and decode context. No hidden allocations in hot paths.</p></div>
+            <div class="tab-code"><pre><code>ByteMsgHero hero;
+bytemsg_hero_init(&amp;hero);
+hero.id = 1001;
+hero.state = BYTEMSG_HERO_STATE_MOVING;
+
+ByteMsgWriter writer;
+bytemsg_writer_init(&amp;writer, buffer, capacity);
+bytemsg_hero_write(&amp;hero, &amp;writer);</code></pre></div>
+          </div>
+          <div class="tab-panel" data-tab-panel="kotlin" role="tabpanel">
+            <div class="tab-copy"><h3>Kotlin</h3><p data-i18n="tab.kotlin.copy">Kotlin gets native constructors, companion pool helpers, and extension functions for user code.</p></div>
+            <div class="tab-code"><pre><code>Hero.prewarm(256)
+
+val hero = Hero.acquire()
+hero.id = 1001u
+hero.state = HeroState.MOVING
+
+writer.reset(buffer)
+hero.writeTo(writer)
+hero.release()</code></pre></div>
+          </div>
+          <div class="tab-panel" data-tab-panel="swift" role="tabpanel">
+            <div class="tab-copy"><h3>Swift</h3><p data-i18n="tab.swift.copy">Swift uses extension methods for custom behavior and explicit pool objects for reusable messages.</p></div>
+            <div class="tab-code"><pre><code>let hero = heroPool.rent()
+hero.id = 1001
+hero.state = .moving
+
+writer.reset(buffer)
+try hero.write(to: writer)
+heroPool.return(hero)</code></pre></div>
+          </div>
         </div>
       </section>
 
       <section class="section reveal" id="performance">
         <div class="section-head">
           <h2 data-i18n="perf.title">Small payloads, strong large-message behavior.</h2>
-          <p data-i18n="perf.copy">Numbers below are benchmark snapshots. Protobuf still wins some tiny decode and encode paths; bytemsg233 is designed to stay compact while keeping authoring and generated APIs simpler.</p>
+          <p data-i18n="perf.copy">These snapshots include small packets, 100-row repeated data, and game-style payloads. Tiny packets matter, but real projects also need battle frames, leaderboards, and login state pushes.</p>
         </div>
 
         <div class="bench-wrap">
@@ -1046,7 +1245,7 @@ hero.release()</code>
             </div>
             <table class="bench-table">
               <thead>
-                <tr><th data-i18n="perf.scenario">Scenario</th><th>ByteMsg</th><th>Protobuf</th><th>JSON</th><th>MsgPack</th></tr>
+                <tr><th data-i18n="perf.scenario">Scenario</th><th>ByteMsg233</th><th>Protobuf</th><th>JSON</th><th>MsgPack</th></tr>
               </thead>
               <tbody>
                 <tr><td data-i18n="perf.player">Player profile</td><td><strong class="bench-value" data-value="61">61 B</strong></td><td><span class="bench-value" data-value="61">61 B</span></td><td><span class="bench-value" data-value="173">173 B</span></td><td><span class="bench-value" data-value="155">155 B</span></td></tr>
@@ -1067,7 +1266,7 @@ hero.release()</code>
               <span>ns/op</span>
             </div>
             <div class="meter" id="encode-meter" data-percent-note="true">
-              <div class="meter-row" data-value="2316"><span>ByteMsg</span><div class="bar-track"><div class="bar-fill"></div></div><strong>2,316</strong></div>
+              <div class="meter-row" data-value="2316"><span>ByteMsg233</span><div class="bar-track"><div class="bar-fill"></div></div><strong>2,316</strong></div>
               <div class="meter-row" data-value="14112"><span>Protobuf</span><div class="bar-track"><div class="bar-fill"></div></div><strong>14,112</strong></div>
               <div class="meter-row" data-value="19322"><span>JSON</span><div class="bar-track"><div class="bar-fill"></div></div><strong>19,322</strong></div>
               <div class="meter-row" data-value="22058"><span>MsgPack</span><div class="bar-track"><div class="bar-fill"></div></div><strong>22,058</strong></div>
@@ -1137,8 +1336,8 @@ hero.release()</code>
     const i18n = {
       en: {
         "meta.title": "bytemsg233 - JSON-first binary schema toolchain",
-        "meta.description": "bytemsg233 is a JSON-first binary schema toolchain with multi-language generation, object pooling, enum helpers, and benchmark comparisons.",
-        "brand.copy": "JSON-first binary schema toolchain for clients, SDKs, and agent-assisted codebases.",
+        "meta.description": "bytemsg233 is a JSON-first binary schema toolchain for game and client protocols, with multi-language generation, object pooling, enum helpers, and benchmark comparisons.",
+        "brand.copy": "JSON-first binary schema toolchain for games, clients, and SDKs.",
         "nav.install": "Install",
         "nav.json": "JSON DSL",
         "nav.languages": "Languages",
@@ -1150,13 +1349,13 @@ hero.release()</code>
         "topline.github": "GitHub repository",
         "hero.title.a": "Install first.",
         "hero.title.b": "Ship schema next.",
-        "hero.copy": "bytemsg233 turns one JSON schema into native-feeling Go, C#, Java, TypeScript, Rust, and Python models with object pooling, enum helpers, localized comments, and compact binary payloads.",
+        "hero.copy": "bytemsg233 turns one JSON schema into native-feeling Go, C#, Java, TypeScript, Rust, C++, C, Kotlin, Swift, Dart, Lua, and Python models with object pooling, enum helpers, localized comments, and compact binary payloads.",
         "button.copy": "Copy",
         "button.copied": "Copied",
         "install.unix": "Install",
         "fact.json": "Default DSL. Top-level keys are message names.",
-        "fact.langs.title": "5 langs",
-        "fact.langs": "Go, C#, TypeScript, Rust, and Java are the 1.0 priority path.",
+        "fact.langs.title": "12 targets",
+        "fact.langs": "Go, C#, TypeScript, Java, Rust, C++, C, Kotlin, Swift, Dart, Lua, and Python are official targets.",
         "fact.plugin.title": "0 plugin",
         "fact.plugin": "No custom `.bmsg` plugin required for the main authoring path.",
         "schema.shape": "default schema shape",
@@ -1179,8 +1378,22 @@ hero.release()</code>
         "lang.java": "Javadoc, getters/setters, enum value lookup, queue-backed pooling.",
         "lang.ts": "Runtime JS plus `.d.ts`, suitable for web and frontend build systems.",
         "lang.python": "Dataclasses, IntEnum, type hints, and a small class-level object pool.",
+        "lang.rust": "Traits, explicit pools, and zero-copy friendly buffer APIs.",
+        "lang.cpp": "Header/runtime split for engines, tools, and native clients.",
+        "lang.c": "Caller-owned buffers and contexts for embedded or FFI hosts.",
+        "lang.mobile": "Mobile-native constructors, extension methods, and pool helpers.",
+        "integrations.title": "Integration tabs",
+        "integrations.copy": "Pick a target and copy the shape into a client, server, or engine runtime.",
+        "tab.go.copy": "Use sidecar methods in the same package for custom behavior. Pool flow should reuse message storage.",
+        "tab.csharp.copy": "Generated messages are partial classes. Prewarm during loading, then rent and release in gameplay hot paths.",
+        "tab.ts.copy": "Use normal constructors for tools and acquire/release for hot client loops.",
+        "tab.rust.copy": "Keep extension traits outside generated files and reuse Vec-backed buffers for encode/decode.",
+        "tab.cpp.copy": "Use generated headers plus a small runtime. Engines can bind pools to arenas or frame allocators.",
+        "tab.c.copy": "Use caller-owned structs, buffers, and decode context. No hidden allocations in hot paths.",
+        "tab.kotlin.copy": "Kotlin gets native constructors, companion pool helpers, and extension functions for user code.",
+        "tab.swift.copy": "Swift uses extension methods for custom behavior and explicit pool objects for reusable messages.",
         "perf.title": "Small payloads, strong large-message behavior.",
-        "perf.copy": "Numbers below are benchmark snapshots. Protobuf still wins some tiny decode and encode paths; bytemsg233 is designed to stay compact while keeping authoring and generated APIs simpler.",
+        "perf.copy": "These snapshots include small packets, 100-row repeated data, and game-style payloads. Tiny packets matter, but real projects also need battle frames, leaderboards, and login state pushes.",
         "perf.payload": "Payload size",
         "perf.lower": "lower is better",
         "perf.scenario": "Scenario",
@@ -1209,8 +1422,8 @@ hero.release()</code>
       },
       zh: {
         "meta.title": "bytemsg233 - JSON-first 二进制 schema 工具链",
-        "meta.description": "bytemsg233 是 JSON-first 的二进制 schema 工具链，提供多语言生成、对象池、enum 适配和性能对比。",
-        "brand.copy": "面向客户端、SDK 和 AI 辅助代码库的 JSON-first 二进制 schema 工具链。",
+        "meta.description": "bytemsg233 是面向游戏和客户端协议的 JSON-first 二进制 schema 工具链，提供多语言生成、对象池、enum 适配和性能对比。",
+        "brand.copy": "面向游戏、客户端和 SDK 的 JSON-first 二进制 schema 工具链。",
         "nav.install": "安装",
         "nav.json": "JSON DSL",
         "nav.languages": "语言生成",
@@ -1222,13 +1435,13 @@ hero.release()</code>
         "topline.github": "GitHub 仓库",
         "hero.title.a": "先安装。",
         "hero.title.b": "再交付 schema。",
-        "hero.copy": "bytemsg233 把一份 JSON schema 生成 Go、C#、Java、TypeScript、Rust、Python 的原生风格模型，内置对象池、enum helper、本地化注释和紧凑二进制载荷。",
+        "hero.copy": "bytemsg233 把一份 JSON schema 生成 Go、C#、Java、TypeScript、Rust、C++、C、Kotlin、Swift、Dart、Lua、Python 的原生风格模型，内置对象池、enum helper、本地化注释和紧凑二进制载荷。",
         "button.copy": "复制",
         "button.copied": "已复制",
         "install.unix": "安装",
         "fact.json": "默认 DSL。顶层 key 就是消息名。",
-        "fact.langs.title": "5 语言",
-        "fact.langs": "Go、C#、TypeScript、Rust、Java 是 1.0 优先路径。",
+        "fact.langs.title": "12 目标",
+        "fact.langs": "Go、C#、TypeScript、Java、Rust、C++、C、Kotlin、Swift、Dart、Lua、Python 都是官方目标。",
         "fact.plugin.title": "0 插件",
         "fact.plugin": "主编写路径不需要自定义 `.bmsg` 编辑器插件。",
         "schema.shape": "默认 schema 结构",
@@ -1251,8 +1464,22 @@ hero.release()</code>
         "lang.java": "Javadoc、getter/setter、enum value lookup、队列池化。",
         "lang.ts": "运行时 JS 加 `.d.ts`，适合 Web 和前端构建系统。",
         "lang.python": "Dataclass、IntEnum、类型提示，以及轻量 class-level 对象池。",
+        "lang.rust": "Trait、显式对象池，以及适合零拷贝缓冲区的 API。",
+        "lang.cpp": "面向引擎、工具和原生客户端的 header/runtime 拆分。",
+        "lang.c": "调用方持有 buffer 和 context，适合 embedded 或 FFI 宿主。",
+        "lang.mobile": "移动端原生构造器、extension method 和池化 helper。",
+        "integrations.title": "接入示例",
+        "integrations.copy": "选择目标语言，把这套形状接进客户端、服务端或引擎运行时。",
+        "tab.go.copy": "自定义逻辑放同 package 的 sidecar method。池化流程复用消息存储。",
+        "tab.csharp.copy": "生成消息是 partial class。加载阶段 Prewarm，游戏热路径 Rent/Release。",
+        "tab.ts.copy": "工具层可直接 new；客户端热循环使用 acquire/release。",
+        "tab.rust.copy": "扩展 trait 放在生成文件外，编码解码复用 Vec buffer。",
+        "tab.cpp.copy": "生成 header 配小运行时。引擎可把 pool 绑定到 arena 或帧分配器。",
+        "tab.c.copy": "使用调用方持有的 struct、buffer 和 decode context。热路径不隐藏分配。",
+        "tab.kotlin.copy": "Kotlin 使用原生构造器、companion pool helper 和 extension function。",
+        "tab.swift.copy": "Swift 使用 extension method 扩展业务逻辑，用显式 pool 对象复用消息。",
         "perf.title": "小载荷也强，大消息更能体现优势。",
-        "perf.copy": "下面是 benchmark 快照。Protobuf 在部分 tiny encode/decode 路径仍会赢；bytemsg233 目标是在保持紧凑的同时，让 schema 编写和生成 API 更简单。",
+        "perf.copy": "这些快照覆盖小包、100 行重复数据和游戏业务包。小包要看，但真实项目还会遇到战斗帧、排行榜和登录全量下发。",
         "perf.payload": "载荷大小",
         "perf.lower": "越低越好",
         "perf.scenario": "场景",
@@ -1377,6 +1604,18 @@ hero.release()</code>
 
     document.querySelectorAll("[data-lang]").forEach((button) => {
       button.addEventListener("click", () => applyLanguage(button.dataset.lang));
+    });
+
+    document.querySelectorAll("[data-tab]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const tab = button.dataset.tab;
+        document.querySelectorAll("[data-tab]").forEach((node) => {
+          node.classList.toggle("active", node.dataset.tab === tab);
+        });
+        document.querySelectorAll("[data-tab-panel]").forEach((panel) => {
+          panel.classList.toggle("active", panel.dataset.tabPanel === tab);
+        });
+      });
     });
 
     function varint(value) {

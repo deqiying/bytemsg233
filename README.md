@@ -17,7 +17,7 @@ go install github.com/neko233-com/bytemsg233/cmd/bytemsg233@latest
 bytemsg233 version
 ```
 
-`bytemsg233` is a JSON-first binary schema toolchain. It uses `.bmsg.json` as the protocol description DSL, generates native-feeling code, and keeps runtime libraries copyable into real projects even when package registry publishing is not available.
+`bytemsg233` is a JSON-first binary schema toolchain for games, clients, and SDKs. It uses `.bmsg.json` as the protocol description DSL, generates native-feeling code, and keeps runtime libraries copyable into real projects even when package registry publishing is not available.
 
 The short version: JSON replaces `.proto`; generated code should not feel like Protobuf.
 
@@ -27,7 +27,7 @@ The short version: JSON replaces `.proto`; generated code should not feel like P
 bytemsg233 init game
 
 bytemsg233 compile game.bmsg.json \
-  -l go,csharp,typescript,rust,java \
+  -l go,csharp,typescript,rust,java,cpp,c \
   -o ./gen
 
 bytemsg233 export game.bmsg.json -f md,html,bmsg -o ./protocol
@@ -46,6 +46,10 @@ bytemsg233 install-lib typescript --to ./vendor/bytemsg233
 bytemsg233 install-lib go --to ./third_party/bytemsg233
 bytemsg233 install-lib rust --to ./vendor/bytemsg233
 bytemsg233 install-lib java --to ./libs/bytemsg233
+
+# Native roadmap targets
+bytemsg233 install-lib cpp --to ./third_party/bytemsg233
+bytemsg233 install-lib c --to ./third_party/bytemsg233
 ```
 
 ## Native JSON DSL
@@ -99,7 +103,15 @@ YAML is still supported for teams that prefer it, and legacy `.bmsg` can be expo
 | TypeScript / JavaScript | priority | `libs/typescript` | `Hero.acquire()` / `release()` | `enum` plus JS runtime |
 | Rust | priority | `libs/rust` | `ByteMsgPool<T>` | `enum`, `from_value()` |
 | Java | priority | `libs/java` | `Hero.acquire()` / `release()` | enum instances |
+| C++ | planned | `libs/cpp` | arena/object pool rent-return | scoped enum |
+| C | planned | `libs/c` | caller-owned pool/context | generated constants |
+| Kotlin | planned | `libs/kotlin` | companion acquire/release | enum class |
+| Swift | planned | `libs/swift` | pool rent-return | enum |
+| Dart / Flutter | planned | `libs/dart` | `Hero.acquire()` / `release()` | enum |
+| Lua | planned | `libs/lua` | table pool acquire/release | constants/table |
 | Python | supported | generated code | `Hero.acquire()` / `release()` | `IntEnum` |
+
+Official runtime repositories are tracked in [docs/LANGUAGES.md](docs/LANGUAGES.md).
 
 Go generated messages also support official pretty string conversion for tools, logs, and fixtures:
 
@@ -141,7 +153,9 @@ The copy command intentionally skips `.git`, `node_modules`, `build`, `dist`, an
 
 ## Performance Snapshot
 
-| Scenario | bytemsg233 | Protobuf | JSON payload | MessagePack |
+Read this table as a practical game/client baseline, not as a tiny-object trick. It includes small packets, repeated DTOs, battle input, and 100-row ranking data. Bigger repeated structures are where binary protocols show their real shape.
+
+| Scenario | ByteMsg233 | Protobuf | JSON payload | MessagePack |
 |---|---:|---:|---:|---:|
 | Player profile, 10 fields | 61 B | 61 B | 173 B | 155 B |
 | Chat message, 5 fields | 57 B | 57 B | 116 B | 103 B |
@@ -149,24 +163,33 @@ The copy command intentionally skips `.git`, `node_modules`, `build`, `dist`, an
 | TaskDto list, 100 rows | 3,845 B | 4,044 B | 14,691 B | 13,303 B |
 | Leaderboard, 100 rows | 3,409 B | 3,608 B | 9,602 B | 8,711 B |
 
+Game-specific benchmark coverage also includes login/full-state pushes and realtime battle frames.
+
 Run locally:
 
 ```bash
 go test ./pkg/binary/... -bench="Benchmark(Encode|Decode)_" -benchmem
 go test ./pkg/binary/... -run "TestBenchmark_SizeComparison" -v
+go test ./pkg/binary/... -run "TestGame_" -v
 ```
 
-Full notes: [docs/BENCHMARK.md](docs/BENCHMARK.md).
+Full notes: [docs/BENCHMARK.md](docs/BENCHMARK.md). Game packet design: [docs/GAME_BINARY.md](docs/GAME_BINARY.md).
 
 ## Repositories
 
 | Path | Repository |
 |---|---|
-| `libs/go` | https://github.com/neko233-com/bytemsg233-lib-go |
-| `libs/csharp` | https://github.com/neko233-com/bytemsg233-lib-csharp |
-| `libs/typescript` | https://github.com/neko233-com/bytemsg233-lib-typescript |
-| `libs/rust` | https://github.com/neko233-com/bytemsg233-lib-rust |
-| `libs/java` | https://github.com/neko233-com/bytemsg233-lib-java |
+| `libs/go` | https://github.com/neko233-com/bytemsg233-go |
+| `libs/csharp` | https://github.com/neko233-com/bytemsg233-csharp |
+| `libs/typescript` | https://github.com/neko233-com/bytemsg233-typescript |
+| `libs/rust` | https://github.com/neko233-com/bytemsg233-rust |
+| `libs/java` | https://github.com/neko233-com/bytemsg233-java |
+| `libs/cpp` | https://github.com/neko233-com/bytemsg233-cpp |
+| `libs/c` | https://github.com/neko233-com/bytemsg233-c |
+| `libs/kotlin` | https://github.com/neko233-com/bytemsg233-kotlin |
+| `libs/swift` | https://github.com/neko233-com/bytemsg233-swift |
+| `libs/dart` | https://github.com/neko233-com/bytemsg233-dart |
+| `libs/lua` | https://github.com/neko233-com/bytemsg233-lua |
 | `editors/vscode` | https://github.com/neko233-com/bytemsg233-plugin-vscode |
 | `editors/jetbrains` | https://github.com/neko233-com/bytemsg233-plugin-jetbrains |
 

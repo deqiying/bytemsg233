@@ -159,7 +159,7 @@ type RankEntry struct {
 	Guild    string `json:"guild" msgpack:"guild"`
 }
 
-// ==================== ByteMsg 编码 ====================
+// ==================== ByteMsg233 编码 ====================
 
 func encodeLoginPushBmsg(lp LoginPush) []byte {
 	var buf bytes.Buffer
@@ -725,12 +725,12 @@ func TestGame_LoginPush(t *testing.T) {
 	t.Logf("║  场景: 登录推送 (Login Push)                 ║")
 	t.Logf("║  30 英雄 · 80 背包 · 15 邮件 · 20 任务      ║")
 	t.Logf("╠══════════════════════════════════════════════╣")
-	t.Logf("║  ByteMsg:     %5d bytes                    ║", len(bmsg))
+	t.Logf("║  ByteMsg233:  %5d bytes                    ║", len(bmsg))
 	t.Logf("║  JSON:        %5d bytes                    ║", len(jsonData))
 	t.Logf("║  MessagePack: %5d bytes                    ║", len(mpData))
 	t.Logf("╠══════════════════════════════════════════════╣")
-	t.Logf("║  ByteMsg / JSON    = %5.1f%%                ║", float64(len(bmsg))/float64(len(jsonData))*100)
-	t.Logf("║  ByteMsg / MsgPack = %5.1f%%                ║", float64(len(bmsg))/float64(len(mpData))*100)
+	t.Logf("║  ByteMsg233 / JSON    = %5.1f%%                ║", float64(len(bmsg))/float64(len(jsonData))*100)
+	t.Logf("║  ByteMsg233 / MsgPack = %5.1f%%                ║", float64(len(bmsg))/float64(len(mpData))*100)
 	t.Logf("║  节省 vs JSON      = %5.1f%%                ║", (1-float64(len(bmsg))/float64(len(jsonData)))*100)
 	t.Logf("╚══════════════════════════════════════════════╝")
 }
@@ -745,12 +745,12 @@ func TestGame_BattleFrame(t *testing.T) {
 	t.Logf("║  场景: 战斗帧同步 (Battle Frame Sync)        ║")
 	t.Logf("║  10 玩家输入 · 每秒 30 帧                    ║")
 	t.Logf("╠══════════════════════════════════════════════╣")
-	t.Logf("║  ByteMsg:     %4d bytes                     ║", len(bmsg))
+	t.Logf("║  ByteMsg233:  %4d bytes                     ║", len(bmsg))
 	t.Logf("║  JSON:        %4d bytes                     ║", len(jsonData))
 	t.Logf("║  MessagePack: %4d bytes                     ║", len(mpData))
 	t.Logf("╠══════════════════════════════════════════════╣")
-	t.Logf("║  ByteMsg / JSON    = %5.1f%%                ║", float64(len(bmsg))/float64(len(jsonData))*100)
-	t.Logf("║  ByteMsg / MsgPack = %5.1f%%                ║", float64(len(bmsg))/float64(len(mpData))*100)
+	t.Logf("║  ByteMsg233 / JSON    = %5.1f%%                ║", float64(len(bmsg))/float64(len(jsonData))*100)
+	t.Logf("║  ByteMsg233 / MsgPack = %5.1f%%                ║", float64(len(bmsg))/float64(len(mpData))*100)
 	t.Logf("╚══════════════════════════════════════════════╝")
 
 	// 30fps 带宽计算
@@ -758,7 +758,7 @@ func TestGame_BattleFrame(t *testing.T) {
 	bpsJson := float64(len(jsonData)) * 30 * 8 / 1000
 	t.Logf("")
 	t.Logf("  30fps 带宽需求:")
-	t.Logf("    ByteMsg: %.1f kbps", bpsBmsg)
+	t.Logf("    ByteMsg233: %.1f kbps", bpsBmsg)
 	t.Logf("    JSON:    %.1f kbps", bpsJson)
 	t.Logf("    节省:    %.1f kbps", bpsJson-bpsBmsg)
 }
@@ -772,18 +772,18 @@ func TestGame_Leaderboard(t *testing.T) {
 	t.Logf("╔══════════════════════════════════════════════╗")
 	t.Logf("║  场景: 排行榜 (Leaderboard — 100 players)    ║")
 	t.Logf("╠══════════════════════════════════════════════╣")
-	t.Logf("║  ByteMsg:     %5d bytes                    ║", len(bmsg))
+	t.Logf("║  ByteMsg233:  %5d bytes                    ║", len(bmsg))
 	t.Logf("║  JSON:        %5d bytes                    ║", len(jsonData))
 	t.Logf("║  MessagePack: %5d bytes                    ║", len(mpData))
 	t.Logf("╠══════════════════════════════════════════════╣")
-	t.Logf("║  ByteMsg / JSON    = %5.1f%%                ║", float64(len(bmsg))/float64(len(jsonData))*100)
-	t.Logf("║  ByteMsg / MsgPack = %5.1f%%                ║", float64(len(bmsg))/float64(len(mpData))*100)
+	t.Logf("║  ByteMsg233 / JSON    = %5.1f%%                ║", float64(len(bmsg))/float64(len(jsonData))*100)
+	t.Logf("║  ByteMsg233 / MsgPack = %5.1f%%                ║", float64(len(bmsg))/float64(len(mpData))*100)
 	t.Logf("╚══════════════════════════════════════════════╝")
 }
 
 // ==================== 编码性能 Benchmark ====================
 
-func BenchmarkGame_LoginPush_ByteMsg(b *testing.B) {
+func BenchmarkGame_LoginPush_ByteMsg233(b *testing.B) {
 	lp := makeLoginPush()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -807,7 +807,7 @@ func BenchmarkGame_LoginPush_Msgpack(b *testing.B) {
 	}
 }
 
-func BenchmarkGame_BattleFrame_ByteMsg(b *testing.B) {
+func BenchmarkGame_BattleFrame_ByteMsg233(b *testing.B) {
 	f := makeBattleFrame()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -831,7 +831,7 @@ func BenchmarkGame_BattleFrame_Msgpack(b *testing.B) {
 	}
 }
 
-func BenchmarkGame_Leaderboard_ByteMsg(b *testing.B) {
+func BenchmarkGame_Leaderboard_ByteMsg233(b *testing.B) {
 	lb := makeLeaderboard()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {

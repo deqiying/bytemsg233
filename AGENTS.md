@@ -17,11 +17,12 @@
 ## Codegen Policy
 
 - Generated code should prioritize native extension points in each target language.
+- Common target languages are part of the product roadmap, not third-party afterthoughts. Official targets should cover Go, C# / Unity, TypeScript / JavaScript, Java / Android, Rust, C++, C, Kotlin, Swift, Dart / Flutter, Lua, and Python.
 - Every target language must support normal allocation/constructor usage, such as `new Message()` or the language-native equivalent.
 - Every target language must support pool usage with a zero-GC hot-path goal after prewarm or equivalent setup.
 - Pool reset should reuse existing lists, dictionaries, arrays, nested messages, and other reusable storage where practical.
 - If a target language supports native extension mechanisms, generated code must expose them so users can add custom behavior without editing generated files.
-- Extension examples: C# `partial class`, Kotlin/Swift extension methods, TypeScript declaration merging or prototype-safe helpers, Rust extension traits, Go sidecar methods in the same package, Java subclass/companion/helper hooks where practical.
+- Extension examples: C# `partial class`, Kotlin/Swift extension methods, TypeScript declaration merging or prototype-safe helpers, Rust extension traits, C++ free functions / wrapper types, C opaque context hooks, Go sidecar methods in the same package, Java subclass/companion/helper hooks where practical.
 - Single-file language exports must default to `ByteMsg233_Export` plus the target extension, such as `ByteMsg233_Export.go` or `ByteMsg233_Export.cs`.
 - Multi-file targets that require class-name-matching file names, such as Java, may keep per-type file names.
 - C# / Unity generated messages must be `partial class` so users can add custom methods in separate files.

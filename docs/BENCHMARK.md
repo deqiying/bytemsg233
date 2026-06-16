@@ -2,21 +2,36 @@
 
 > Go benchmark snapshot · Windows amd64 · AMD Ryzen 9 7900X3D
 
-bytemsg233 is optimized for schema-driven binary payloads with small field headers, varint integers, zigzag signed integers, and no repeated field names. The goal is not to beat Protobuf in every microcase. The goal is a compact wire format with simpler JSON schema authoring, native language APIs, object pooling, localized comments, and strong large-message behavior.
+This page explains what the numbers mean, not just who wins a table.
+
+ByteMsg233 is optimized for schema-driven game and client traffic: small field headers, varint integers, zigzag signed integers, no repeated field names, and generated APIs that can reuse memory. It is not trying to beat Protobuf in every tiny microcase. The target is a practical protocol: readable schema, compact packets, native generated code, and a zero-GC hot path where the caller provides buffers and pools are prewarmed.
+
+## How To Read The Tables
+
+Lower is better for size, `ns/op`, `B/op`, and `allocs/op`.
+
+Comparison order is fixed:
+
+1. ByteMsg233
+2. Protobuf
+3. JSON
+4. Optional extra codecs, such as MessagePack
+
+JSON is included because many teams start there. MessagePack is included because it is a common "binary JSON" baseline. Protobuf is included because it is the obvious mature competitor.
 
 ## Payload Size
 
-Lower is better.
+Payload size matters most when the same shape repeats: rankings, inventory rows, battle inputs, quest lists, mail lists, and state snapshots.
 
-Column order is fixed: bytemsg233, Protobuf, JSON, then optional extra codecs.
-
-| Scenario | bytemsg233 | Protobuf | JSON | MessagePack |
+| Scenario | ByteMsg233 | Protobuf | JSON | MessagePack |
 |---|---:|---:|---:|---:|
 | Player profile, 10 fields | **61 B** | 61 B | 173 B | 155 B |
 | Chat message, 5 fields | **57 B** | 57 B | 116 B | 103 B |
 | Battle input, 10 players x 8 fields | **247 B** | 266 B | 1,097 B | 931 B |
 | TaskDto list, 100 rows x 9 fields | **3,845 B** | 4,044 B | 14,691 B | 13,303 B |
 | Leaderboard, 100 rows x 6 fields | **3,409 B** | 3,608 B | 9,602 B | 8,711 B |
+
+Savings versus other codecs:
 
 | Scenario | vs Protobuf | vs JSON | vs MessagePack |
 |---|---:|---:|---:|
@@ -28,9 +43,9 @@ Column order is fixed: bytemsg233, Protobuf, JSON, then optional extra codecs.
 
 ## Encode Speed
 
-Lower ns/op is better.
+Tiny packets are where mature libraries like Protobuf can still win. Bigger repeated structures are where ByteMsg233 becomes more interesting.
 
-| Scenario | bytemsg233 | Protobuf | JSON | MessagePack |
+| Scenario | ByteMsg233 | Protobuf | JSON | MessagePack |
 |---|---:|---:|---:|---:|
 | Player profile | 140 | **90** | 387 | 513 |
 | Chat message | 154 | **107** | 317 | 375 |
@@ -39,29 +54,27 @@ Lower ns/op is better.
 
 Interpretation:
 
-- Protobuf is faster on tiny encode cases.
-- bytemsg233 pulls ahead as payloads become larger and repeated structures dominate.
-- MessagePack and JSON pay heavily for map-like payload shape and field names.
+- Protobuf is still excellent on tiny encode cases.
+- ByteMsg233 pulls ahead when repeated structures dominate.
+- JSON and MessagePack pay for dynamic object shape and field-name-heavy data.
 
 ## Decode Speed
 
-Lower ns/op is better.
+Decode numbers are a baseline. Generated fast paths and pool-aware decoders are expected to improve this area.
 
-| Scenario | bytemsg233 | Protobuf | JSON | MessagePack |
+| Scenario | ByteMsg233 | Protobuf | JSON | MessagePack |
 |---|---:|---:|---:|---:|
 | Player profile | 279 | **104** | 1,636 | 612 |
 | Chat message | 224 | **86** | 969 | 349 |
 | Battle input | 1,001 | - | 172 | **90** |
 
-Decode still has room for generated fast paths. Current numbers are useful as a baseline, not the ceiling.
-
 ## Allocations
 
-Lower allocs/op is better.
+Allocations are where game clients feel pain: a small per-packet allocation can become a frame-time spike when repeated thousands of times.
 
 ### Encode
 
-| Scenario | bytemsg233 | Protobuf | JSON | MessagePack |
+| Scenario | ByteMsg233 | Protobuf | JSON | MessagePack |
 |---|---:|---:|---:|---:|
 | Player profile | 2 | 3 | 1 | 4 |
 | Battle input | 2 | 36 | 2 | 7 |
@@ -69,20 +82,41 @@ Lower allocs/op is better.
 
 ### Decode
 
-| Scenario | bytemsg233 | Protobuf | JSON | MessagePack |
+| Scenario | ByteMsg233 | Protobuf | JSON | MessagePack |
 |---|---:|---:|---:|---:|
 | Player profile | 5 | 2 | 4 | 1 |
 | Chat message | 5 | 2 | 4 | 1 |
 
-Generated object pools are separate from these raw codec benchmark numbers. They are designed to reduce application-level churn after code generation, especially in client loops and Unity-style gameplay code.
+Generated object pools are separate from these raw codec benchmark numbers. They reduce application-level churn after code generation, especially in Unity-style gameplay code and client update loops.
 
-For hot-path encode code, prefer caller-owned buffers. `AppendEncoder` is the zero-GC path for preallocated byte slices. Example check:
+For hot-path encode code, prefer caller-owned buffers. `AppendEncoder` is the zero-GC path for preallocated byte slices:
 
 ```bash
 go test ./pkg/binary -run ^$ -bench "BenchmarkEncode_TaskList" -benchtime=1000x -benchmem
 ```
 
-Current `TaskList_ByteMsg` hot-path result: `0 B/op`, `0 allocs/op` for 100 `TaskDto` entries.
+Current `TaskList_ByteMsg233` hot-path target: `0 B/op`, `0 allocs/op` for 100 `TaskDto` entries.
+
+## Game Traffic Coverage
+
+The benchmark suite must cover real packet families, not only a business DTO list.
+
+| Scenario | Structure |
+|---|---|
+| Login push | player, 30 heroes, 80 items, 15 mails, 20 quests, settings |
+| Battle frame | 10 player inputs, frame id, timestamp, random seed |
+| Leaderboard | 100 rank rows with player, guild, avatar, score |
+| Battle input | compact input batch with fixed numeric fields |
+| TaskDto list | 100 business DTO rows for non-game repeated data |
+
+Run the game packet checks:
+
+```bash
+go test ./pkg/binary -run "TestGame_" -v
+go test ./pkg/binary -run ^$ -bench "BenchmarkGame_" -benchmem
+```
+
+See [GAME_BINARY.md](GAME_BINARY.md) for the message-shape rules.
 
 ## Run Locally
 
@@ -90,39 +124,25 @@ Current `TaskList_ByteMsg` hot-path result: `0 B/op`, `0 allocs/op` for 100 `Tas
 # Payload size comparison
 go test ./pkg/binary/... -run "TestBenchmark_SizeComparison" -v
 
+# Game packet checks
+go test ./pkg/binary/... -run "TestGame_" -v
+
 # Encoding benchmarks
 go test ./pkg/binary/... -bench="BenchmarkEncode_" -benchmem
 
 # Decoding benchmarks
 go test ./pkg/binary/... -bench="BenchmarkDecode_" -benchmem
 
-# Full benchmark set
-go test ./pkg/binary/... -bench="Benchmark(Encode|Decode)_" -benchmem
-```
-
-## JSON Schema Used By New Examples
-
-```json
-{
-  "schema": "bymsg/v1",
-  "package": "com.example.benchmark",
-  "PlayerProfile": {
-    "id": { "type": "uint64", "tag": 1 },
-    "name": { "type": "string", "tag": 2 },
-    "level": { "type": "uint32", "tag": 3 },
-    "exp": { "type": "uint64", "tag": 4 },
-    "tags": { "type": "list<string>", "tag": 5 },
-    "attrs": { "type": "map<string, string>", "tag": 6 }
-  }
-}
+# Game benchmarks
+go test ./pkg/binary/... -bench="BenchmarkGame_" -benchmem
 ```
 
 ## Summary
 
-bytemsg233 is strongest when the project needs all of these at once:
+ByteMsg233 is strongest when the project needs all of these at once:
 
-- payload size close to Protobuf and far below JSON/MessagePack;
-- generated APIs that feel native in Go, C#, Java, TypeScript, and Python;
-- built-in object pooling for client-heavy workloads;
-- JSON schema files that work in normal editors and GitHub without custom plugins;
-- localized class and field comments from the schema itself.
+- packet size close to Protobuf and far below JSON/MessagePack;
+- generated APIs that feel native in Go, C#, Java, TypeScript, Rust, C++, C, Kotlin, Swift, Dart, Lua, and Python;
+- object pooling for client-heavy workloads;
+- JSON schema files that are readable in normal editors;
+- debug-friendly pretty string helpers outside the hot path.
