@@ -199,6 +199,40 @@
       border-bottom: 1px solid rgba(244, 234, 216, 0.32);
     }
 
+    .topline-actions {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .lang-switch {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.045);
+    }
+
+    .lang-switch button {
+      min-width: 42px;
+      border: 0;
+      border-radius: 999px;
+      padding: 7px 10px;
+      color: var(--muted);
+      background: transparent;
+      cursor: pointer;
+      font-size: 0.76rem;
+      font-weight: 700;
+    }
+
+    .lang-switch button.active {
+      color: var(--ink);
+      background: linear-gradient(90deg, var(--accent-2), var(--accent));
+    }
+
     .hero-grid {
       display: grid;
       grid-template-columns: minmax(0, 1.02fr) minmax(460px, 0.98fr);
@@ -571,6 +605,20 @@
       animation: grow 1s ease both;
     }
 
+    .bench-percent {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 0.76rem;
+      white-space: nowrap;
+    }
+
+    .percent-note {
+      color: var(--muted);
+      font-size: 0.78rem;
+      line-height: 1.5;
+    }
+
     .lab {
       border: 1px solid var(--line);
       border-radius: var(--radius);
@@ -813,19 +861,19 @@
           <div class="brand-mark">b</div>
           <div>
             <h1>byte msg 233</h1>
-            <p>JSON-first binary schema toolchain for clients, SDKs, and agent-assisted codebases.</p>
+            <p data-i18n="brand.copy">JSON-first binary schema toolchain for clients, SDKs, and agent-assisted codebases.</p>
           </div>
         </div>
         <nav class="nav" aria-label="Page navigation">
-          <a href="#install"><span>Install</span><small>01</small></a>
-          <a href="#json"><span>JSON DSL</span><small>02</small></a>
-          <a href="#languages"><span>Languages</span><small>03</small></a>
-          <a href="#performance"><span>Performance</span><small>04</small></a>
-          <a href="#lab"><span>Binary Lab</span><small>05</small></a>
-          <a href="#docs"><span>Docs Rules</span><small>06</small></a>
+          <a href="#install"><span data-i18n="nav.install">Install</span><small>01</small></a>
+          <a href="#json"><span data-i18n="nav.json">JSON DSL</span><small>02</small></a>
+          <a href="#languages"><span data-i18n="nav.languages">Languages</span><small>03</small></a>
+          <a href="#performance"><span data-i18n="nav.performance">Performance</span><small>04</small></a>
+          <a href="#lab"><span data-i18n="nav.lab">Binary Lab</span><small>05</small></a>
+          <a href="#docs"><span data-i18n="nav.docs">Docs Rules</span><small>06</small></a>
         </nav>
       </div>
-      <div class="rail-foot">
+      <div class="rail-foot" data-i18n="rail.foot">
         JSON replaces .proto. YAML remains supported when a team wants it.
       </div>
     </aside>
@@ -833,29 +881,35 @@
     <main>
       <section class="hero" id="install">
         <div class="topline">
-          <span>bytemsg233 / schema compiler / binary runtime</span>
-          <a href="https://github.com/neko233-com/bytemsg233">GitHub repository</a>
+          <span data-i18n="topline.label">bytemsg233 / schema compiler / binary runtime</span>
+          <div class="topline-actions">
+            <div class="lang-switch" aria-label="Language">
+              <button type="button" data-lang="en">EN</button>
+              <button type="button" data-lang="zh">中文</button>
+            </div>
+            <a href="https://github.com/neko233-com/bytemsg233" data-i18n="topline.github">GitHub repository</a>
+          </div>
         </div>
 
         <div class="hero-grid">
           <div class="poster reveal">
             <div>
-              <h2>Install first. <span>Ship schema next.</span></h2>
-              <p class="poster-copy">bytemsg233 turns one JSON schema into native-feeling Go, C#, Java, TypeScript, Rust, and Python models with object pooling, enum helpers, localized comments, and compact binary payloads.</p>
+              <h2><span data-i18n="hero.title.a">Install first.</span> <span data-i18n="hero.title.b">Ship schema next.</span></h2>
+              <p class="poster-copy" data-i18n="hero.copy">bytemsg233 turns one JSON schema into native-feeling Go, C#, Java, TypeScript, Rust, and Python models with object pooling, enum helpers, localized comments, and compact binary payloads.</p>
             </div>
 
             <div class="install-strip">
               <div class="terminal">
                 <div class="terminal-head">
-                  <span>Install</span>
-                  <button class="copy-btn" data-copy="curl -fsSL https://raw.githubusercontent.com/neko233-com/bytemsg233/main/scripts/install.sh | bash">Copy</button>
+                  <span data-i18n="install.unix">Install</span>
+                  <button class="copy-btn" data-copy="curl -fsSL https://raw.githubusercontent.com/neko233-com/bytemsg233/main/scripts/install.sh | bash" data-i18n="button.copy">Copy</button>
                 </div>
                 <pre><code>curl -fsSL https://raw.githubusercontent.com/neko233-com/bytemsg233/main/scripts/install.sh | bash</code></pre>
               </div>
               <div class="terminal">
                 <div class="terminal-head">
                   <span>Windows PowerShell</span>
-                  <button class="copy-btn" data-copy="irm https://raw.githubusercontent.com/neko233-com/bytemsg233/main/scripts/install.ps1 | iex">Copy</button>
+                  <button class="copy-btn" data-copy="irm https://raw.githubusercontent.com/neko233-com/bytemsg233/main/scripts/install.ps1 | iex" data-i18n="button.copy">Copy</button>
                 </div>
                 <pre><code>irm https://raw.githubusercontent.com/neko233-com/bytemsg233/main/scripts/install.ps1 | iex</code></pre>
               </div>
@@ -864,15 +918,15 @@
 
           <div class="workspace reveal">
             <div class="quick-facts">
-              <div class="fact"><strong>JSON</strong><span>Default DSL. Top-level keys are message names.</span></div>
-              <div class="fact"><strong>5 langs</strong><span>Go, C#, TypeScript, Rust, and Java are the 1.0 priority path.</span></div>
-              <div class="fact"><strong>0 plugin</strong><span>No custom `.bmsg` plugin required for the main authoring path.</span></div>
+              <div class="fact"><strong>JSON</strong><span data-i18n="fact.json">Default DSL. Top-level keys are message names.</span></div>
+              <div class="fact"><strong data-i18n="fact.langs.title">5 langs</strong><span data-i18n="fact.langs">Go, C#, TypeScript, Rust, and Java are the 1.0 priority path.</span></div>
+              <div class="fact"><strong data-i18n="fact.plugin.title">0 plugin</strong><span data-i18n="fact.plugin">No custom `.bmsg` plugin required for the main authoring path.</span></div>
             </div>
 
             <div class="yaml-panel">
               <div class="panel-title">
                 <strong>user.bmsg.json</strong>
-                <span>default schema shape</span>
+                <span data-i18n="schema.shape">default schema shape</span>
               </div>
               <pre><code>{
   <span class="kw">"schema"</span>: <span class="st">"bymsg/v1"</span>,
@@ -897,21 +951,21 @@
 
       <section class="section reveal" id="json">
         <div class="section-head">
-          <h2>The DSL is JSON because big protocols need structure.</h2>
-          <p>When messages grow, JSON keeps message names, fields, enum maps, and generated diffs predictable. YAML remains supported; JSON is the native contract.</p>
+          <h2 data-i18n="json.title">The DSL is JSON because big protocols need structure.</h2>
+          <p data-i18n="json.copy">When messages grow, JSON keeps message names, fields, enum maps, and generated diffs predictable. YAML remains supported; JSON is the native contract.</p>
         </div>
 
         <div class="split">
           <div class="open-panel">
             <div>
-              <h3>One file. Structured comments. Stable diffs.</h3>
-              <p>Descriptions live as fields, not line comments. That lets class comments and field comments generate cleanly in every target language and locale.</p>
+              <h3 data-i18n="json.panel.title">One file. Structured comments. Stable diffs.</h3>
+              <p data-i18n="json.panel.copy">Descriptions live as fields, not line comments. That lets class comments and field comments generate cleanly in every target language and locale.</p>
             </div>
             <div class="rule-list">
-              <div class="rule"><strong>message key</strong><span>Top-level keys such as `Hero` and `InventoryItem` map to native classes or structs.</span></div>
-              <div class="rule"><strong>fields</strong><span>Every field declares `type`, `tag`, and optional localized descriptions.</span></div>
-              <div class="rule"><strong>enums</strong><span>Enum values generate native enum helpers instead of forcing raw integers.</span></div>
-              <div class="rule"><strong>exports</strong><span>Generate `.md` for people and `.bmsg` for legacy/future DSL tooling.</span></div>
+              <div class="rule"><strong data-i18n="rule.message.title">message key</strong><span data-i18n="rule.message.copy">Top-level keys such as `Hero` and `InventoryItem` map to native classes or structs.</span></div>
+              <div class="rule"><strong data-i18n="rule.fields.title">fields</strong><span data-i18n="rule.fields.copy">Every field declares `type`, `tag`, and optional localized descriptions.</span></div>
+              <div class="rule"><strong data-i18n="rule.enums.title">enums</strong><span data-i18n="rule.enums.copy">Enum values generate native enum helpers instead of forcing raw integers.</span></div>
+              <div class="rule"><strong data-i18n="rule.exports.title">exports</strong><span data-i18n="rule.exports.copy">Generate `.md` for people and `.bmsg` for legacy/future DSL tooling.</span></div>
             </div>
           </div>
 
@@ -935,42 +989,42 @@ bytemsg233 export user.bmsg.json \
 
       <section class="section reveal" id="languages">
         <div class="section-head">
-          <h2>Generated code should feel native, not translated.</h2>
-          <p>Each target gets its own pool pattern, enum helpers, comments, and naming style. The schema is shared; the developer experience is language-specific.</p>
+          <h2 data-i18n="languages.title">Generated code should feel native, not translated.</h2>
+          <p data-i18n="languages.copy">Each target gets its own pool pattern, enum helpers, comments, and naming style. The schema is shared; the developer experience is language-specific.</p>
         </div>
 
         <div class="language-grid">
           <article class="language-panel">
             <h3>Go</h3>
-            <p>Struct tags, exported fields, and `sync.Pool` style helpers.</p>
+            <p data-i18n="lang.go">Struct tags, exported fields, and `sync.Pool` style helpers.</p>
             <code>hero := AcquireHero()
 defer ReleaseHero(hero)
 hero.State = HeroStateMOVING</code>
           </article>
           <article class="language-panel">
             <h3>C# / Unity</h3>
-            <p>Partial classes, XML docs, native collections, and Unity-friendly pooling.</p>
+            <p data-i18n="lang.csharp">Partial classes, XML docs, native collections, and Unity-friendly pooling.</p>
             <code>var hero = Hero.Rent();
 hero.State = HeroState.MOVING;
 hero.Release();</code>
           </article>
           <article class="language-panel">
             <h3>Java</h3>
-            <p>Javadoc, getters/setters, enum value lookup, queue-backed pooling.</p>
+            <p data-i18n="lang.java">Javadoc, getters/setters, enum value lookup, queue-backed pooling.</p>
             <code>Hero hero = Hero.acquire();
 hero.setState(HeroState.MOVING);
 hero.release();</code>
           </article>
           <article class="language-panel">
             <h3>TypeScript</h3>
-            <p>Runtime JS plus `.d.ts`, suitable for web and frontend build systems.</p>
+            <p data-i18n="lang.ts">Runtime JS plus `.d.ts`, suitable for web and frontend build systems.</p>
             <code>const hero = Hero.acquire();
 hero.state = HeroState.MOVING;
 hero.release();</code>
           </article>
           <article class="language-panel">
             <h3>Python</h3>
-            <p>Dataclasses, IntEnum, type hints, and a small class-level object pool.</p>
+            <p data-i18n="lang.python">Dataclasses, IntEnum, type hints, and a small class-level object pool.</p>
             <code>hero = Hero.acquire()
 hero.state = HeroState.MOVING
 hero.release()</code>
@@ -980,42 +1034,46 @@ hero.release()</code>
 
       <section class="section reveal" id="performance">
         <div class="section-head">
-          <h2>Small payloads, strong large-message behavior.</h2>
-          <p>Numbers below are benchmark snapshots. Protobuf still wins some tiny decode and encode paths; bytemsg233 is designed to stay compact while keeping authoring and generated APIs simpler.</p>
+          <h2 data-i18n="perf.title">Small payloads, strong large-message behavior.</h2>
+          <p data-i18n="perf.copy">Numbers below are benchmark snapshots. Protobuf still wins some tiny decode and encode paths; bytemsg233 is designed to stay compact while keeping authoring and generated APIs simpler.</p>
         </div>
 
         <div class="bench-wrap">
           <div class="metric-panel">
             <div class="panel-title">
-              <strong>Payload size</strong>
-              <span>lower is better</span>
+              <strong data-i18n="perf.payload">Payload size</strong>
+              <span data-i18n="perf.lower">lower is better</span>
             </div>
-            <table>
+            <table class="bench-table">
               <thead>
-                <tr><th>Scenario</th><th>ByteMsg</th><th>Protobuf</th><th>MsgPack</th><th>JSON</th></tr>
+                <tr><th data-i18n="perf.scenario">Scenario</th><th>ByteMsg</th><th>Protobuf</th><th>JSON</th><th>MsgPack</th></tr>
               </thead>
               <tbody>
-                <tr><td>Player profile</td><td><strong>61 B</strong></td><td>61 B</td><td>155 B</td><td>173 B</td></tr>
-                <tr><td>Chat message</td><td><strong>57 B</strong></td><td>57 B</td><td>103 B</td><td>116 B</td></tr>
-                <tr><td>Battle input</td><td><strong>247 B</strong></td><td>266 B</td><td>931 B</td><td>1,097 B</td></tr>
-                <tr><td>Leaderboard</td><td><strong>3,409 B</strong></td><td>3,608 B</td><td>8,711 B</td><td>9,602 B</td></tr>
+                <tr><td data-i18n="perf.player">Player profile</td><td><strong class="bench-value" data-value="61">61 B</strong></td><td><span class="bench-value" data-value="61">61 B</span></td><td><span class="bench-value" data-value="173">173 B</span></td><td><span class="bench-value" data-value="155">155 B</span></td></tr>
+                <tr><td data-i18n="perf.chat">Chat message</td><td><strong class="bench-value" data-value="57">57 B</strong></td><td><span class="bench-value" data-value="57">57 B</span></td><td><span class="bench-value" data-value="116">116 B</span></td><td><span class="bench-value" data-value="103">103 B</span></td></tr>
+                <tr><td data-i18n="perf.battle">Battle input</td><td><strong class="bench-value" data-value="247">247 B</strong></td><td><span class="bench-value" data-value="266">266 B</span></td><td><span class="bench-value" data-value="1097">1,097 B</span></td><td><span class="bench-value" data-value="931">931 B</span></td></tr>
+                <tr><td data-i18n="perf.task">TaskDto list</td><td><strong class="bench-value" data-value="3845">3,845 B</strong></td><td><span class="bench-value" data-value="4044">4,044 B</span></td><td><span class="bench-value" data-value="14691">14,691 B</span></td><td><span class="bench-value" data-value="13303">13,303 B</span></td></tr>
+                <tr><td data-i18n="perf.leaderboard">Leaderboard</td><td><strong class="bench-value" data-value="3409">3,409 B</strong></td><td><span class="bench-value" data-value="3608">3,608 B</span></td><td><span class="bench-value" data-value="9602">9,602 B</span></td><td><span class="bench-value" data-value="8711">8,711 B</span></td></tr>
               </tbody>
             </table>
+            <div class="panel-title">
+              <span class="percent-note" data-i18n="perf.percent.note">Percent uses the worst value in each row as 100%.</span>
+            </div>
           </div>
 
           <div class="metric-panel">
             <div class="panel-title">
-              <strong>Encode speed</strong>
+              <strong data-i18n="perf.speed">Encode speed</strong>
               <span>ns/op</span>
             </div>
-            <div class="meter">
-              <div class="meter-row"><span>ByteMsg</span><div class="bar-track"><div class="bar-fill" style="width:35%"></div></div><strong>979</strong></div>
-              <div class="meter-row"><span>Protobuf</span><div class="bar-track"><div class="bar-fill" style="width:72%"></div></div><strong>2,030</strong></div>
-              <div class="meter-row"><span>MsgPack</span><div class="bar-track"><div class="bar-fill" style="width:100%"></div></div><strong>3,994</strong></div>
-              <div class="meter-row"><span>JSON</span><div class="bar-track"><div class="bar-fill" style="width:86%"></div></div><strong>2,836</strong></div>
+            <div class="meter" id="encode-meter" data-percent-note="true">
+              <div class="meter-row" data-value="2316"><span>ByteMsg</span><div class="bar-track"><div class="bar-fill"></div></div><strong>2,316</strong></div>
+              <div class="meter-row" data-value="14112"><span>Protobuf</span><div class="bar-track"><div class="bar-fill"></div></div><strong>14,112</strong></div>
+              <div class="meter-row" data-value="19322"><span>JSON</span><div class="bar-track"><div class="bar-fill"></div></div><strong>19,322</strong></div>
+              <div class="meter-row" data-value="22058"><span>MsgPack</span><div class="bar-track"><div class="bar-fill"></div></div><strong>22,058</strong></div>
             </div>
             <div class="panel-title">
-              <span>Battle input, 10 players. Run `go test ./pkg/binary/... -bench=BenchmarkEncode_ -benchmem` locally.</span>
+              <span data-i18n="perf.speed.note">100 TaskDto entries. Percent uses the slowest codec as 100%. Run `go test ./pkg/binary -run ^$ -bench "BenchmarkEncode_TaskList" -benchmem` locally.</span>
             </div>
           </div>
         </div>
@@ -1023,20 +1081,20 @@ hero.release()</code>
 
       <section class="section reveal" id="lab">
         <div class="section-head">
-          <h2>See why field tags matter.</h2>
-          <p>The payload does not repeat field names. The demo below encodes a tiny object with field headers and values, then compares it with JSON text length.</p>
+          <h2 data-i18n="lab.title">See why field tags matter.</h2>
+          <p data-i18n="lab.copy">The payload does not repeat field names. The demo below encodes a tiny object with field headers and values, then compares it with JSON text length.</p>
         </div>
 
         <div class="lab">
           <div class="lab-form">
-            <h3>Binary lab</h3>
-            <label>ID <input id="enc-id" type="number" value="123" min="0" /></label>
-            <label>Name <input id="enc-name" type="text" value="Neko" /></label>
-            <label>Score <input id="enc-score" type="number" value="-18" /></label>
+            <h3 data-i18n="lab.form.title">Binary lab</h3>
+            <label><span data-i18n="lab.id">ID</span><input id="enc-id" type="number" value="123" min="0" /></label>
+            <label><span data-i18n="lab.name">Name</span><input id="enc-name" type="text" value="Neko" /></label>
+            <label><span data-i18n="lab.score">Score</span><input id="enc-score" type="number" value="-18" /></label>
           </div>
           <div class="lab-output">
             <div class="panel-title" style="padding:0;border:0;">
-              <strong>Encoded bytes</strong>
+              <strong data-i18n="lab.encoded">Encoded bytes</strong>
               <span id="byte-count">0 B</span>
             </div>
             <div class="hex-line" id="hex-line"></div>
@@ -1048,34 +1106,238 @@ hero.release()</code>
 
       <section class="section reveal" id="docs">
         <div class="section-head">
-          <h2>Markdown and HTML have different jobs.</h2>
-          <p>Repository docs and public demo pages should not pretend to be the same surface. This page is standalone and written for humans browsing the project.</p>
+          <h2 data-i18n="docs.title">Markdown and HTML have different jobs.</h2>
+          <p data-i18n="docs.copy">Repository docs and public demo pages should not pretend to be the same surface. This page is standalone and written for humans browsing the project.</p>
         </div>
 
         <div class="doc-rules">
           <article class="doc-rule">
             <h3>README.md</h3>
-            <p>Install first, then fastest successful path, then enough context to decide whether the project is worth using.</p>
+            <p data-i18n="docs.readme">Install first, then fastest successful path, then enough context to decide whether the project is worth using.</p>
           </article>
           <article class="doc-rule">
             <h3>docs/*.md</h3>
-            <p>Developer-facing details: CLI flags, schema rules, benchmarks, migration notes, and implementation constraints.</p>
+            <p data-i18n="docs.markdown">Developer-facing details: CLI flags, schema rules, benchmarks, migration notes, and implementation constraints.</p>
           </article>
           <article class="doc-rule">
             <h3>docs/**/*.html</h3>
-            <p>Public-facing pages. They must be complete on their own and must not require reading Markdown to understand the product.</p>
+            <p data-i18n="docs.html">Public-facing pages. They must be complete on their own and must not require reading Markdown to understand the product.</p>
           </article>
         </div>
       </section>
 
       <footer>
         <span>bytemsg233 by neko233-com</span>
-        <span>JSON-first. Binary payloads. Native generated APIs.</span>
+        <span data-i18n="footer.copy">JSON-first. Binary payloads. Native generated APIs.</span>
       </footer>
     </main>
   </div>
 
   <script>
+    const i18n = {
+      en: {
+        "meta.title": "bytemsg233 - JSON-first binary schema toolchain",
+        "meta.description": "bytemsg233 is a JSON-first binary schema toolchain with multi-language generation, object pooling, enum helpers, and benchmark comparisons.",
+        "brand.copy": "JSON-first binary schema toolchain for clients, SDKs, and agent-assisted codebases.",
+        "nav.install": "Install",
+        "nav.json": "JSON DSL",
+        "nav.languages": "Languages",
+        "nav.performance": "Performance",
+        "nav.lab": "Binary Lab",
+        "nav.docs": "Docs Rules",
+        "rail.foot": "JSON replaces .proto. YAML remains supported when a team wants it.",
+        "topline.label": "bytemsg233 / schema compiler / binary runtime",
+        "topline.github": "GitHub repository",
+        "hero.title.a": "Install first.",
+        "hero.title.b": "Ship schema next.",
+        "hero.copy": "bytemsg233 turns one JSON schema into native-feeling Go, C#, Java, TypeScript, Rust, and Python models with object pooling, enum helpers, localized comments, and compact binary payloads.",
+        "button.copy": "Copy",
+        "button.copied": "Copied",
+        "install.unix": "Install",
+        "fact.json": "Default DSL. Top-level keys are message names.",
+        "fact.langs.title": "5 langs",
+        "fact.langs": "Go, C#, TypeScript, Rust, and Java are the 1.0 priority path.",
+        "fact.plugin.title": "0 plugin",
+        "fact.plugin": "No custom `.bmsg` plugin required for the main authoring path.",
+        "schema.shape": "default schema shape",
+        "json.title": "The DSL is JSON because big protocols need structure.",
+        "json.copy": "When messages grow, JSON keeps message names, fields, enum maps, and generated diffs predictable. YAML remains supported; JSON is the native contract.",
+        "json.panel.title": "One file. Structured comments. Stable diffs.",
+        "json.panel.copy": "Descriptions live as fields, not line comments. That lets class comments and field comments generate cleanly in every target language and locale.",
+        "rule.message.title": "message key",
+        "rule.message.copy": "Top-level keys such as `Hero` and `InventoryItem` map to native classes or structs.",
+        "rule.fields.title": "fields",
+        "rule.fields.copy": "Every field declares `type`, `tag`, and optional localized descriptions.",
+        "rule.enums.title": "enums",
+        "rule.enums.copy": "Enum values generate native enum helpers instead of forcing raw integers.",
+        "rule.exports.title": "exports",
+        "rule.exports.copy": "Generate `.md` for people and `.bmsg` for legacy/future DSL tooling.",
+        "languages.title": "Generated code should feel native, not translated.",
+        "languages.copy": "Each target gets its own pool pattern, enum helpers, comments, and naming style. The schema is shared; the developer experience is language-specific.",
+        "lang.go": "Struct tags, exported fields, and `sync.Pool` style helpers.",
+        "lang.csharp": "Partial classes, XML docs, native collections, and Unity-friendly pooling.",
+        "lang.java": "Javadoc, getters/setters, enum value lookup, queue-backed pooling.",
+        "lang.ts": "Runtime JS plus `.d.ts`, suitable for web and frontend build systems.",
+        "lang.python": "Dataclasses, IntEnum, type hints, and a small class-level object pool.",
+        "perf.title": "Small payloads, strong large-message behavior.",
+        "perf.copy": "Numbers below are benchmark snapshots. Protobuf still wins some tiny decode and encode paths; bytemsg233 is designed to stay compact while keeping authoring and generated APIs simpler.",
+        "perf.payload": "Payload size",
+        "perf.lower": "lower is better",
+        "perf.scenario": "Scenario",
+        "perf.player": "Player profile",
+        "perf.chat": "Chat message",
+        "perf.battle": "Battle input",
+        "perf.task": "TaskDto list",
+        "perf.leaderboard": "Leaderboard",
+        "perf.percent.note": "Percent uses the worst value in each row as 100%.",
+        "perf.speed": "Encode speed",
+        "perf.speed.note": "100 TaskDto entries. Percent uses the slowest codec as 100%. Run `go test ./pkg/binary -run ^$ -bench \"BenchmarkEncode_TaskList\" -benchmem` locally.",
+        "lab.title": "See why field tags matter.",
+        "lab.copy": "The payload does not repeat field names. The demo below encodes a tiny object with field headers and values, then compares it with JSON text length.",
+        "lab.form.title": "Binary lab",
+        "lab.id": "ID",
+        "lab.name": "Name",
+        "lab.score": "Score",
+        "lab.encoded": "Encoded bytes",
+        "lab.compare": "JSON is {json} B for the same values. This tiny payload saves {saved}% before compression.",
+        "docs.title": "Markdown and HTML have different jobs.",
+        "docs.copy": "Repository docs and public demo pages should not pretend to be the same surface. This page is standalone and written for humans browsing the project.",
+        "docs.readme": "Install first, then fastest successful path, then enough context to decide whether the project is worth using.",
+        "docs.markdown": "Developer-facing details: CLI flags, schema rules, benchmarks, migration notes, and implementation constraints.",
+        "docs.html": "Public-facing pages. They must be complete on their own and must not require reading Markdown to understand the product.",
+        "footer.copy": "JSON-first. Binary payloads. Native generated APIs."
+      },
+      zh: {
+        "meta.title": "bytemsg233 - JSON-first 二进制 schema 工具链",
+        "meta.description": "bytemsg233 是 JSON-first 的二进制 schema 工具链，提供多语言生成、对象池、enum 适配和性能对比。",
+        "brand.copy": "面向客户端、SDK 和 AI 辅助代码库的 JSON-first 二进制 schema 工具链。",
+        "nav.install": "安装",
+        "nav.json": "JSON DSL",
+        "nav.languages": "语言生成",
+        "nav.performance": "性能",
+        "nav.lab": "二进制实验",
+        "nav.docs": "文档规则",
+        "rail.foot": "JSON 替代 .proto。团队需要时仍然支持 YAML。",
+        "topline.label": "bytemsg233 / schema 编译器 / 二进制运行时",
+        "topline.github": "GitHub 仓库",
+        "hero.title.a": "先安装。",
+        "hero.title.b": "再交付 schema。",
+        "hero.copy": "bytemsg233 把一份 JSON schema 生成 Go、C#、Java、TypeScript、Rust、Python 的原生风格模型，内置对象池、enum helper、本地化注释和紧凑二进制载荷。",
+        "button.copy": "复制",
+        "button.copied": "已复制",
+        "install.unix": "安装",
+        "fact.json": "默认 DSL。顶层 key 就是消息名。",
+        "fact.langs.title": "5 语言",
+        "fact.langs": "Go、C#、TypeScript、Rust、Java 是 1.0 优先路径。",
+        "fact.plugin.title": "0 插件",
+        "fact.plugin": "主编写路径不需要自定义 `.bmsg` 编辑器插件。",
+        "schema.shape": "默认 schema 结构",
+        "json.title": "协议变大时，JSON DSL 更适合保持结构。",
+        "json.copy": "消息增多后，JSON 能让消息名、字段、enum map 和生成 diff 保持稳定。YAML 仍然支持；JSON 是默认契约。",
+        "json.panel.title": "一个文件。结构化注释。稳定 diff。",
+        "json.panel.copy": "描述写在字段里，而不是散落行注释。这样每个目标语言都能生成干净的类注释和字段注释。",
+        "rule.message.title": "消息 key",
+        "rule.message.copy": "`Hero`、`InventoryItem` 这类顶层 key 会映射为目标语言的类或结构体。",
+        "rule.fields.title": "字段",
+        "rule.fields.copy": "每个字段声明 `type`、`tag` 和可选本地化描述。",
+        "rule.enums.title": "枚举",
+        "rule.enums.copy": "Enum 会生成目标语言原生 helper，不强迫用户处理裸整数。",
+        "rule.exports.title": "导出",
+        "rule.exports.copy": "生成 `.md` 给人看，生成 `.bmsg` 给 legacy 或未来 DSL 工具。",
+        "languages.title": "生成代码应该像原生代码，不像翻译稿。",
+        "languages.copy": "每个目标语言都有自己的池化模式、enum helper、注释和命名风格。schema 共享，开发体验按语言定制。",
+        "lang.go": "Struct tag、导出字段、接近 `sync.Pool` 风格的 helper。",
+        "lang.csharp": "partial class、XML docs、原生集合，以及 Unity 友好的池化。",
+        "lang.java": "Javadoc、getter/setter、enum value lookup、队列池化。",
+        "lang.ts": "运行时 JS 加 `.d.ts`，适合 Web 和前端构建系统。",
+        "lang.python": "Dataclass、IntEnum、类型提示，以及轻量 class-level 对象池。",
+        "perf.title": "小载荷也强，大消息更能体现优势。",
+        "perf.copy": "下面是 benchmark 快照。Protobuf 在部分 tiny encode/decode 路径仍会赢；bytemsg233 目标是在保持紧凑的同时，让 schema 编写和生成 API 更简单。",
+        "perf.payload": "载荷大小",
+        "perf.lower": "越低越好",
+        "perf.scenario": "场景",
+        "perf.player": "玩家信息",
+        "perf.chat": "聊天消息",
+        "perf.battle": "战斗输入",
+        "perf.task": "TaskDto 列表",
+        "perf.leaderboard": "排行榜",
+        "perf.percent.note": "百分比以每行最差值为 100%。",
+        "perf.speed": "编码速度",
+        "perf.speed.note": "100 条 TaskDto。百分比以最慢 codec 为 100%。本地运行 `go test ./pkg/binary -run ^$ -bench \"BenchmarkEncode_TaskList\" -benchmem`。",
+        "lab.title": "字段 tag 为什么重要。",
+        "lab.copy": "载荷不会重复字段名。下面 demo 会编码一个小对象，并和 JSON 文本长度对比。",
+        "lab.form.title": "二进制实验",
+        "lab.id": "ID",
+        "lab.name": "名称",
+        "lab.score": "分数",
+        "lab.encoded": "编码字节",
+        "lab.compare": "相同值的 JSON 是 {json} B。这个小载荷在压缩前节省 {saved}%。",
+        "docs.title": "Markdown 和 HTML 分工不同。",
+        "docs.copy": "仓库文档和公开 demo 页面不是同一种表面。这一页是独立页面，面向正在浏览项目的人。",
+        "docs.readme": "README 先给安装，再给最快成功路径，再给足够判断项目是否值得使用的上下文。",
+        "docs.markdown": "docs/*.md 放开发者细节：CLI 参数、schema 规则、benchmark、迁移说明和实现约束。",
+        "docs.html": "docs/**/*.html 面向公开浏览。它必须自洽，不能要求读 Markdown 才理解产品。",
+        "footer.copy": "JSON-first。二进制载荷。原生生成 API。"
+      }
+    };
+
+    const savedLanguage = localStorage.getItem("bytemsg233-lang");
+    const browserLanguage = navigator.language && navigator.language.toLowerCase().startsWith("zh") ? "zh" : "en";
+    let activeLanguage = savedLanguage || browserLanguage;
+
+    function t(key) {
+      return (i18n[activeLanguage] && i18n[activeLanguage][key]) || i18n.en[key] || key;
+    }
+
+    function applyLanguage(language) {
+      activeLanguage = language;
+      localStorage.setItem("bytemsg233-lang", language);
+      document.documentElement.lang = language === "zh" ? "zh-CN" : "en";
+      document.title = t("meta.title");
+      const description = document.querySelector('meta[name="description"]');
+      if (description) description.setAttribute("content", t("meta.description"));
+      document.querySelectorAll("[data-i18n]").forEach((node) => {
+        node.textContent = t(node.dataset.i18n);
+      });
+      document.querySelectorAll("[data-lang]").forEach((button) => {
+        button.classList.toggle("active", button.dataset.lang === language);
+      });
+      renderLab();
+    }
+
+    function renderPercentages() {
+      document.querySelectorAll(".bench-table tbody tr").forEach((row) => {
+        const values = Array.from(row.querySelectorAll(".bench-value"));
+        const max = Math.max(...values.map((node) => Number(node.dataset.value)));
+        values.forEach((node) => {
+          const percent = Math.round((Number(node.dataset.value) / max) * 100);
+          let label = node.querySelector(".bench-percent");
+          if (!label) {
+            label = document.createElement("span");
+            label.className = "bench-percent";
+            node.appendChild(label);
+          }
+          label.textContent = `${percent}%`;
+        });
+      });
+
+      document.querySelectorAll(".meter").forEach((meter) => {
+        const rows = Array.from(meter.querySelectorAll(".meter-row"));
+        const max = Math.max(...rows.map((row) => Number(row.dataset.value)));
+        rows.forEach((row) => {
+          const percent = Math.round((Number(row.dataset.value) / max) * 100);
+          row.querySelector(".bar-fill").style.width = `${percent}%`;
+          let label = row.querySelector(".bench-percent");
+          if (!label) {
+            label = document.createElement("span");
+            label.className = "bench-percent";
+            row.querySelector("strong").appendChild(label);
+          }
+          label.textContent = `${percent}%`;
+        });
+      });
+    }
+
     const progress = document.getElementById("progress");
     const navLinks = Array.from(document.querySelectorAll(".nav a"));
     const sections = navLinks.map((link) => document.querySelector(link.getAttribute("href"))).filter(Boolean);
@@ -1108,9 +1370,13 @@ hero.release()</code>
       button.addEventListener("click", async () => {
         await navigator.clipboard.writeText(button.dataset.copy);
         const old = button.textContent;
-        button.textContent = "Copied";
+        button.textContent = t("button.copied");
         setTimeout(() => { button.textContent = old; }, 1200);
       });
+    });
+
+    document.querySelectorAll("[data-lang]").forEach((button) => {
+      button.addEventListener("click", () => applyLanguage(button.dataset.lang));
     });
 
     function varint(value) {
@@ -1150,7 +1416,10 @@ hero.release()</code>
 
       document.getElementById("hex-line").innerHTML = bytes.map((byte) => `<span class="byte">${hex(byte)}</span>`).join("");
       document.getElementById("byte-count").textContent = `${bytes.length} B`;
-      document.getElementById("compare-note").textContent = `JSON is ${json.length} B for the same values. This tiny payload saves ${Math.max(0, Math.round((1 - bytes.length / json.length) * 100))}% before compression.`;
+      const saved = Math.max(0, Math.round((1 - bytes.length / json.length) * 100));
+      document.getElementById("compare-note").textContent = t("lab.compare")
+        .replace("{json}", json.length)
+        .replace("{saved}", saved);
       document.getElementById("encode-detail").textContent = [
         `field 1 id    -> header ${hex((1 << 3) | 0)}, value ${varint(id).map(hex).join(" ")}`,
         `field 2 name  -> header ${hex((2 << 3) | 2)}, len ${nameBytes.length}, value ${nameBytes.map(hex).join(" ") || "(empty)"}`,
@@ -1161,7 +1430,8 @@ hero.release()</code>
     ["enc-id", "enc-name", "enc-score"].forEach((id) => {
       document.getElementById(id).addEventListener("input", renderLab);
     });
-    renderLab();
+    renderPercentages();
+    applyLanguage(activeLanguage);
   </script>
 </body>
 </html>
