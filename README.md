@@ -71,37 +71,25 @@ Top-level JSON keys are message names. Reserved keys such as `schema`, `package`
     }
   },
   "Hero": {
-    "description": {
-      "zh": "英雄资料",
-      "en": "Hero profile"
-    },
+    "packetId": 1001,
+    "comment": "Hero profile",
     "id": {
       "type": "uint32",
-      "tag": 1,
-      "description": {
-        "zh": "英雄 ID",
-        "en": "Hero ID"
-      }
+      "comment": "Hero ID"
     },
     "name": {
       "type": "string",
-      "tag": 2
+      "comment": "Hero name"
     },
-    "skill_ids": {
-      "type": "list<uint32>",
-      "tag": 3
-    },
-    "attrs": {
-      "type": "map<string, string>",
-      "tag": 4
-    },
-    "state": {
-      "type": "HeroState",
-      "tag": 5
-    }
+    "skill_ids": "list<uint32>",
+    "state": "HeroState"
   }
 }
 ```
+
+Only three things matter for fields: field name, type, and optional comment. `tag` is optional; when omitted, bytemsg233 assigns tags from JSON field order. `packetId` is optional and belongs on the message, which matches game protocol routing.
+
+For complex data, reference another message class by name instead of nesting message structures inline. That keeps packets readable and keeps generated classes pool-friendly.
 
 YAML is still supported for teams that prefer it, and legacy `.bmsg` can be exported for future tooling experiments. The main authoring path is `.bmsg.json`.
 

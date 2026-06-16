@@ -12,12 +12,14 @@ type Schema struct {
 type Message struct {
 	Fields      map[string]*Field `yaml:"fields" json:"fields"`
 	Description *Description      `yaml:"description,omitempty" json:"description,omitempty"`
+	PacketID    int               `yaml:"packetId,omitempty" json:"packetId,omitempty"`
 }
 
 // Field represents a field in a message
 type Field struct {
 	Type        string       `yaml:"type" json:"type"`
 	Description *Description `yaml:"description,omitempty" json:"description,omitempty"`
+	Comment     string       `yaml:"comment,omitempty" json:"comment,omitempty"`
 	Tag         int          `yaml:"tag" json:"tag"`
 }
 

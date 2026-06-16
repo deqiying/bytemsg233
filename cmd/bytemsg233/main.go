@@ -79,26 +79,17 @@ func main() {
     }
   },
   "Example": {
-    "description": {
-      "zh": "示例消息",
-      "en": "Example message"
-    },
+    "packetId": 1001,
+    "comment": "Example message",
     "id": {
       "type": "uint32",
-      "tag": 1,
-      "description": {
-        "zh": "ID",
-        "en": "ID"
-      }
+      "comment": "ID"
     },
     "name": {
       "type": "string",
-      "tag": 2,
-      "description": {
-        "zh": "名称",
-        "en": "Name"
-      }
-    }
+      "comment": "Name"
+    },
+    "status": "Status"
   }
 }
 `, name)

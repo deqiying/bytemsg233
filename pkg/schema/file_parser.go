@@ -1,8 +1,10 @@
 package schema
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -134,24 +136,39 @@ func parseNativeJSONMessage(raw json.RawMessage) (*Message, error) {
 		}
 		msg.Description = &desc
 	}
+	if rawComment, ok := obj["comment"]; ok && msg.Description == nil {
+		var comment string
+		if err := json.Unmarshal(rawComment, &comment); err != nil {
+			return nil, fmt.Errorf("comment: %w", err)
+		}
+		msg.Description = &Description{Zh: comment, En: comment}
+	}
+	if rawPacketID, ok := obj["packetId"]; ok {
+		if err := json.Unmarshal(rawPacketID, &msg.PacketID); err != nil {
+			return nil, fmt.Errorf("packetId: %w", err)
+		}
+	}
 
 	if rawFields, ok := obj["fields"]; ok {
 		if err := json.Unmarshal(rawFields, &msg.Fields); err != nil {
 			return nil, fmt.Errorf("fields: %w", err)
 		}
+		assignMissingTags(msg, orderedObjectKeys(rawFields))
 		return msg, nil
 	}
 
-	for fieldName, rawField := range obj {
-		if fieldName == "description" {
+	for _, fieldName := range orderedObjectKeys(raw) {
+		if isReservedNativeJSONMessageKey(fieldName) {
 			continue
 		}
+		rawField := obj[fieldName]
 		field, err := parseNativeJSONField(rawField)
 		if err != nil {
 			return nil, fmt.Errorf("field %s: %w", fieldName, err)
 		}
 		msg.Fields[fieldName] = field
 	}
+	assignMissingTags(msg, orderedObjectKeys(raw))
 
 	return msg, nil
 }
@@ -159,6 +176,7 @@ func parseNativeJSONMessage(raw json.RawMessage) (*Message, error) {
 func parseNativeJSONField(raw json.RawMessage) (*Field, error) {
 	var field Field
 	if err := json.Unmarshal(raw, &field); err == nil && field.Type != "" {
+		normalizeComment(&field)
 		return &field, nil
 	}
 
@@ -170,6 +188,51 @@ func parseNativeJSONField(raw json.RawMessage) (*Field, error) {
 	return nil, fmt.Errorf("expected field object with type/tag")
 }
 
+func normalizeComment(field *Field) {
+	if field == nil || field.Comment == "" || field.Description != nil {
+		return
+	}
+	field.Description = &Description{Zh: field.Comment, En: field.Comment}
+}
+
+func assignMissingTags(msg *Message, orderedKeys []string) {
+	if msg == nil {
+		return
+	}
+
+	used := make(map[int]bool)
+	for _, field := range msg.Fields {
+		if field.Tag > 0 {
+			used[field.Tag] = true
+		}
+		normalizeComment(field)
+	}
+
+	next := 1
+	assign := func(name string) {
+		field := msg.Fields[name]
+		if field == nil || field.Tag > 0 {
+			return
+		}
+		for used[next] {
+			next++
+		}
+		field.Tag = next
+		used[next] = true
+		next++
+	}
+
+	for _, key := range orderedKeys {
+		if isReservedNativeJSONMessageKey(key) {
+			continue
+		}
+		assign(key)
+	}
+	for name := range msg.Fields {
+		assign(name)
+	}
+}
+
 func isReservedNativeJSONKey(key string) bool {
 	switch key {
 	case "schema", "$schema", "package", "namespace", "messages", "enums":
@@ -177,6 +240,79 @@ func isReservedNativeJSONKey(key string) bool {
 	default:
 		return false
 	}
+}
+
+func isReservedNativeJSONMessageKey(key string) bool {
+	switch key {
+	case "description", "comment", "packetId", "fields":
+		return true
+	default:
+		return false
+	}
+}
+
+func orderedObjectKeys(raw []byte) []string {
+	decoder := json.NewDecoder(bytes.NewReader(raw))
+	token, err := decoder.Token()
+	if err != nil {
+		return nil
+	}
+	if delim, ok := token.(json.Delim); !ok || delim != '{' {
+		return nil
+	}
+
+	var keys []string
+	for decoder.More() {
+		token, err := decoder.Token()
+		if err != nil {
+			return keys
+		}
+		key, ok := token.(string)
+		if !ok {
+			return keys
+		}
+		keys = append(keys, key)
+		if err := skipJSONValue(decoder); err != nil {
+			return keys
+		}
+	}
+	return keys
+}
+
+func skipJSONValue(decoder *json.Decoder) error {
+	token, err := decoder.Token()
+	if err != nil {
+		return err
+	}
+
+	if delim, ok := token.(json.Delim); ok {
+		switch delim {
+		case '{':
+			for decoder.More() {
+				if _, err := decoder.Token(); err != nil {
+					return err
+				}
+				if err := skipJSONValue(decoder); err != nil {
+					return err
+				}
+			}
+			_, err := decoder.Token()
+			return err
+		case '[':
+			for decoder.More() {
+				if err := skipJSONValue(decoder); err != nil {
+					return err
+				}
+			}
+			_, err := decoder.Token()
+			return err
+		}
+	}
+
+	if err == io.EOF {
+		return nil
+	}
+	return nil
 }
 
 // ParseTOML parses TOML content

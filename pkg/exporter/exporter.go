@@ -37,6 +37,9 @@ func Markdown(s *schema.Schema) []byte {
 		for _, msgName := range codegen.SortedMessageNames(s) {
 			msg := s.Messages[msgName]
 			buf.WriteString(fmt.Sprintf("### %s\n\n", msgName))
+			if msg.PacketID > 0 {
+				buf.WriteString(fmt.Sprintf("- Packet ID: `%d`\n\n", msg.PacketID))
+			}
 			if msg.Description != nil {
 				buf.WriteString(descriptionLine(msg.Description))
 				buf.WriteString("\n")
@@ -80,6 +83,9 @@ func Bmsg(s *schema.Schema) []byte {
 
 	for _, msgName := range codegen.SortedMessageNames(s) {
 		msg := s.Messages[msgName]
+		if msg.PacketID > 0 {
+			buf.WriteString(fmt.Sprintf("// packetId: %d\n", msg.PacketID))
+		}
 		buf.WriteString(fmt.Sprintf("message %s {\n", msgName))
 		for _, fieldName := range codegen.SortedFieldNames(msg) {
 			field := msg.Fields[fieldName]

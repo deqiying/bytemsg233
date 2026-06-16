@@ -127,3 +127,44 @@ func TestParseFileNativeJSON(t *testing.T) {
 		t.Fatalf("Expected 1 enum, got %d", len(s.Enums))
 	}
 }
+
+func TestParseFileMinimalGameJSON(t *testing.T) {
+	dir := t.TempDir()
+	path := dir + "/game.bmsg.json"
+	data := []byte(`{
+  "schema": "bymsg/v1",
+  "package": "com.example.game",
+  "Hero": {
+    "packetId": 1001,
+    "comment": "Hero packet",
+    "id": { "type": "uint32", "comment": "Hero ID" },
+    "name": "string",
+    "profile": "HeroProfile"
+  },
+  "HeroProfile": {
+    "level": "uint32"
+  }
+}`)
+	if err := os.WriteFile(path, data, 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	s, err := ParseFile(path)
+	if err != nil {
+		t.Fatalf("ParseFile minimal game json: %v", err)
+	}
+
+	hero := s.Messages["Hero"]
+	if hero.PacketID != 1001 {
+		t.Fatalf("Expected packetId 1001, got %d", hero.PacketID)
+	}
+	if hero.Fields["id"].Tag != 1 || hero.Fields["name"].Tag != 2 || hero.Fields["profile"].Tag != 3 {
+		t.Fatalf("Expected declaration-order tags, got id=%d name=%d profile=%d", hero.Fields["id"].Tag, hero.Fields["name"].Tag, hero.Fields["profile"].Tag)
+	}
+	if hero.Fields["profile"].Type != "HeroProfile" {
+		t.Fatalf("Expected message class reference HeroProfile")
+	}
+	if hero.Fields["id"].Description == nil || hero.Fields["id"].Description.En != "Hero ID" {
+		t.Fatalf("Expected comment shorthand to become description")
+	}
+}
