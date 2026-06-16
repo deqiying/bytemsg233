@@ -3,6 +3,8 @@ package binary
 import (
 	"bytes"
 	"encoding/json"
+	"math"
+	"sort"
 	"testing"
 
 	"github.com/vmihailenco/msgpack/v5"
@@ -48,6 +50,45 @@ type BenchChatMsg struct {
 	Sender   string `json:"sender" msgpack:"sender"`
 	Content  string `json:"content" msgpack:"content"`
 	Time     uint64 `json:"time" msgpack:"time"`
+}
+
+type BenchChatDto struct {
+	MsgId     uint64            `json:"msg_id" msgpack:"msg_id"`
+	Channel   uint32            `json:"channel" msgpack:"channel"`
+	Sender    BenchChatSender   `json:"sender" msgpack:"sender"`
+	Content   string            `json:"content" msgpack:"content"`
+	Lang      string            `json:"lang" msgpack:"lang"`
+	CreatedAt int64             `json:"created_at" msgpack:"created_at"`
+	Edited    bool              `json:"edited" msgpack:"edited"`
+	Priority  int32             `json:"priority" msgpack:"priority"`
+	Heat      float32           `json:"heat" msgpack:"heat"`
+	Score     float64           `json:"score" msgpack:"score"`
+	Raw       []byte            `json:"raw" msgpack:"raw"`
+	Tags      []string          `json:"tags" msgpack:"tags"`
+	Mentions  []uint64          `json:"mentions" msgpack:"mentions"`
+	Args      map[string]string `json:"args" msgpack:"args"`
+	Items     []BenchChatItem   `json:"items" msgpack:"items"`
+	Reply     BenchChatReply    `json:"reply" msgpack:"reply"`
+}
+
+type BenchChatSender struct {
+	Uid    uint64 `json:"uid" msgpack:"uid"`
+	Name   string `json:"name" msgpack:"name"`
+	Level  uint32 `json:"level" msgpack:"level"`
+	Vip    uint32 `json:"vip" msgpack:"vip"`
+	Guild  string `json:"guild" msgpack:"guild"`
+	Online bool   `json:"online" msgpack:"online"`
+}
+
+type BenchChatItem struct {
+	ItemId uint32 `json:"item_id" msgpack:"item_id"`
+	Count  uint32 `json:"count" msgpack:"count"`
+	Rare   bool   `json:"rare" msgpack:"rare"`
+}
+
+type BenchChatReply struct {
+	MsgId   uint64 `json:"msg_id" msgpack:"msg_id"`
+	Summary string `json:"summary" msgpack:"summary"`
 }
 
 type BenchBattleInput struct {
@@ -107,6 +148,37 @@ func benchMakeChat() BenchChatMsg {
 	return BenchChatMsg{
 		Channel: 1, SenderId: 10001, Sender: "亚瑟",
 		Content: "集合！准备打团！冲冲冲！", Time: 1718304000,
+	}
+}
+
+func benchMakeChatDto() BenchChatDto {
+	return BenchChatDto{
+		MsgId:   8800000001,
+		Channel: 3,
+		Sender: BenchChatSender{
+			Uid: 100000001, Name: "绝影·暗夜猎手", Level: 65, Vip: 8, Guild: "苍穹之巅", Online: true,
+		},
+		Content:   "集合！Boss 还剩 30%，战士开盾，奶妈留大招。",
+		Lang:      "zh-CN",
+		CreatedAt: 1718304000,
+		Edited:    true,
+		Priority:  -2,
+		Heat:      0.875,
+		Score:     9981.25,
+		Raw:       []byte{0x08, 0x7b, 0x12, 0x04, 0x4e, 0x65, 0x6b, 0x6f},
+		Tags:      []string{"raid", "boss", "guild"},
+		Mentions:  []uint64{100000002, 100000003, 100000004},
+		Args: map[string]string{
+			"boss_id": "90001",
+			"phase":   "3",
+			"map":     "dragon_cave",
+			"voice":   "guild",
+		},
+		Items: []BenchChatItem{
+			{ItemId: 60001, Count: 3, Rare: true},
+			{ItemId: 60002, Count: 15, Rare: false},
+		},
+		Reply: BenchChatReply{MsgId: 8799999999, Summary: "上一条：等人齐再开"},
 	}
 }
 
@@ -276,6 +348,317 @@ func decodeChatBmsg(data []byte) BenchChatMsg {
 		}
 	}
 	return c
+}
+
+func encodeChatDtoBmsg(c BenchChatDto) []byte {
+	buf := GetBuffer()
+	defer PutBuffer(buf)
+	enc := NewEncoder(buf)
+	enc.WriteFieldHeader(1, 0)
+	enc.WriteVarint(c.MsgId)
+	enc.WriteFieldHeader(2, 0)
+	enc.WriteVarint(uint64(c.Channel))
+	enc.WriteFieldHeader(3, 2)
+	enc.WriteBytes(encodeChatSenderBmsg(c.Sender))
+	enc.WriteFieldHeader(4, 2)
+	enc.WriteString(c.Content)
+	enc.WriteFieldHeader(5, 2)
+	enc.WriteString(c.Lang)
+	enc.WriteFieldHeader(6, 0)
+	enc.WriteZigzag(c.CreatedAt)
+	if c.Edited {
+		enc.WriteFieldHeader(7, 0)
+		enc.WriteVarint(1)
+	}
+	enc.WriteFieldHeader(8, 0)
+	enc.WriteZigzag(int64(c.Priority))
+	enc.WriteFieldHeader(9, 5)
+	enc.WriteFixed32(math.Float32bits(c.Heat))
+	enc.WriteFieldHeader(10, 1)
+	enc.WriteFixed64(math.Float64bits(c.Score))
+	enc.WriteFieldHeader(11, 2)
+	enc.WriteBytes(c.Raw)
+	enc.WriteFieldHeader(12, 2)
+	enc.WriteBytes(encodeStringListBmsg(c.Tags))
+	enc.WriteFieldHeader(13, 2)
+	enc.WriteBytes(encodeUint64ListBmsg(c.Mentions))
+	enc.WriteFieldHeader(14, 2)
+	enc.WriteBytes(encodeStringMapBmsg(c.Args))
+	enc.WriteFieldHeader(15, 2)
+	enc.WriteBytes(encodeChatItemsBmsg(c.Items))
+	enc.WriteFieldHeader(16, 2)
+	enc.WriteBytes(encodeChatReplyBmsg(c.Reply))
+	return append([]byte(nil), buf.Bytes()...)
+}
+
+func encodeChatSenderBmsg(s BenchChatSender) []byte {
+	var buf bytes.Buffer
+	enc := NewEncoder(&buf)
+	enc.WriteFieldHeader(1, 0)
+	enc.WriteVarint(s.Uid)
+	enc.WriteFieldHeader(2, 2)
+	enc.WriteString(s.Name)
+	enc.WriteFieldHeader(3, 0)
+	enc.WriteVarint(uint64(s.Level))
+	enc.WriteFieldHeader(4, 0)
+	enc.WriteVarint(uint64(s.Vip))
+	enc.WriteFieldHeader(5, 2)
+	enc.WriteString(s.Guild)
+	if s.Online {
+		enc.WriteFieldHeader(6, 0)
+		enc.WriteVarint(1)
+	}
+	return buf.Bytes()
+}
+
+func encodeChatReplyBmsg(r BenchChatReply) []byte {
+	var buf bytes.Buffer
+	enc := NewEncoder(&buf)
+	enc.WriteFieldHeader(1, 0)
+	enc.WriteVarint(r.MsgId)
+	enc.WriteFieldHeader(2, 2)
+	enc.WriteString(r.Summary)
+	return buf.Bytes()
+}
+
+func encodeChatItemsBmsg(items []BenchChatItem) []byte {
+	var buf bytes.Buffer
+	enc := NewEncoder(&buf)
+	enc.WriteVarint(uint64(len(items)))
+	for _, item := range items {
+		enc.WriteBytes(encodeChatItemBmsg(item))
+	}
+	return buf.Bytes()
+}
+
+func encodeChatItemBmsg(item BenchChatItem) []byte {
+	var buf bytes.Buffer
+	enc := NewEncoder(&buf)
+	enc.WriteFieldHeader(1, 0)
+	enc.WriteVarint(uint64(item.ItemId))
+	enc.WriteFieldHeader(2, 0)
+	enc.WriteVarint(uint64(item.Count))
+	if item.Rare {
+		enc.WriteFieldHeader(3, 0)
+		enc.WriteVarint(1)
+	}
+	return buf.Bytes()
+}
+
+func encodeStringListBmsg(values []string) []byte {
+	var buf bytes.Buffer
+	enc := NewEncoder(&buf)
+	enc.WriteVarint(uint64(len(values)))
+	for _, value := range values {
+		enc.WriteString(value)
+	}
+	return buf.Bytes()
+}
+
+func encodeUint64ListBmsg(values []uint64) []byte {
+	var buf bytes.Buffer
+	enc := NewEncoder(&buf)
+	enc.WriteVarint(uint64(len(values)))
+	for _, value := range values {
+		enc.WriteVarint(value)
+	}
+	return buf.Bytes()
+}
+
+func encodeStringMapBmsg(values map[string]string) []byte {
+	var buf bytes.Buffer
+	enc := NewEncoder(&buf)
+	keys := make([]string, 0, len(values))
+	for key := range values {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	enc.WriteVarint(uint64(len(keys)))
+	for _, key := range keys {
+		enc.WriteString(key)
+		enc.WriteString(values[key])
+	}
+	return buf.Bytes()
+}
+
+func decodeChatDtoBmsg(data []byte) BenchChatDto {
+	dec := NewDecoder(bytes.NewReader(data))
+	var c BenchChatDto
+	for {
+		tag, wt, err := dec.ReadFieldHeader()
+		if err != nil {
+			break
+		}
+		switch {
+		case tag == 1 && wt == 0:
+			c.MsgId, _ = dec.ReadVarint()
+		case tag == 2 && wt == 0:
+			v, _ := dec.ReadVarint()
+			c.Channel = uint32(v)
+		case tag == 3 && wt == 2:
+			v, _ := dec.ReadBytes()
+			c.Sender = decodeChatSenderBmsg(v)
+		case tag == 4 && wt == 2:
+			c.Content, _ = dec.ReadString()
+		case tag == 5 && wt == 2:
+			c.Lang, _ = dec.ReadString()
+		case tag == 6 && wt == 0:
+			c.CreatedAt, _ = dec.ReadZigzag()
+		case tag == 7 && wt == 0:
+			v, _ := dec.ReadVarint()
+			c.Edited = v != 0
+		case tag == 8 && wt == 0:
+			v, _ := dec.ReadZigzag()
+			c.Priority = int32(v)
+		case tag == 9 && wt == 5:
+			v, _ := dec.ReadFixed32()
+			c.Heat = math.Float32frombits(v)
+		case tag == 10 && wt == 1:
+			v, _ := dec.ReadFixed64()
+			c.Score = math.Float64frombits(v)
+		case tag == 11 && wt == 2:
+			c.Raw, _ = dec.ReadBytes()
+		case tag == 12 && wt == 2:
+			v, _ := dec.ReadBytes()
+			c.Tags = decodeStringListBmsg(v)
+		case tag == 13 && wt == 2:
+			v, _ := dec.ReadBytes()
+			c.Mentions = decodeUint64ListBmsg(v)
+		case tag == 14 && wt == 2:
+			v, _ := dec.ReadBytes()
+			c.Args = decodeStringMapBmsg(v)
+		case tag == 15 && wt == 2:
+			v, _ := dec.ReadBytes()
+			c.Items = decodeChatItemsBmsg(v)
+		case tag == 16 && wt == 2:
+			v, _ := dec.ReadBytes()
+			c.Reply = decodeChatReplyBmsg(v)
+		default:
+			return c
+		}
+	}
+	return c
+}
+
+func decodeChatSenderBmsg(data []byte) BenchChatSender {
+	dec := NewDecoder(bytes.NewReader(data))
+	var s BenchChatSender
+	for {
+		tag, wt, err := dec.ReadFieldHeader()
+		if err != nil {
+			break
+		}
+		switch {
+		case tag == 1 && wt == 0:
+			s.Uid, _ = dec.ReadVarint()
+		case tag == 2 && wt == 2:
+			s.Name, _ = dec.ReadString()
+		case tag == 3 && wt == 0:
+			v, _ := dec.ReadVarint()
+			s.Level = uint32(v)
+		case tag == 4 && wt == 0:
+			v, _ := dec.ReadVarint()
+			s.Vip = uint32(v)
+		case tag == 5 && wt == 2:
+			s.Guild, _ = dec.ReadString()
+		case tag == 6 && wt == 0:
+			v, _ := dec.ReadVarint()
+			s.Online = v != 0
+		default:
+			return s
+		}
+	}
+	return s
+}
+
+func decodeChatReplyBmsg(data []byte) BenchChatReply {
+	dec := NewDecoder(bytes.NewReader(data))
+	var r BenchChatReply
+	for {
+		tag, wt, err := dec.ReadFieldHeader()
+		if err != nil {
+			break
+		}
+		switch {
+		case tag == 1 && wt == 0:
+			r.MsgId, _ = dec.ReadVarint()
+		case tag == 2 && wt == 2:
+			r.Summary, _ = dec.ReadString()
+		default:
+			return r
+		}
+	}
+	return r
+}
+
+func decodeChatItemsBmsg(data []byte) []BenchChatItem {
+	dec := NewDecoder(bytes.NewReader(data))
+	count, _ := dec.ReadVarint()
+	items := make([]BenchChatItem, 0, count)
+	for i := uint64(0); i < count; i++ {
+		raw, _ := dec.ReadBytes()
+		items = append(items, decodeChatItemBmsg(raw))
+	}
+	return items
+}
+
+func decodeChatItemBmsg(data []byte) BenchChatItem {
+	dec := NewDecoder(bytes.NewReader(data))
+	var item BenchChatItem
+	for {
+		tag, wt, err := dec.ReadFieldHeader()
+		if err != nil {
+			break
+		}
+		switch {
+		case tag == 1 && wt == 0:
+			v, _ := dec.ReadVarint()
+			item.ItemId = uint32(v)
+		case tag == 2 && wt == 0:
+			v, _ := dec.ReadVarint()
+			item.Count = uint32(v)
+		case tag == 3 && wt == 0:
+			v, _ := dec.ReadVarint()
+			item.Rare = v != 0
+		default:
+			return item
+		}
+	}
+	return item
+}
+
+func decodeStringListBmsg(data []byte) []string {
+	dec := NewDecoder(bytes.NewReader(data))
+	count, _ := dec.ReadVarint()
+	values := make([]string, 0, count)
+	for i := uint64(0); i < count; i++ {
+		value, _ := dec.ReadString()
+		values = append(values, value)
+	}
+	return values
+}
+
+func decodeUint64ListBmsg(data []byte) []uint64 {
+	dec := NewDecoder(bytes.NewReader(data))
+	count, _ := dec.ReadVarint()
+	values := make([]uint64, 0, count)
+	for i := uint64(0); i < count; i++ {
+		value, _ := dec.ReadVarint()
+		values = append(values, value)
+	}
+	return values
+}
+
+func decodeStringMapBmsg(data []byte) map[string]string {
+	dec := NewDecoder(bytes.NewReader(data))
+	count, _ := dec.ReadVarint()
+	values := make(map[string]string, count)
+	for i := uint64(0); i < count; i++ {
+		key, _ := dec.ReadString()
+		value, _ := dec.ReadString()
+		values[key] = value
+	}
+	return values
 }
 
 func encodeInputsBmsg(inputs []BenchBattleInput) []byte {
@@ -503,6 +886,316 @@ func decodeChatProto(data []byte) BenchChatMsg {
 	return c
 }
 
+func encodeChatDtoProto(c BenchChatDto) []byte {
+	var buf []byte
+	buf = protowire.AppendTag(buf, 1, protowire.VarintType)
+	buf = protowire.AppendVarint(buf, c.MsgId)
+	buf = protowire.AppendTag(buf, 2, protowire.VarintType)
+	buf = protowire.AppendVarint(buf, uint64(c.Channel))
+	buf = protowire.AppendTag(buf, 3, protowire.BytesType)
+	buf = protowire.AppendBytes(buf, encodeChatSenderProto(c.Sender))
+	buf = protowire.AppendTag(buf, 4, protowire.BytesType)
+	buf = protowire.AppendString(buf, c.Content)
+	buf = protowire.AppendTag(buf, 5, protowire.BytesType)
+	buf = protowire.AppendString(buf, c.Lang)
+	buf = protowire.AppendTag(buf, 6, protowire.VarintType)
+	buf = protowire.AppendVarint(buf, uint64(protowire.EncodeZigZag(c.CreatedAt)))
+	if c.Edited {
+		buf = protowire.AppendTag(buf, 7, protowire.VarintType)
+		buf = protowire.AppendVarint(buf, 1)
+	}
+	buf = protowire.AppendTag(buf, 8, protowire.VarintType)
+	buf = protowire.AppendVarint(buf, uint64(protowire.EncodeZigZag(int64(c.Priority))))
+	buf = protowire.AppendTag(buf, 9, protowire.Fixed32Type)
+	buf = protowire.AppendFixed32(buf, math.Float32bits(c.Heat))
+	buf = protowire.AppendTag(buf, 10, protowire.Fixed64Type)
+	buf = protowire.AppendFixed64(buf, math.Float64bits(c.Score))
+	buf = protowire.AppendTag(buf, 11, protowire.BytesType)
+	buf = protowire.AppendBytes(buf, c.Raw)
+	for _, tag := range c.Tags {
+		buf = protowire.AppendTag(buf, 12, protowire.BytesType)
+		buf = protowire.AppendString(buf, tag)
+	}
+	for _, mention := range c.Mentions {
+		buf = protowire.AppendTag(buf, 13, protowire.VarintType)
+		buf = protowire.AppendVarint(buf, mention)
+	}
+	keys := make([]string, 0, len(c.Args))
+	for key := range c.Args {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	for _, key := range keys {
+		entry := protowire.AppendTag(nil, 1, protowire.BytesType)
+		entry = protowire.AppendString(entry, key)
+		entry = protowire.AppendTag(entry, 2, protowire.BytesType)
+		entry = protowire.AppendString(entry, c.Args[key])
+		buf = protowire.AppendTag(buf, 14, protowire.BytesType)
+		buf = protowire.AppendBytes(buf, entry)
+	}
+	for _, item := range c.Items {
+		buf = protowire.AppendTag(buf, 15, protowire.BytesType)
+		buf = protowire.AppendBytes(buf, encodeChatItemProto(item))
+	}
+	buf = protowire.AppendTag(buf, 16, protowire.BytesType)
+	buf = protowire.AppendBytes(buf, encodeChatReplyProto(c.Reply))
+	return buf
+}
+
+func encodeChatSenderProto(s BenchChatSender) []byte {
+	var buf []byte
+	buf = protowire.AppendTag(buf, 1, protowire.VarintType)
+	buf = protowire.AppendVarint(buf, s.Uid)
+	buf = protowire.AppendTag(buf, 2, protowire.BytesType)
+	buf = protowire.AppendString(buf, s.Name)
+	buf = protowire.AppendTag(buf, 3, protowire.VarintType)
+	buf = protowire.AppendVarint(buf, uint64(s.Level))
+	buf = protowire.AppendTag(buf, 4, protowire.VarintType)
+	buf = protowire.AppendVarint(buf, uint64(s.Vip))
+	buf = protowire.AppendTag(buf, 5, protowire.BytesType)
+	buf = protowire.AppendString(buf, s.Guild)
+	if s.Online {
+		buf = protowire.AppendTag(buf, 6, protowire.VarintType)
+		buf = protowire.AppendVarint(buf, 1)
+	}
+	return buf
+}
+
+func encodeChatItemProto(item BenchChatItem) []byte {
+	var buf []byte
+	buf = protowire.AppendTag(buf, 1, protowire.VarintType)
+	buf = protowire.AppendVarint(buf, uint64(item.ItemId))
+	buf = protowire.AppendTag(buf, 2, protowire.VarintType)
+	buf = protowire.AppendVarint(buf, uint64(item.Count))
+	if item.Rare {
+		buf = protowire.AppendTag(buf, 3, protowire.VarintType)
+		buf = protowire.AppendVarint(buf, 1)
+	}
+	return buf
+}
+
+func encodeChatReplyProto(r BenchChatReply) []byte {
+	var buf []byte
+	buf = protowire.AppendTag(buf, 1, protowire.VarintType)
+	buf = protowire.AppendVarint(buf, r.MsgId)
+	buf = protowire.AppendTag(buf, 2, protowire.BytesType)
+	buf = protowire.AppendString(buf, r.Summary)
+	return buf
+}
+
+func decodeChatDtoProto(data []byte) BenchChatDto {
+	var c BenchChatDto
+	for len(data) > 0 {
+		num, typ, n := protowire.ConsumeTag(data)
+		if n < 0 {
+			break
+		}
+		data = data[n:]
+		switch typ {
+		case protowire.VarintType:
+			v, n := protowire.ConsumeVarint(data)
+			if n < 0 {
+				return c
+			}
+			data = data[n:]
+			switch num {
+			case 1:
+				c.MsgId = v
+			case 2:
+				c.Channel = uint32(v)
+			case 6:
+				c.CreatedAt = protowire.DecodeZigZag(v)
+			case 7:
+				c.Edited = v != 0
+			case 8:
+				c.Priority = int32(protowire.DecodeZigZag(v))
+			case 13:
+				c.Mentions = append(c.Mentions, v)
+			}
+		case protowire.Fixed32Type:
+			v, n := protowire.ConsumeFixed32(data)
+			if n < 0 {
+				return c
+			}
+			data = data[n:]
+			if num == 9 {
+				c.Heat = math.Float32frombits(v)
+			}
+		case protowire.Fixed64Type:
+			v, n := protowire.ConsumeFixed64(data)
+			if n < 0 {
+				return c
+			}
+			data = data[n:]
+			if num == 10 {
+				c.Score = math.Float64frombits(v)
+			}
+		case protowire.BytesType:
+			v, n := protowire.ConsumeBytes(data)
+			if n < 0 {
+				return c
+			}
+			data = data[n:]
+			switch num {
+			case 3:
+				c.Sender = decodeChatSenderProto(v)
+			case 4:
+				c.Content = string(v)
+			case 5:
+				c.Lang = string(v)
+			case 11:
+				c.Raw = append(c.Raw[:0], v...)
+			case 12:
+				c.Tags = append(c.Tags, string(v))
+			case 14:
+				if c.Args == nil {
+					c.Args = make(map[string]string)
+				}
+				key, value := decodeStringMapEntryProto(v)
+				c.Args[key] = value
+			case 15:
+				c.Items = append(c.Items, decodeChatItemProto(v))
+			case 16:
+				c.Reply = decodeChatReplyProto(v)
+			}
+		default:
+			n = protowire.ConsumeFieldValue(num, typ, data)
+			if n < 0 {
+				return c
+			}
+			data = data[n:]
+		}
+	}
+	return c
+}
+
+func decodeChatSenderProto(data []byte) BenchChatSender {
+	var s BenchChatSender
+	for len(data) > 0 {
+		num, typ, n := protowire.ConsumeTag(data)
+		if n < 0 {
+			break
+		}
+		data = data[n:]
+		switch typ {
+		case protowire.VarintType:
+			v, n := protowire.ConsumeVarint(data)
+			if n < 0 {
+				return s
+			}
+			data = data[n:]
+			switch num {
+			case 1:
+				s.Uid = v
+			case 3:
+				s.Level = uint32(v)
+			case 4:
+				s.Vip = uint32(v)
+			case 6:
+				s.Online = v != 0
+			}
+		case protowire.BytesType:
+			v, n := protowire.ConsumeBytes(data)
+			if n < 0 {
+				return s
+			}
+			data = data[n:]
+			switch num {
+			case 2:
+				s.Name = string(v)
+			case 5:
+				s.Guild = string(v)
+			}
+		}
+	}
+	return s
+}
+
+func decodeChatItemProto(data []byte) BenchChatItem {
+	var item BenchChatItem
+	for len(data) > 0 {
+		num, typ, n := protowire.ConsumeTag(data)
+		if n < 0 {
+			break
+		}
+		data = data[n:]
+		if typ != protowire.VarintType {
+			continue
+		}
+		v, n := protowire.ConsumeVarint(data)
+		if n < 0 {
+			return item
+		}
+		data = data[n:]
+		switch num {
+		case 1:
+			item.ItemId = uint32(v)
+		case 2:
+			item.Count = uint32(v)
+		case 3:
+			item.Rare = v != 0
+		}
+	}
+	return item
+}
+
+func decodeChatReplyProto(data []byte) BenchChatReply {
+	var r BenchChatReply
+	for len(data) > 0 {
+		num, typ, n := protowire.ConsumeTag(data)
+		if n < 0 {
+			break
+		}
+		data = data[n:]
+		switch typ {
+		case protowire.VarintType:
+			v, n := protowire.ConsumeVarint(data)
+			if n < 0 {
+				return r
+			}
+			data = data[n:]
+			if num == 1 {
+				r.MsgId = v
+			}
+		case protowire.BytesType:
+			v, n := protowire.ConsumeBytes(data)
+			if n < 0 {
+				return r
+			}
+			data = data[n:]
+			if num == 2 {
+				r.Summary = string(v)
+			}
+		}
+	}
+	return r
+}
+
+func decodeStringMapEntryProto(data []byte) (string, string) {
+	var key, value string
+	for len(data) > 0 {
+		num, typ, n := protowire.ConsumeTag(data)
+		if n < 0 {
+			break
+		}
+		data = data[n:]
+		if typ != protowire.BytesType {
+			continue
+		}
+		v, n := protowire.ConsumeBytes(data)
+		if n < 0 {
+			return key, value
+		}
+		data = data[n:]
+		if num == 1 {
+			key = string(v)
+		} else if num == 2 {
+			value = string(v)
+		}
+	}
+	return key, value
+}
+
 func encodeInputsProto(inputs []BenchBattleInput) []byte {
 	var buf []byte
 	for _, in := range inputs {
@@ -586,6 +1279,7 @@ func encodeMsgpack(v any) []byte { d, _ := msgpack.Marshal(v); return d }
 func TestBenchmark_SizeComparison(t *testing.T) {
 	player := benchMakePlayer()
 	chat := benchMakeChat()
+	chatDto := benchMakeChatDto()
 	inputs := benchMakeBattleInputs()
 	tasks := benchMakeTasks(100)
 	lb := benchMakeLeaderboard()
@@ -601,6 +1295,7 @@ func TestBenchmark_SizeComparison(t *testing.T) {
 	rows := []row{
 		{"玩家信息 (10 fields)", len(encodePlayerBmsg(player)), len(encodePlayerProto(player)), len(encodeJSON(player)), len(encodeMsgpack(player))},
 		{"聊天消息 (5 fields)", len(encodeChatBmsg2(chat)), len(encodeChatProto(chat)), len(encodeJSON(chat)), len(encodeMsgpack(chat))},
+		{"ChatDto 全类型 (list/map/custom)", len(encodeChatDtoBmsg(chatDto)), len(encodeChatDtoProto(chatDto)), len(encodeJSON(chatDto)), len(encodeMsgpack(chatDto))},
 		{"战斗输入 (10人×8 fields)", len(encodeInputsBmsg(inputs)), len(encodeInputsProto(inputs)), len(encodeJSON(inputs)), len(encodeMsgpack(inputs))},
 		{"任务列表 (100 TaskDto×9 fields)", len(encodeTasksBmsg(tasks)), len(encodeTasksProto(tasks)), len(encodeJSON(tasks)), len(encodeMsgpack(tasks))},
 		{"排行榜 (100人×6 fields)", len(encodeLeaderboardBmsg2(lb)), len(encodeLeaderboardProto(lb)), len(encodeJSON(lb)), len(encodeMsgpack(lb))},
@@ -627,6 +1322,18 @@ func TestBenchmark_SizeComparison(t *testing.T) {
 	for _, r := range rows {
 		saved := (1 - float64(r.Bmsg)/float64(r.JSON)) * 100
 		t.Logf("    %-24s  -%.1f%%", r.Name, saved)
+	}
+}
+
+func TestBenchmark_ChatDtoAllTypesRoundTrip(t *testing.T) {
+	chat := benchMakeChatDto()
+	bmsg := decodeChatDtoBmsg(encodeChatDtoBmsg(chat))
+	proto := decodeChatDtoProto(encodeChatDtoProto(chat))
+	if bmsg.MsgId != chat.MsgId || bmsg.Sender.Uid != chat.Sender.Uid || len(bmsg.Tags) != len(chat.Tags) || len(bmsg.Args) != len(chat.Args) || len(bmsg.Items) != len(chat.Items) {
+		t.Fatalf("ByteMsg233 ChatDto all-types roundtrip mismatch: %#v", bmsg)
+	}
+	if proto.MsgId != chat.MsgId || proto.Sender.Uid != chat.Sender.Uid || len(proto.Tags) != len(chat.Tags) || len(proto.Args) != len(chat.Args) || len(proto.Items) != len(chat.Items) {
+		t.Fatalf("Protobuf ChatDto all-types roundtrip mismatch: %#v", proto)
 	}
 }
 
@@ -684,6 +1391,35 @@ func BenchmarkEncode_Chat_JSON(b *testing.B) {
 }
 func BenchmarkEncode_Chat_Msgpack(b *testing.B) {
 	c := benchMakeChat()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		encodeMsgpack(c)
+	}
+}
+
+func BenchmarkEncode_ChatDtoAllTypes_ByteMsg233(b *testing.B) {
+	c := benchMakeChatDto()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		encodeChatDtoBmsg(c)
+	}
+}
+func BenchmarkEncode_ChatDtoAllTypes_Proto(b *testing.B) {
+	c := benchMakeChatDto()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		encodeChatDtoProto(c)
+	}
+}
+func BenchmarkEncode_ChatDtoAllTypes_JSON(b *testing.B) {
+	c := benchMakeChatDto()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		encodeJSON(c)
+	}
+}
+func BenchmarkEncode_ChatDtoAllTypes_Msgpack(b *testing.B) {
+	c := benchMakeChatDto()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		encodeMsgpack(c)
@@ -858,6 +1594,37 @@ func BenchmarkDecode_Chat_JSON(b *testing.B) {
 func BenchmarkDecode_Chat_Msgpack(b *testing.B) {
 	var c BenchChatMsg
 	data := encodeMsgpack(c)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		msgpack.Unmarshal(data, &c)
+	}
+}
+
+func BenchmarkDecode_ChatDtoAllTypes_ByteMsg233(b *testing.B) {
+	data := encodeChatDtoBmsg(benchMakeChatDto())
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		decodeChatDtoBmsg(data)
+	}
+}
+func BenchmarkDecode_ChatDtoAllTypes_Proto(b *testing.B) {
+	data := encodeChatDtoProto(benchMakeChatDto())
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		decodeChatDtoProto(data)
+	}
+}
+func BenchmarkDecode_ChatDtoAllTypes_JSON(b *testing.B) {
+	var c BenchChatDto
+	data := encodeJSON(benchMakeChatDto())
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		json.Unmarshal(data, &c)
+	}
+}
+func BenchmarkDecode_ChatDtoAllTypes_Msgpack(b *testing.B) {
+	var c BenchChatDto
+	data := encodeMsgpack(benchMakeChatDto())
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		msgpack.Unmarshal(data, &c)

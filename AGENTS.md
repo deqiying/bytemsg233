@@ -37,9 +37,11 @@
   3. JSON
 - MessagePack or other codecs may appear after those three only.
 - Avoid tiny-only comparisons. Include large repeated DTO scenarios, especially:
+  - `ChatDto` all-type encode/decode coverage with bool, signed/unsigned integers, float, double, string, bytes, list, map key/value parameters, and nested custom message types.
   - `[]TaskDto` with at least 100 entries.
   - leaderboard / ranking lists with 100+ entries.
   - battle frame batches.
   - login/full-state game payloads.
 - Size comparisons should use realistic game/business payloads and repeated structures, not only one small object.
 - Prefer real encoded bytes over theoretical sizes. If theoretical values are used, label them clearly.
+- Performance docs should show both duration (`ns/op`) and throughput (`ops/s` or `次/s`) when presenting encode/decode speed.

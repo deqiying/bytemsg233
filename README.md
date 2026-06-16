@@ -159,6 +159,7 @@ Read this table as a practical game/client baseline, not as a tiny-object trick.
 |---|---:|---:|---:|---:|
 | Player profile, 10 fields | 61 B | 61 B | 173 B | 155 B |
 | Chat message, 5 fields | 57 B | 57 B | 116 B | 103 B |
+| ChatDto all types | 304 B | 316 B | 647 B | 531 B |
 | Battle input, 10 players | 247 B | 266 B | 1,097 B | 931 B |
 | TaskDto list, 100 rows | 3,845 B | 4,044 B | 14,691 B | 13,303 B |
 | Leaderboard, 100 rows | 3,409 B | 3,608 B | 9,602 B | 8,711 B |
@@ -169,6 +170,7 @@ Run locally:
 
 ```bash
 go test ./pkg/binary/... -bench="Benchmark(Encode|Decode)_" -benchmem
+go test ./pkg/binary/... -bench="Benchmark(Encode|Decode)_ChatDtoAllTypes" -benchmem
 go test ./pkg/binary/... -run "TestBenchmark_SizeComparison" -v
 go test ./pkg/binary/... -run "TestGame_" -v
 ```

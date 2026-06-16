@@ -27,6 +27,7 @@ Payload size matters most when the same shape repeats: rankings, inventory rows,
 |---|---:|---:|---:|---:|
 | Player profile, 10 fields | **61 B** | 61 B | 173 B | 155 B |
 | Chat message, 5 fields | **57 B** | 57 B | 116 B | 103 B |
+| ChatDto all types, list/map/custom | **304 B** | 316 B | 647 B | 531 B |
 | Battle input, 10 players x 8 fields | **247 B** | 266 B | 1,097 B | 931 B |
 | TaskDto list, 100 rows x 9 fields | **3,845 B** | 4,044 B | 14,691 B | 13,303 B |
 | Leaderboard, 100 rows x 6 fields | **3,409 B** | 3,608 B | 9,602 B | 8,711 B |
@@ -37,6 +38,7 @@ Savings versus other codecs:
 |---|---:|---:|---:|
 | Player profile | 0% | -64.7% | -60.6% |
 | Chat message | 0% | -50.9% | -44.7% |
+| ChatDto all types | -3.8% | -53.0% | -42.7% |
 | Battle input | -7.1% | -77.5% | -73.5% |
 | TaskDto list | -4.9% | -73.8% | -71.1% |
 | Leaderboard | -5.5% | -64.5% | -60.9% |
@@ -45,12 +47,24 @@ Savings versus other codecs:
 
 Tiny packets are where mature libraries like Protobuf can still win. Bigger repeated structures are where ByteMsg233 becomes more interesting.
 
+These values are duration. Lower `ns/op` is better.
+
 | Scenario | ByteMsg233 | Protobuf | JSON | MessagePack |
 |---|---:|---:|---:|---:|
 | Player profile | 140 | **90** | 387 | 513 |
 | Chat message | 154 | **107** | 317 | 375 |
+| ChatDto all types | 1,112 | **845** | 1,359 | 1,433 |
 | Battle input | **979** | 2,030 | 2,836 | 3,994 |
 | Leaderboard | **9,277** | 26,729 | 21,990 | 52,826 |
+
+The same ChatDto result as throughput. Higher `ops/s` is better.
+
+| Codec | Encode ops/s | Decode ops/s |
+|---|---:|---:|
+| ByteMsg233 | 899,281 | 660,502 |
+| Protobuf | **1,183,152** | **1,511,259** |
+| JSON | 735,835 | 209,073 |
+| MessagePack | 697,837 | 672,948 |
 
 Interpretation:
 
@@ -66,6 +80,7 @@ Decode numbers are a baseline. Generated fast paths and pool-aware decoders are 
 |---|---:|---:|---:|---:|
 | Player profile | 279 | **104** | 1,636 | 612 |
 | Chat message | 224 | **86** | 969 | 349 |
+| ChatDto all types | 1,514 | **662** | 4,783 | 1,486 |
 | Battle input | 1,001 | - | 172 | **90** |
 
 ## Allocations
@@ -105,6 +120,7 @@ The benchmark suite must cover real packet families, not only a business DTO lis
 |---|---|
 | Login push | player, 30 heroes, 80 items, 15 mails, 20 quests, settings |
 | Battle frame | 10 player inputs, frame id, timestamp, random seed |
+| ChatDto all types | bool, signed/unsigned ints, float, double, string, bytes, list, map KV, nested custom messages |
 | Leaderboard | 100 rank rows with player, guild, avatar, score |
 | Battle input | compact input batch with fixed numeric fields |
 | TaskDto list | 100 business DTO rows for non-game repeated data |
@@ -113,7 +129,9 @@ Run the game packet checks:
 
 ```bash
 go test ./pkg/binary -run "TestGame_" -v
+go test ./pkg/binary -run "TestBenchmark_ChatDtoAllTypesRoundTrip" -v
 go test ./pkg/binary -run ^$ -bench "BenchmarkGame_" -benchmem
+go test ./pkg/binary -run ^$ -bench "Benchmark(Encode|Decode)_ChatDtoAllTypes" -benchmem
 ```
 
 See [GAME_BINARY.md](GAME_BINARY.md) for the message-shape rules.
