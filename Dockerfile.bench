@@ -1,0 +1,41 @@
+FROM ubuntu:24.04
+
+ARG GO_VERSION=1.26.0
+ARG NODE_MAJOR=22
+ARG DOTNET_CHANNEL=10.0
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV DOTNET_ROOT=/opt/dotnet
+ENV PATH=/usr/local/go/bin:/root/.cargo/bin:/opt/dotnet:$PATH
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    bash \
+    ca-certificates \
+    curl \
+    git \
+    openjdk-17-jdk-headless \
+    tar \
+    unzip \
+    xz-utils \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN curl -fsSL "https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz" -o /tmp/go.tgz \
+    && rm -rf /usr/local/go \
+    && tar -C /usr/local -xzf /tmp/go.tgz \
+    && rm /tmp/go.tgz
+
+RUN curl -fsSL "https://deb.nodesource.com/setup_${NODE_MAJOR}.x" | bash - \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends nodejs \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN curl -fsSL https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain stable
+
+RUN curl -fsSL https://dot.net/v1/dotnet-install.sh -o /tmp/dotnet-install.sh \
+    && bash /tmp/dotnet-install.sh --channel "${DOTNET_CHANNEL}" --install-dir /opt/dotnet \
+    && rm /tmp/dotnet-install.sh
+
+WORKDIR /workspace
+
+CMD ["bash", "scripts/bench-all.sh"]

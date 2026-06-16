@@ -183,6 +183,14 @@ go test ./pkg/binary/... -run "TestBenchmark_SizeComparison" -v
 go test ./pkg/binary/... -run "TestGame_" -v
 ```
 
+Run the full benchmark and runtime verification suite in one Docker image:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/bench-docker.ps1
+```
+
+This runs Go codec benchmarks against Protobuf/JSON/MessagePack, game benchmarks, TypeScript tests, Rust tests, C# runtime tests, and Java 17 `javac` checks for runtime plus generated code. Logs are written under `bench-results/`.
+
 Full notes: [docs/BENCHMARK.md](docs/BENCHMARK.md). Game packet design: [docs/GAME_BINARY.md](docs/GAME_BINARY.md).
 
 ## Repositories

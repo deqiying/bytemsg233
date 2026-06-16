@@ -17,6 +17,9 @@ dist/
 build/
 output/
 generated/
+bench-results/
+.bench-java-gen/
+.bench-java-classes/
 *.vsix
 *.tgz
 

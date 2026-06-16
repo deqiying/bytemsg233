@@ -43,6 +43,11 @@ tasks:
     cmds:
       - go test ./pkg/binary/... -bench=. -benchmem -count=3
 
+  bench-docker:
+    desc: Docker 一键运行所有语言 benchmark / runtime 验证
+    cmds:
+      - powershell -NoProfile -ExecutionPolicy Bypass -File scripts/bench-docker.ps1
+
   bench-game:
     desc: 游戏场景基准测试
     cmds:
