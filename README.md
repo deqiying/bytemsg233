@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/assets/bytemsg233-logo-192.png" alt="ByteMsg233 logo" width="128" height="128">
+</p>
+
 # ByteMsg233
 
 ## Install

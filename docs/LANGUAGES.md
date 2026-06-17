@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/bytemsg233-logo-192.png" alt="ByteMsg233 logo" width="96" height="96">
+</p>
+
 # Language Runtime Roadmap
 
 ByteMsg233 treats each target language as a real product surface, not a checkbox. Generated files should be easy to read, easy to extend, and safe to regenerate.

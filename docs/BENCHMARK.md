@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/bytemsg233-logo-192.png" alt="ByteMsg233 logo" width="96" height="96">
+</p>
+
 # Performance
 
 > Go benchmark snapshot · Windows amd64 · AMD Ryzen 9 7900X3D

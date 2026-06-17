@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/bytemsg233-logo-192.png" alt="ByteMsg233 logo" width="96" height="96">
+</p>
+
 # Game Binary Message Design
 
 ByteMsg233 is designed around a very normal game problem: the server keeps sending small packets all day, and sometimes sends one big state package when the player logs in, reconnects, opens a ranking page, or enters a battle.
