@@ -1318,6 +1318,29 @@ heroPool.return(hero)</code></pre></div>
 
           <div class="metric-panel">
             <div class="panel-title">
+              <strong data-i18n="perf.proto.title">ByteMsg233 vs Protobuf</strong>
+              <span data-i18n="perf.proto.note">messages per second</span>
+            </div>
+            <table>
+              <thead>
+                <tr><th data-i18n="perf.scenario">Scenario</th><th data-i18n="perf.encode">Encode</th><th data-i18n="perf.decode">Decode</th></tr>
+              </thead>
+              <tbody>
+                <tr><td data-i18n="perf.player">Player profile</td><td><strong>25050100</strong><span class="bench-ratio">2.17x Protobuf</span></td><td><strong>17132088</strong><span class="bench-ratio">1.80x Protobuf</span></td></tr>
+                <tr><td data-i18n="perf.chat">Chat message</td><td><strong>30376671</strong><span class="bench-ratio">1.91x Protobuf</span></td><td><strong>33852404</strong><span class="bench-ratio">2.75x Protobuf</span></td></tr>
+                <tr><td data-i18n="perf.chatdto">ChatDto all types</td><td><strong>4664179</strong><span class="bench-ratio">3.51x Protobuf</span></td><td><strong>1695778</strong><span class="bench-ratio">2.04x Protobuf</span></td></tr>
+                <tr><td data-i18n="perf.battle">Battle input</td><td><strong>5913661</strong><span class="bench-ratio">5.63x Protobuf</span></td><td><strong>2608923</strong><span class="bench-ratio">Protobuf baseline pending</span></td></tr>
+                <tr><td data-i18n="perf.task">TaskDto list</td><td><strong>456413</strong><span class="bench-ratio">6.60x Protobuf</span></td><td><strong>307125</strong><span class="bench-ratio">3.24x Protobuf</span></td></tr>
+                <tr><td data-i18n="perf.leaderboard">Leaderboard</td><td><strong>240500</strong><span class="bench-ratio">5.46x Protobuf</span></td><td><strong>-</strong><span class="bench-ratio">Decode baseline pending</span></td></tr>
+              </tbody>
+            </table>
+            <div class="panel-title">
+              <span data-i18n="perf.proto.foot">Go single-thread benchmark snapshot. Higher values mean more messages handled in one second.</span>
+            </div>
+          </div>
+
+          <div class="metric-panel">
+            <div class="panel-title">
               <strong data-i18n="perf.lang.title">Language runtime matrix</strong>
               <span data-i18n="perf.lang.note">optimized blocks</span>
             </div>
@@ -1470,6 +1493,9 @@ heroPool.return(hero)</code></pre></div>
         "perf.throughput": "Throughput",
         "perf.ops": "ops/s",
         "perf.throughput.note": "Same ChatDto benchmark, converted from ns/op so people can read how many messages fit in one second.",
+        "perf.proto.title": "ByteMsg233 vs Protobuf",
+        "perf.proto.note": "messages per second",
+        "perf.proto.foot": "Go single-thread benchmark snapshot. Higher values mean more messages handled in one second.",
         "perf.lang.title": "Language runtime matrix",
         "perf.lang.note": "optimized blocks",
         "perf.lang": "Language",
@@ -1567,6 +1593,9 @@ heroPool.return(hero)</code></pre></div>
         "perf.throughput": "吞吐",
         "perf.ops": "次/s",
         "perf.throughput.note": "同一组 ChatDto benchmark，从 ns/op 换算成每秒可处理多少条消息，更容易读性能差异。",
+        "perf.proto.title": "ByteMsg233 vs Protobuf",
+        "perf.proto.note": "每秒可处理消息数",
+        "perf.proto.foot": "Go 单线程 benchmark 快照。数值越高，表示 1 秒内能处理更多消息。",
         "perf.lang.title": "语言运行时矩阵",
         "perf.lang.note": "优化 block",
         "perf.lang": "语言",
