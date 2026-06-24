@@ -104,6 +104,7 @@ func (g *Generator) generateImports(buf *strings.Builder, features generatorFeat
 		"\"fmt\"",
 		"\"io\"",
 		"\"strconv\"",
+		"\"sync\"",
 		"bytemsgBinary \"github.com/neko233-com/bytemsg233/pkg/binary\"",
 	}
 	if features.Floats {
@@ -274,14 +275,12 @@ func (g *Generator) generateMessage(buf *strings.Builder, s *schema.Schema, name
 	buf.WriteString("}\n\n")
 
 	poolName := codegen.ToCamelCase(name) + "Pool"
-	buf.WriteString(fmt.Sprintf("var %s = make([]*%s, 0, ByteMsgPacketPoolLimit)\n\n", poolName, name))
+	buf.WriteString(fmt.Sprintf("var %s = sync.Pool{New: func() any { return &%s{} }}\n\n", poolName, name))
 
 	buf.WriteString(fmt.Sprintf("// Acquire%s gets a reusable %s from the pool.\n", name, name))
 	buf.WriteString(fmt.Sprintf("func Acquire%s() *%s {\n", name, name))
-	buf.WriteString(fmt.Sprintf("\tif n := len(%s); n > 0 {\n", poolName))
-	buf.WriteString(fmt.Sprintf("\t\tvalue := %s[n-1]\n", poolName))
-	buf.WriteString(fmt.Sprintf("\t\t%s[n-1] = nil\n", poolName))
-	buf.WriteString(fmt.Sprintf("\t\t%s = %s[:n-1]\n", poolName, poolName))
+	buf.WriteString(fmt.Sprintf("\tvalue, _ := %s.Get().(*%s)\n", poolName, name))
+	buf.WriteString("\tif value != nil {\n")
 	buf.WriteString("\t\treturn value\n")
 	buf.WriteString("\t}\n")
 	buf.WriteString(fmt.Sprintf("\treturn &%s{}\n", name))
@@ -291,9 +290,7 @@ func (g *Generator) generateMessage(buf *strings.Builder, s *schema.Schema, name
 	buf.WriteString(fmt.Sprintf("func Release%s(value *%s) {\n", name, name))
 	buf.WriteString("\tif value == nil {\n\t\treturn\n\t}\n")
 	buf.WriteString("\tvalue.Reset()\n")
-	buf.WriteString(fmt.Sprintf("\tif len(%s) < ByteMsgPacketPoolLimit {\n", poolName))
-	buf.WriteString(fmt.Sprintf("\t\t%s = append(%s, value)\n", poolName, poolName))
-	buf.WriteString("\t}\n")
+	buf.WriteString(fmt.Sprintf("\t%s.Put(value)\n", poolName))
 	buf.WriteString("}\n\n")
 
 	buf.WriteString(fmt.Sprintf("func (x *%s) ReleaseByteMsgPacket() {\n", name))

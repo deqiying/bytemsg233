@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"io"
+	"sync"
 )
 
 const ByteMsgBufferPoolLimit = 10000
@@ -29,18 +30,20 @@ const (
 	WireTypeFixed32         = 5
 )
 
-var bufferPool = make([]*bytes.Buffer, 0, ByteMsgBufferPoolLimit)
+var bufferPool = sync.Pool{
+	New: func() any {
+		return new(bytes.Buffer)
+	},
+}
 
 // GetBuffer gets a buffer from the pool
 func GetBuffer() *bytes.Buffer {
-	if n := len(bufferPool); n > 0 {
-		buf := bufferPool[n-1]
-		bufferPool[n-1] = nil
-		bufferPool = bufferPool[:n-1]
-		buf.Reset()
-		return buf
+	buf, _ := bufferPool.Get().(*bytes.Buffer)
+	if buf == nil {
+		return new(bytes.Buffer)
 	}
-	return new(bytes.Buffer)
+	buf.Reset()
+	return buf
 }
 
 // PutBuffer returns a buffer to the pool
@@ -52,9 +55,7 @@ func PutBuffer(buf *bytes.Buffer) {
 		return
 	}
 	buf.Reset()
-	if len(bufferPool) < ByteMsgBufferPoolLimit {
-		bufferPool = append(bufferPool, buf)
-	}
+	bufferPool.Put(buf)
 }
 
 // Encoder writes binary data

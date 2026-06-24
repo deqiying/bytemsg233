@@ -3,6 +3,7 @@ package binary
 import (
 	"bytes"
 	"encoding/binary"
+	"sync"
 	"testing"
 )
 
@@ -352,16 +353,35 @@ func TestOptimizedBlocksRoundTrip(t *testing.T) {
 	}
 }
 
-func TestBufferPoolLimit(t *testing.T) {
-	bufferPool = bufferPool[:0]
-	for i := 0; i < ByteMsgBufferPoolLimit+1; i++ {
-		PutBuffer(new(bytes.Buffer))
-	}
-	if len(bufferPool) != ByteMsgBufferPoolLimit {
-		t.Fatalf("buffer pool len = %d, want %d", len(bufferPool), ByteMsgBufferPoolLimit)
-	}
+func TestBufferPoolConcurrent(t *testing.T) {
+	const goroutineCount = 128
+	const loopCount = 1000
 
-	bufferPool = bufferPool[:0]
+	var wg sync.WaitGroup
+	wg.Add(goroutineCount)
+	for workerIndex := 0; workerIndex < goroutineCount; workerIndex++ {
+		go func(workerIndex int) {
+			defer wg.Done()
+			for loopIndex := 0; loopIndex < loopCount; loopIndex++ {
+				buf := GetBuffer()
+				if buf == nil {
+					t.Errorf("GetBuffer returned nil")
+					return
+				}
+				enc := NewBufferEncoderValue(buf)
+				if err := enc.WriteFieldHeader(1, WireTypeVarint); err != nil {
+					t.Errorf("WriteFieldHeader failed: %v", err)
+					return
+				}
+				if err := enc.WriteVarint(uint64(workerIndex + loopIndex)); err != nil {
+					t.Errorf("WriteVarint failed: %v", err)
+					return
+				}
+				PutBuffer(buf)
+			}
+		}(workerIndex)
+	}
+	wg.Wait()
 }
 
 func TestVarintCompactness(t *testing.T) {

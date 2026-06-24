@@ -107,6 +107,9 @@ func TestGoGenerator(t *testing.T) {
 	if !strings.Contains(content, "func ReleaseUserProfile(value *UserProfile)") {
 		t.Error("Expected pool release helper")
 	}
+	if !strings.Contains(content, " = sync.Pool") {
+		t.Error("Expected concurrent-safe sync.Pool")
+	}
 	if !strings.Contains(content, "func (x *UserProfile) Reset()") {
 		t.Error("Expected reset method")
 	}
@@ -252,6 +255,7 @@ const generatedGoRoundTripTest = `package protocol
 import (
 	"bytes"
 	"encoding/binary"
+	"fmt"
 	"reflect"
 	"strings"
 	"testing"
@@ -411,14 +415,29 @@ func TestGeneratedResetReusesStorage(t *testing.T) {
 	}
 }
 
-func TestGeneratedPacketPoolLimit(t *testing.T) {
-	playerPool = playerPool[:0]
-	for i := 0; i < ByteMsgPacketPoolLimit+1; i++ {
-		ReleasePlayer(&Player{Id: uint64(i)})
+func TestGeneratedPacketPoolConcurrent(t *testing.T) {
+	const goroutineCount = 64
+	const loopCount = 1000
+
+	errCh := make(chan error, goroutineCount)
+	for workerIndex := 0; workerIndex < goroutineCount; workerIndex++ {
+		go func(workerIndex int) {
+			for loopIndex := 0; loopIndex < loopCount; loopIndex++ {
+				player := AcquirePlayer()
+				if player == nil {
+					errCh <- fmt.Errorf("AcquirePlayer returned nil")
+					return
+				}
+				player.Id = uint64(workerIndex*loopCount + loopIndex)
+				ReleasePlayer(player)
+			}
+			errCh <- nil
+		}(workerIndex)
 	}
-	if len(playerPool) != ByteMsgPacketPoolLimit {
-		t.Fatalf("player pool len = %d, want %d", len(playerPool), ByteMsgPacketPoolLimit)
+	for workerIndex := 0; workerIndex < goroutineCount; workerIndex++ {
+		if err := <-errCh; err != nil {
+			t.Fatal(err)
+		}
 	}
-	playerPool = playerPool[:0]
 }
 `
