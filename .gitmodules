@@ -37,3 +37,12 @@
 [submodule "libs/lua"]
 	path = libs/lua
 	url = https://github.com/neko233-com/bytemsg233-lib-lua.git
+[submodule "libs/php"]
+	path = libs/php
+	url = https://github.com/neko233-com/bytemsg233-lib-php.git
+[submodule "libs/erlang"]
+	path = libs/erlang
+	url = https://github.com/neko233-com/bytemsg233-lib-erlang.git
+[submodule "libs/objc"]
+	path = libs/objc
+	url = https://github.com/neko233-com/bytemsg233-lib-objc.git

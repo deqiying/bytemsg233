@@ -132,6 +132,9 @@ Runtime libraries and generated encode/decode hot paths are single-threaded by d
 | Swift | planned | `libs/swift` | pool rent-return | enum |
 | Dart / Flutter | planned | `libs/dart` | `Hero.acquire()` / `release()` | enum |
 | Lua | planned | `libs/lua` | table pool acquire/release | constants/table |
+| PHP | planned | `libs/php` | `Hero::acquire()` / `release()` | `enum` (PHP 8.1+) |
+| Erlang | planned | `libs/erlang` | process dictionary pool | atom constants |
+| Objective-C | planned | `libs/objc` | `rent` / `return` | `NS_ENUM` |
 | Python | supported | generated code | `Hero.acquire()` / `release()` | `IntEnum` |
 
 Official runtime repositories are tracked in [docs/LANGUAGES.md](docs/LANGUAGES.md).
@@ -232,6 +235,9 @@ Full notes: [docs/BENCHMARK.md](docs/BENCHMARK.md). Game packet design: [docs/GA
 | `libs/swift` | https://github.com/neko233-com/bytemsg233-lib-swift |
 | `libs/dart` | https://github.com/neko233-com/bytemsg233-lib-dart |
 | `libs/lua` | https://github.com/neko233-com/bytemsg233-lib-lua |
+| `libs/php` | https://github.com/neko233-com/bytemsg233-lib-php |
+| `libs/erlang` | https://github.com/neko233-com/bytemsg233-lib-erlang |
+| `libs/objc` | https://github.com/neko233-com/bytemsg233-lib-objc |
 | `editors/vscode` | https://github.com/neko233-com/bytemsg233-plugin-vscode |
 | `editors/jetbrains` | https://github.com/neko233-com/bytemsg233-plugin-jetbrains |
 
@@ -371,6 +377,9 @@ bytemsg233 install-lib c --to ./third_party/bytemsg233
 | Swift | 计划中 | `libs/swift` | pool rent-return | enum |
 | Dart / Flutter | 计划中 | `libs/dart` | `Hero.acquire()` / `release()` | enum |
 | Lua | 计划中 | `libs/lua` | table pool acquire/release | 常量/table |
+| PHP | 计划中 | `libs/php` | `Hero::acquire()` / `release()` | `enum` (PHP 8.1+) |
+| Erlang | 计划中 | `libs/erlang` | process dictionary pool | atom 常量 |
+| Objective-C | 计划中 | `libs/objc` | `rent` / `return` | `NS_ENUM` |
 | Python | 已支持 | 生成代码 | `Hero.acquire()` / `release()` | `IntEnum` |
 
 官方运行时仓库列表见 [docs/LANGUAGES.md](docs/LANGUAGES.md)。
@@ -471,6 +480,9 @@ powershell -ExecutionPolicy Bypass -File scripts/test-java.ps1
 | `libs/swift` | https://github.com/neko233-com/bytemsg233-lib-swift |
 | `libs/dart` | https://github.com/neko233-com/bytemsg233-lib-dart |
 | `libs/lua` | https://github.com/neko233-com/bytemsg233-lib-lua |
+| `libs/php` | https://github.com/neko233-com/bytemsg233-lib-php |
+| `libs/erlang` | https://github.com/neko233-com/bytemsg233-lib-erlang |
+| `libs/objc` | https://github.com/neko233-com/bytemsg233-lib-objc |
 | `editors/vscode` | https://github.com/neko233-com/bytemsg233-plugin-vscode |
 | `editors/jetbrains` | https://github.com/neko233-com/bytemsg233-plugin-jetbrains |
 
