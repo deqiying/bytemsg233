@@ -135,7 +135,8 @@ Runtime libraries and generated encode/decode hot paths are single-threaded by d
 | PHP | planned | `libs/php` | `Hero::acquire()` / `release()` | `enum` (PHP 8.1+) |
 | Erlang | planned | `libs/erlang` | process dictionary pool | atom constants |
 | Objective-C | planned | `libs/objc` | `rent` / `return` | `NS_ENUM` |
-| Python | supported | generated code | `Hero.acquire()` / `release()` | `IntEnum` |
+| Python 3 | priority | `libs/python` | `Hero.acquire()` / `release()` | `IntEnum` |
+| Verse | planned | `libs/verse` | Writer / Reader | integer constants |
 
 Official runtime repositories are tracked in [docs/LANGUAGES.md](docs/LANGUAGES.md).
 
@@ -238,6 +239,8 @@ Full notes: [docs/BENCHMARK.md](docs/BENCHMARK.md). Game packet design: [docs/GA
 | `libs/php` | https://github.com/neko233-com/bytemsg233-lib-php |
 | `libs/erlang` | https://github.com/neko233-com/bytemsg233-lib-erlang |
 | `libs/objc` | https://github.com/neko233-com/bytemsg233-lib-objc |
+| `libs/python` | https://github.com/neko233-com/bytemsg233-lib-python |
+| `libs/verse` | https://github.com/neko233-com/bytemsg233-lib-verse |
 | `editors/vscode` | https://github.com/neko233-com/bytemsg233-plugin-vscode |
 | `editors/jetbrains` | https://github.com/neko233-com/bytemsg233-plugin-jetbrains |
 
@@ -380,7 +383,8 @@ bytemsg233 install-lib c --to ./third_party/bytemsg233
 | PHP | 计划中 | `libs/php` | `Hero::acquire()` / `release()` | `enum` (PHP 8.1+) |
 | Erlang | 计划中 | `libs/erlang` | process dictionary pool | atom 常量 |
 | Objective-C | 计划中 | `libs/objc` | `rent` / `return` | `NS_ENUM` |
-| Python | 已支持 | 生成代码 | `Hero.acquire()` / `release()` | `IntEnum` |
+| Python 3 | 优先 | `libs/python` | `Hero.acquire()` / `release()` | `IntEnum` |
+| Verse | 计划中 | `libs/verse` | Writer / Reader | 整数常量 |
 
 官方运行时仓库列表见 [docs/LANGUAGES.md](docs/LANGUAGES.md)。
 
@@ -483,6 +487,8 @@ powershell -ExecutionPolicy Bypass -File scripts/test-java.ps1
 | `libs/php` | https://github.com/neko233-com/bytemsg233-lib-php |
 | `libs/erlang` | https://github.com/neko233-com/bytemsg233-lib-erlang |
 | `libs/objc` | https://github.com/neko233-com/bytemsg233-lib-objc |
+| `libs/python` | https://github.com/neko233-com/bytemsg233-lib-python |
+| `libs/verse` | https://github.com/neko233-com/bytemsg233-lib-verse |
 | `editors/vscode` | https://github.com/neko233-com/bytemsg233-plugin-vscode |
 | `editors/jetbrains` | https://github.com/neko233-com/bytemsg233-plugin-jetbrains |
 

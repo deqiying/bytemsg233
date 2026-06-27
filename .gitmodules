@@ -46,3 +46,9 @@
 [submodule "libs/objc"]
 	path = libs/objc
 	url = https://github.com/neko233-com/bytemsg233-lib-objc.git
+[submodule "libs/python"]
+	path = libs/python
+	url = https://github.com/neko233-com/bytemsg233-lib-python.git
+[submodule "libs/verse"]
+	path = libs/verse
+	url = https://github.com/neko233-com/bytemsg233-lib-verse.git
