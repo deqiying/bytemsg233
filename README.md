@@ -168,7 +168,7 @@ This writes:
 - `game.md`: human-readable protocol documentation for client/server integration.
 - `game.html`: standalone user-facing protocol page.
 - `game.bmsg`: legacy/extension-friendly DSL export.
-- `game.proto`: proto3 metadata exchange export with ByteMsg233 schema/version/packet metadata in comments.
+- `game.proto`: proto3 metadata exchange export with ByteMsg233 metadata and localized schema descriptions in comments.
 
 Markdown is for people. HTML demo pages are standalone. Neither should depend on the other as a required reading path.
 
@@ -417,7 +417,7 @@ bytemsg233 export game.bmsg.json -f md,html,bmsg,proto -o ./protocol
 - `game.md`：人类可读的协议文档，用于客户端/服务端集成。
 - `game.html`：独立的用户协议页面。
 - `game.bmsg`：旧版/扩展友好的 DSL 导出。
-- `game.proto`：proto3 元数据互通导出，ByteMsg233 schema/version/packet 元数据保存在注释中。
+- `game.proto`：proto3 元数据互通导出，ByteMsg233 元数据和本地化 schema 描述保存在注释中。
 
 Markdown 面向开发者。HTML 演示页面独立运行。两者不依赖对方作为必读路径。
 

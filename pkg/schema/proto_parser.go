@@ -52,6 +52,11 @@ type protoToken struct {
 	Line  int
 }
 
+type protoComment struct {
+	Text string
+	Line int
+}
+
 type protoLexer struct {
 	input []rune
 	pos   int
@@ -171,7 +176,7 @@ func isProtoIdentPart(ch rune) bool {
 type protoParser struct {
 	lexer           *protoLexer
 	current         protoToken
-	pendingComments []string
+	pendingComments []protoComment
 	sawSyntax       bool
 	schema          *Schema
 }
@@ -266,13 +271,17 @@ func (p *protoParser) parsePackage() error {
 }
 
 func (p *protoParser) parseEnum() error {
+	comments := p.pendingComments
 	p.pendingComments = nil
 	p.next()
 	name, err := p.expectIdentifier()
 	if err != nil {
 		return err
 	}
-	enum := &Enum{Values: make(map[string]int)}
+	enum := &Enum{
+		Values:      make(map[string]int),
+		Description: protoDescriptionFromComments(comments),
+	}
 	p.next()
 	if err := p.expectSymbol("{"); err != nil {
 		return err
@@ -320,14 +329,19 @@ func (p *protoParser) parseEnum() error {
 }
 
 func (p *protoParser) parseMessage() error {
-	packetID := packetIDFromComments(p.pendingComments)
+	comments := p.pendingComments
+	packetID := packetIDFromComments(comments)
 	p.pendingComments = nil
 	p.next()
 	name, err := p.expectIdentifier()
 	if err != nil {
 		return err
 	}
-	msg := &Message{Fields: make(map[string]*Field), PacketID: packetID}
+	msg := &Message{
+		Fields:      make(map[string]*Field),
+		Description: protoDescriptionFromComments(comments),
+		PacketID:    packetID,
+	}
 	p.next()
 	if err := p.expectSymbol("{"); err != nil {
 		return err
@@ -349,8 +363,9 @@ func (p *protoParser) parseMessage() error {
 				return p.unsupported(p.current.Value)
 			}
 		}
+		comments := p.pendingComments
 		p.pendingComments = nil
-		fieldName, field, err := p.parseField()
+		fieldName, field, err := p.parseField(comments)
 		if err != nil {
 			return err
 		}
@@ -362,7 +377,7 @@ func (p *protoParser) parseMessage() error {
 	return nil
 }
 
-func (p *protoParser) parseField() (string, *Field, error) {
+func (p *protoParser) parseField(comments []protoComment) (string, *Field, error) {
 	repeated := false
 	if p.current.Kind == protoTokenIdent && p.current.Value == "repeated" {
 		repeated = true
@@ -403,8 +418,19 @@ func (p *protoParser) parseField() (string, *Field, error) {
 	if err := p.expectSymbol(";"); err != nil {
 		return "", nil, err
 	}
+	semicolonLine := p.current.Line
 	p.next()
-	return fieldName, &Field{Type: fieldType, Tag: tag}, nil
+	field := &Field{
+		Type:        fieldType,
+		Description: protoDescriptionFromComments(comments),
+		Tag:         tag,
+	}
+	inlineComments, nextComments := splitProtoCommentsByLine(p.pendingComments, semicolonLine)
+	if inlineDesc := protoDescriptionFromComments(inlineComments); inlineDesc != nil {
+		field.Description = mergeProtoDescription(field.Description, inlineDesc)
+	}
+	p.pendingComments = nextComments
+	return fieldName, field, nil
 }
 
 func (p *protoParser) parseFieldType() (string, error) {
@@ -490,25 +516,27 @@ func (p *protoParser) next() {
 			p.current = token
 			return
 		}
-		p.consumeComment(token.Value)
+		p.consumeComment(token.Value, token.Line)
 	}
 }
 
-func (p *protoParser) consumeComment(value string) {
-	text := strings.TrimSpace(value)
-	if text == "" {
-		return
-	}
-	if commentValue, ok := byteMsgProtoCommentValue(text, "schema"); ok {
-		p.schema.Version = commentValue
-	}
-	if commentValue, ok := byteMsgProtoCommentValue(text, "protocolVersion"); ok {
-		version, err := strconv.ParseUint(commentValue, 10, 64)
-		if err == nil {
-			p.schema.ProtocolVersion = version
+func (p *protoParser) consumeComment(value string, line int) {
+	lines := protoCommentLines(value)
+	for offset, text := range lines {
+		if text == "" {
+			continue
 		}
+		if commentValue, ok := byteMsgProtoCommentValue(text, "schema"); ok {
+			p.schema.Version = commentValue
+		}
+		if commentValue, ok := byteMsgProtoCommentValue(text, "protocolVersion"); ok {
+			version, err := strconv.ParseUint(commentValue, 10, 64)
+			if err == nil {
+				p.schema.ProtocolVersion = version
+			}
+		}
+		p.pendingComments = append(p.pendingComments, protoComment{Text: text, Line: line + offset})
 	}
-	p.pendingComments = append(p.pendingComments, text)
 }
 
 func (p *protoParser) expectIdentifier() (string, error) {
@@ -575,6 +603,105 @@ func isSupportedProtoMapKey(schemaType string) bool {
 	}
 }
 
+func protoDescriptionFromComments(comments []protoComment) *Description {
+	var zhLines []string
+	var enLines []string
+
+	for _, comment := range comments {
+		text := strings.TrimSpace(comment.Text)
+		if text == "" || isByteMsgProtoMetadataComment(text) {
+			continue
+		}
+		if value, ok := protoLocaleCommentValue(text, "zh"); ok {
+			zhLines = append(zhLines, value)
+			continue
+		}
+		if value, ok := protoLocaleCommentValue(text, "en"); ok {
+			enLines = append(enLines, value)
+			continue
+		}
+		zhLines = append(zhLines, text)
+		enLines = append(enLines, text)
+	}
+
+	if len(zhLines) == 0 && len(enLines) == 0 {
+		return nil
+	}
+	return &Description{
+		Zh: strings.Join(zhLines, "\n"),
+		En: strings.Join(enLines, "\n"),
+	}
+}
+
+func protoLocaleCommentValue(text string, locale string) (string, bool) {
+	prefix := locale + ":"
+	if !strings.HasPrefix(strings.ToLower(text), prefix) {
+		return "", false
+	}
+	return strings.TrimSpace(text[len(prefix):]), true
+}
+
+func mergeProtoDescription(base *Description, extra *Description) *Description {
+	if base == nil {
+		return extra
+	}
+	if extra == nil {
+		return base
+	}
+	base.Zh = joinProtoDescriptionText(base.Zh, extra.Zh)
+	base.En = joinProtoDescriptionText(base.En, extra.En)
+	return base
+}
+
+func joinProtoDescriptionText(left string, right string) string {
+	if left == "" {
+		return right
+	}
+	if right == "" {
+		return left
+	}
+	return left + "\n" + right
+}
+
+func splitProtoCommentsByLine(comments []protoComment, line int) ([]protoComment, []protoComment) {
+	var matching []protoComment
+	var rest []protoComment
+	for _, comment := range comments {
+		if comment.Line == line {
+			matching = append(matching, comment)
+			continue
+		}
+		rest = append(rest, comment)
+	}
+	return matching, rest
+}
+
+func protoCommentLines(value string) []string {
+	value = strings.ReplaceAll(value, "\r\n", "\n")
+	value = strings.ReplaceAll(value, "\r", "\n")
+	rawLines := strings.Split(value, "\n")
+	lines := make([]string, 0, len(rawLines))
+	for _, line := range rawLines {
+		line = strings.TrimSpace(line)
+		if line == "*" {
+			line = ""
+		} else if strings.HasPrefix(line, "* ") {
+			line = strings.TrimSpace(strings.TrimPrefix(line, "*"))
+		}
+		lines = append(lines, line)
+	}
+	return lines
+}
+
+func isByteMsgProtoMetadataComment(text string) bool {
+	for _, key := range []string{"schema", "protocolVersion", "packetId"} {
+		if _, ok := byteMsgProtoCommentValue(text, key); ok {
+			return true
+		}
+	}
+	return false
+}
+
 func byteMsgProtoCommentValue(text string, key string) (string, bool) {
 	prefix := "ByteMsg233 " + key + ":"
 	if !strings.HasPrefix(strings.ToLower(text), strings.ToLower(prefix)) {
@@ -583,9 +710,9 @@ func byteMsgProtoCommentValue(text string, key string) (string, bool) {
 	return strings.TrimSpace(text[len(prefix):]), true
 }
 
-func packetIDFromComments(comments []string) int {
+func packetIDFromComments(comments []protoComment) int {
 	for i := len(comments) - 1; i >= 0; i-- {
-		value, ok := byteMsgProtoCommentValue(comments[i], "packetId")
+		value, ok := byteMsgProtoCommentValue(comments[i].Text, "packetId")
 		if !ok {
 			continue
 		}

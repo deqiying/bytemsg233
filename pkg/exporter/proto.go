@@ -30,6 +30,7 @@ func Proto(s *schema.Schema) ([]byte, error) {
 	}
 
 	for _, enumName := range codegen.SortedEnumNames(s) {
+		writeProtoDescriptionComments(&buf, s.Enums[enumName].Description, "")
 		buf.WriteString(fmt.Sprintf("enum %s {\n", enumName))
 		for _, value := range codegen.SortedEnumValues(s.Enums[enumName]) {
 			buf.WriteString(fmt.Sprintf("  %s = %d;\n", value.Name, value.Value))
@@ -39,6 +40,7 @@ func Proto(s *schema.Schema) ([]byte, error) {
 
 	for _, msgName := range codegen.SortedMessageNames(s) {
 		msg := s.Messages[msgName]
+		writeProtoDescriptionComments(&buf, msg.Description, "")
 		if msg.PacketID > 0 {
 			buf.WriteString(fmt.Sprintf("// ByteMsg233 packetId: %d\n", msg.PacketID))
 		}
@@ -49,12 +51,32 @@ func Proto(s *schema.Schema) ([]byte, error) {
 			if err != nil {
 				return nil, fmt.Errorf("%s.%s: %w", msgName, fieldName, err)
 			}
+			writeProtoDescriptionComments(&buf, field.Description, "  ")
 			buf.WriteString(fmt.Sprintf("  %s %s = %d;\n", fieldType, fieldName, field.Tag))
 		}
 		buf.WriteString("}\n\n")
 	}
 
 	return []byte(buf.String()), nil
+}
+
+func writeProtoDescriptionComments(buf *strings.Builder, desc *schema.Description, indent string) {
+	if desc == nil {
+		return
+	}
+	writeProtoCommentLines(buf, indent, "zh", desc.Zh)
+	writeProtoCommentLines(buf, indent, "en", desc.En)
+}
+
+func writeProtoCommentLines(buf *strings.Builder, indent string, locale string, value string) {
+	if value == "" {
+		return
+	}
+	value = strings.ReplaceAll(value, "\r\n", "\n")
+	value = strings.ReplaceAll(value, "\r", "\n")
+	for _, line := range strings.Split(value, "\n") {
+		buf.WriteString(fmt.Sprintf("%s// %s: %s\n", indent, locale, line))
+	}
 }
 
 type protoExporter struct{}

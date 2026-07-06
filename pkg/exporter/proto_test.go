@@ -18,13 +18,15 @@ func TestProtoExporter(t *testing.T) {
 					"PLAYER_STATE_UNKNOWN": 0,
 					"PLAYER_STATE_ACTIVE":  1,
 				},
+				Description: &schema.Description{Zh: "玩家状态", En: "Player State"},
 			},
 		},
 		Messages: map[string]*schema.Message{
 			"Player": {
-				PacketID: 1001,
+				PacketID:    1001,
+				Description: &schema.Description{Zh: "玩家", En: "Player"},
 				Fields: map[string]*schema.Field{
-					"id":      {Type: "uint64", Tag: 1},
+					"id":      {Type: "uint64", Tag: 1, Description: &schema.Description{Zh: "玩家ID", En: "Player ID"}},
 					"score":   {Type: "int32", Tag: 2},
 					"name":    {Type: "string", Tag: 3},
 					"tags":    {Type: "list<string>", Tag: 4},
@@ -37,8 +39,9 @@ func TestProtoExporter(t *testing.T) {
 				},
 			},
 			"PlayerProfile": {
+				Description: &schema.Description{Zh: "玩家资料"},
 				Fields: map[string]*schema.Field{
-					"level": {Type: "uint32", Tag: 1},
+					"level": {Type: "uint32", Tag: 1, Description: &schema.Description{Zh: "等级"}},
 				},
 			},
 		},
@@ -54,10 +57,16 @@ func TestProtoExporter(t *testing.T) {
 		"package example.game;",
 		"// ByteMsg233 schema: bymsg/v1",
 		"// ByteMsg233 protocolVersion: 7",
+		"// zh: 玩家状态",
+		"// en: Player State",
 		"enum PlayerState {",
 		"  PLAYER_STATE_UNKNOWN = 0;",
+		"// zh: 玩家",
+		"// en: Player",
 		"// ByteMsg233 packetId: 1001",
 		"message Player {",
+		"  // zh: 玩家ID",
+		"  // en: Player ID",
 		"  uint64 id = 1;",
 		"  sint32 score = 2;",
 		"  repeated string tags = 4;",
@@ -67,6 +76,8 @@ func TestProtoExporter(t *testing.T) {
 		"  float heat = 8;",
 		"  double power = 9;",
 		"  bytes payload = 10;",
+		"// zh: 玩家资料",
+		"  // zh: 等级",
 	}
 	for _, item := range expected {
 		if !strings.Contains(content, item) {
@@ -116,14 +127,18 @@ func TestProtoRoundTrip(t *testing.T) {
 		ProtocolVersion: 9,
 		Package:         "roundtrip",
 		Enums: map[string]*schema.Enum{
-			"Status": {Values: map[string]int{"STATUS_UNKNOWN": 0, "STATUS_OK": 1}},
+			"Status": {
+				Values:      map[string]int{"STATUS_UNKNOWN": 0, "STATUS_OK": 1},
+				Description: &schema.Description{Zh: "状态", En: "Status"},
+			},
 		},
 		Messages: map[string]*schema.Message{
 			"Packet": {
-				PacketID: 7001,
+				PacketID:    7001,
+				Description: &schema.Description{Zh: "消息包", En: "Packet"},
 				Fields: map[string]*schema.Field{
-					"id":     {Type: "uint64", Tag: 1},
-					"status": {Type: "Status", Tag: 2},
+					"id":     {Type: "uint64", Tag: 1, Description: &schema.Description{Zh: "编号", En: "ID"}},
+					"status": {Type: "Status", Tag: 2, Description: &schema.Description{Zh: "状态", En: "Status"}},
 					"tags":   {Type: "list<string>", Tag: 3},
 					"attrs":  {Type: "map<string, uint32>", Tag: 4},
 				},
@@ -147,6 +162,15 @@ func TestProtoRoundTrip(t *testing.T) {
 	}
 	if target.Messages["Packet"].Fields["attrs"].Type != "map<string, uint32>" {
 		t.Fatalf("attrs type mismatch: %s", target.Messages["Packet"].Fields["attrs"].Type)
+	}
+	if target.Enums["Status"].Description == nil || target.Enums["Status"].Description.Zh != "状态" {
+		t.Fatalf("enum description mismatch: %#v", target.Enums["Status"].Description)
+	}
+	if target.Messages["Packet"].Description == nil || target.Messages["Packet"].Description.Zh != "消息包" {
+		t.Fatalf("message description mismatch: %#v", target.Messages["Packet"].Description)
+	}
+	if target.Messages["Packet"].Fields["id"].Description == nil || target.Messages["Packet"].Fields["id"].Description.Zh != "编号" {
+		t.Fatalf("field description mismatch: %#v", target.Messages["Packet"].Fields["id"].Description)
 	}
 }
 

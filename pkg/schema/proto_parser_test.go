@@ -96,6 +96,60 @@ message Ping {
 	}
 }
 
+func TestParseProtoPreservesDescriptions(t *testing.T) {
+	data := []byte(`syntax = "proto3";
+
+package protocol;
+
+// zh: 用户类型
+// en: User Type
+enum UserType {
+  USER_TYPE_UNKNOWN = 0;
+  USER_TYPE_NORMAL = 1;
+}
+
+// zh: 用户资料
+// en: User Profile
+// ByteMsg233 packetId: 1001
+message UserProfile {
+  // zh: 用户ID
+  // en: User ID
+  uint64 id = 1;
+  string name = 2; // zh: 用户名
+  // 普通中文注释
+  string nickname = 3;
+}
+`)
+
+	s, err := ParseProto(data)
+	if err != nil {
+		t.Fatalf("ParseProto failed: %v", err)
+	}
+	enumDesc := s.Enums["UserType"].Description
+	if enumDesc == nil || enumDesc.Zh != "用户类型" || enumDesc.En != "User Type" {
+		t.Fatalf("enum description mismatch: %#v", enumDesc)
+	}
+	msg := s.Messages["UserProfile"]
+	if msg.PacketID != 1001 {
+		t.Fatalf("packet id = %d, want 1001", msg.PacketID)
+	}
+	if msg.Description == nil || msg.Description.Zh != "用户资料" || msg.Description.En != "User Profile" {
+		t.Fatalf("message description mismatch: %#v", msg.Description)
+	}
+	idDesc := msg.Fields["id"].Description
+	if idDesc == nil || idDesc.Zh != "用户ID" || idDesc.En != "User ID" {
+		t.Fatalf("id description mismatch: %#v", idDesc)
+	}
+	nameDesc := msg.Fields["name"].Description
+	if nameDesc == nil || nameDesc.Zh != "用户名" {
+		t.Fatalf("name description mismatch: %#v", nameDesc)
+	}
+	nicknameDesc := msg.Fields["nickname"].Description
+	if nicknameDesc == nil || nicknameDesc.Zh != "普通中文注释" {
+		t.Fatalf("nickname description mismatch: %#v", nicknameDesc)
+	}
+}
+
 func TestParseProtoRejectsUnsupportedSyntax(t *testing.T) {
 	_, err := ParseProto([]byte(`syntax = "proto3";
 package protocol;
