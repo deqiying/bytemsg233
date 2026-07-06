@@ -60,8 +60,8 @@ func Markdown(s *schema.Schema) []byte {
 
 	buf.WriteString("## CLI\n\n")
 	buf.WriteString("```bash\n")
-	buf.WriteString("bytemsg233 compile protocol.bmsg.json -l go,csharp,typescript,rust,java -o ./gen\n")
-	buf.WriteString("bytemsg233 install-lib csharp --to ./Assets/Plugins/ByteMsg233\n")
+	buf.WriteString("bytemsg233 compile protocol.json -l go,csharp,typescript,rust,java -o ./gen\n")
+	buf.WriteString("bytemsg233 export protocol.json -f proto -o ./protocol\n")
 	buf.WriteString("```\n")
 
 	return []byte(buf.String())

@@ -17,7 +17,8 @@
         "street": { "type": "string", "tag": 1 },
         "city": { "type": "string", "tag": 2 },
         "zip": { "type": "string", "tag": 3 }
-      }
+      },
+      "description": { "zh": "地址" }
     }
   },
   "enums": {

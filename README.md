@@ -23,6 +23,10 @@ go install github.com/neko233-com/bytemsg233/cmd/bytemsg233@latest
 
 ```bash
 bytemsg233 version
+bytemsg233 update
+
+# Optional fallback mirror for restricted networks.
+bytemsg233 update --mirror https://gh-proxy.com/
 ```
 
 **ByteMsg233** is a JSON-first binary schema toolchain for games, clients, and SDKs. It uses `.bmsg.json` as the primary protocol description DSL, can import/export a practical `.proto` metadata subset, generates native-feeling code, and keeps runtime libraries copyable into real projects even when package registry publishing is not available.

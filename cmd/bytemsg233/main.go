@@ -1,15 +1,18 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/neko233-com/bytemsg233/pkg/compiler"
 	"github.com/neko233-com/bytemsg233/pkg/exporter"
 	"github.com/neko233-com/bytemsg233/pkg/libinstall"
 	"github.com/neko233-com/bytemsg233/pkg/schema"
+	"github.com/neko233-com/bytemsg233/pkg/updater"
 	"github.com/spf13/cobra"
 )
 
@@ -130,7 +133,7 @@ func main() {
 			return nil
 		},
 	}
-	exportCmd.Flags().StringSliceP("format", "f", []string{"md", "html", "bmsg"}, "Export formats (md, html, bmsg, proto)")
+	exportCmd.Flags().StringSliceP("format", "f", []string{"md", "html", "bmsg", "proto"}, "Export formats (md, html, bmsg, proto)")
 	exportCmd.Flags().StringP("output", "o", ".", "Output directory")
 	exportCmd.Flags().String("name", "", "Output base name")
 
@@ -157,7 +160,36 @@ func main() {
 	installLibCmd.Flags().String("to", "", "Target directory in your project")
 	installLibCmd.Flags().String("repo", "", "bytemsg233 repository root; defaults to current directory")
 
-	rootCmd.AddCommand(compileCmd, versionCmd, initCmd, exportCmd, installLibCmd)
+	var updateCmd = &cobra.Command{
+		Use:   "update",
+		Short: "Update bytemsg233 to the latest release",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			targetVersion, _ := cmd.Flags().GetString("version")
+			mirrors, _ := cmd.Flags().GetStringSlice("mirror")
+			timeout, _ := cmd.Flags().GetDuration("timeout")
+			force, _ := cmd.Flags().GetBool("force")
+			dryRun, _ := cmd.Flags().GetBool("dry-run")
+			ctx, cancel := context.WithTimeout(cmd.Context(), timeout*4)
+			defer cancel()
+			_, err := updater.Run(ctx, updater.Options{
+				CurrentVersion: version,
+				Version:        targetVersion,
+				Mirrors:        mirrors,
+				Timeout:        timeout,
+				Force:          force,
+				DryRun:         dryRun,
+				Out:            cmd.OutOrStdout(),
+			})
+			return err
+		},
+	}
+	updateCmd.Flags().String("version", "latest", "Target version, for example v1.0.7 or latest")
+	updateCmd.Flags().StringSlice("mirror", nil, "Fallback mirror prefix; repeatable, supports {url}; env BYTEMSG233_UPDATE_MIRROR also works")
+	updateCmd.Flags().Duration("timeout", 30*time.Second, "Timeout per download attempt")
+	updateCmd.Flags().Bool("force", false, "Install even when current version matches target")
+	updateCmd.Flags().Bool("dry-run", false, "Print update URLs without downloading")
+
+	rootCmd.AddCommand(compileCmd, versionCmd, initCmd, exportCmd, installLibCmd, updateCmd)
 
 	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)
