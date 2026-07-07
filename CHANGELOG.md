@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - `bytemsg233 update` self-update command with optional `--mirror` fallback
 - Schema import/export with Proto interop (`import-proto`, `export-proto`)
+- Proto export writes zh/en localized description comments; import restores enum, message, and field descriptions
 - Python 3 and Verse (UEFN) runtime libs as submodules
 - PHP, Erlang, Objective-C runtime libs as submodules
 - PR-first contributing guide (`CONTRIBUTING.md`)
@@ -25,6 +26,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Renamed submodules to `-lib-` convention; updated all refs to include full runtime source
 - CI: keep GitHub Pages on legacy static publish workflow
 - README: bilingual support with updated install instructions
+
+### Docs
+
+- Proto comment round-trip tests; README, Markdown docs, and GitHub Docs HTML updated
 
 ## [1.0.7] - 2026-06-24
 
